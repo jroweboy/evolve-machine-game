@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/dev/llvm-mos/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "intelliSenseMode": "windows-clang-x64",
+            "compilerPath": "c:/dev/llvm-mos/bin/clang.exe"
+        }
+    ],
+    "version": 4
+}

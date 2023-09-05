@@ -1,4 +1,15 @@
 {
+    "watch-run.targetList": [
+        {
+            "target": "/inc/*.inc",
+            "task": "compile"
+        },
+        {
+            "target": "/**/*.s",
+            "task": "compile"
+        },
+    ],
+    "files.autoSave": "afterDelay",
     "C_Cpp.default.compilerPath": "c:\\dev\\llvm-mos\\bin\\clang.exe",
     "files.associations": {
         "*.c": "c",

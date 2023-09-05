@@ -5,20 +5,24 @@
 
 #include <bank.h>
 
-constexpr char kScreenWidth = 32;
-constexpr char kScreenHeight = 30;
-constexpr int kScreenSize = kScreenWidth * kScreenHeight;
+// constexpr char kScreenWidth = 32;
+// constexpr char kScreenHeight = 30;
+// constexpr int kScreenSize = kScreenWidth * kScreenHeight;
 
-constexpr char hello[] = "Hello, NES!";
+// constexpr char hello[] = "Hello, NES!";
 
 
 
-constexpr char background_pal[] = {
-    0x0f, 0x10, 0x20, 0x30, // grayscale
-    0x0f, 0x10, 0x20, 0x30, // grayscale
-    0x0f, 0x10, 0x20, 0x30, // grayscale
-    0x0f, 0x10, 0x20, 0x30, // grayscale
-};
+// constexpr char background_pal[] = {
+//     0x0f, 0x10, 0x20, 0x30, // grayscale
+//     0x0f, 0x10, 0x20, 0x30, // grayscale
+//     0x0f, 0x10, 0x20, 0x30, // grayscale
+//     0x0f, 0x10, 0x20, 0x30, // grayscale
+// };
+
+extern unsigned char _current_music;
+extern unsigned char _next_music;
+
 
 int main() {
     
@@ -28,16 +32,16 @@ int main() {
   // Use lower half of PPU memory for background tiles
   bank_bg(0);
 
-  // Set the background palette
-  pal_bg(background_pal);
+  // // Set the background palette
+  // pal_bg(background_pal);
 
-  // Fill the background with space characters to clear the screen
-  vram_adr(NAMETABLE_A);
-  vram_fill(' ', kScreenSize);
+  // // Fill the background with space characters to clear the screen
+  // vram_adr(NAMETABLE_A);
+  // vram_fill(' ', kScreenSize);
 
-  // Write a message
-  vram_adr(NTADR_A(10, 10));
-  vram_write(hello, sizeof(hello) - 1);
+  // // Write a message
+  // vram_adr(NTADR_A(10, 10));
+  // vram_write(hello, sizeof(hello) - 1);
 
   // Turn the PPU back on
   ppu_on_all();

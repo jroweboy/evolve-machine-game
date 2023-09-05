@@ -5,7 +5,7 @@ import pathlib
 
 def bin2h(fpathin: pathlib.Path, fout:pathlib.Path = None):
   '''Generates a C header file from a binary file.'''
-  with open(fout.joinpath("generated.h"), 'w') as output:
+  with open(fout, 'w') as output:
     for fin in fpathin.glob("*.bin"):
       var_name = fin.stem.replace(".", "_").replace(" ", "_")
       

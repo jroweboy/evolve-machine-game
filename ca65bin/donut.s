@@ -19,7 +19,7 @@
 ; 2018-04-30: Initial release.
 ;
 
-.export donut_decompress_block, donut_block_ayx, donut_block_x
+.export donut_decompress_block ;, donut_block_ayx, donut_block_x
 .export donut_block_buffer
 .exportzp donut_stream_ptr
 .exportzp donut_block_count
@@ -37,14 +37,14 @@ donut_block_count:      .res 1
 ;;
 ; helper subroutine for passing parameters with registers
 ; decompress X*64 bytes starting at AAYY to PPU_DATA
-.proc donut_block_ayx
-  sty donut_stream_ptr+0
-  sta donut_stream_ptr+1
-;,; jmp donut_block_x
-.endproc
-.proc donut_block_x
+; .proc donut_block_ayx
+;   sty donut_stream_ptr+0
+;   sta donut_stream_ptr+1
+;   stx donut_block_count
+; ;,; jmp donut_block_x
+; .endproc
+.proc donut_block
 PPU_DATA = $2007
-  stx donut_block_count
   block_loop:
     ldx #64
     jsr donut_decompress_block

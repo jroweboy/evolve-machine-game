@@ -15,6 +15,10 @@ typedef int8_t    s8;
 typedef int16_t   s16;
 typedef int32_t   s32;
 
+// global functions defined in asm
+// This function is defined at 0xc000
+extern void donut_decompress_block();
+
 #ifdef __cplusplus
 }
 #endif

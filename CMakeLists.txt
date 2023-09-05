@@ -39,20 +39,26 @@ add_link_options(
 )
 
 # Gather all project source and header files to compile into the final ROM image
-set(SRC ${CMAKE_SOURCE_DIR}/src)
-file(GLOB_RECURSE SOURCES ${SRC}/*.cpp ${SRC}/*.s)
-file(GLOB_RECURSE HEADERS ${SRC}/*.h ${SRC}/*.inc)
+# set(SRC ${CMAKE_SOURCE_DIR}/src)
 
 set(ROM ${CMAKE_PROJECT_NAME}.nes)
 add_executable(${ROM}
-    ${SOURCES}
-    ${HEADERS}
+    src/ca65.s
+    src/chr.cpp
+    src/chr.hpp
+    src/chr.s
+    src/common.hpp
+    src/main.cpp
+    src/title_screen.cpp
+    src/title_screen.hpp
 )
 
+target_include_directories(${ROM} PRIVATE gen)
+
 include(CompressCHR)
-compress_chr(SRC ${CMAKE_SOURCE_DIR}/chr/raw DEST ${CMAKE_SOURCE_DIR}/chr/compressed)
+compress_chr(SRC ${CMAKE_SOURCE_DIR}/chr/raw DEST ${CMAKE_SOURCE_DIR}/gen/chr)
 include(GenerateCA65Binary)
-generate_ca65_binary(SRC ${CMAKE_SOURCE_DIR}/ca65bin)
+generate_ca65_binary(SRC ${CMAKE_SOURCE_DIR}/ca65bin DEST ${CMAKE_SOURCE_DIR}/gen/ca65)
 
 target_link_libraries(${ROM} PRIVATE
     # first-party

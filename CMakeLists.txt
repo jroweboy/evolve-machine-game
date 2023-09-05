@@ -3,16 +3,15 @@ cmake_minimum_required(VERSION 3.20)
 # We want at least -Os for everything, even debug. Otherwise the emitted assembly
 # can easily overflow code sections
 
-# TODO: test which optimization level works best in release mode
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -flto")
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Os -flto")
 set(CMAKE_CXX_FLAGS_DEBUG "-Os")
 set(CMAKE_CXX_FLAGS_MINSIZEREL "-DNDEBUG -Os -flto")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -flto")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-Os -flto")
 # Assembler complains when -DNDEBUG is here
-set(CMAKE_ASM_FLAGS_RELEASE "-O3 -flto")
+set(CMAKE_ASM_FLAGS_RELEASE "-Os -flto")
 set(CMAKE_ASM_FLAGS_DEBUG "-Os")
 set(CMAKE_ASM_FLAGS_MINSIZEREL "-Os -flto")
-set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-O3 -flto")
+set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-Os -flto")
 
 # Configure the project to use llvm-mos targeting the NES with the MMC1 mapper
 set(LLVM_MOS_PLATFORM nes-action53)
@@ -50,7 +49,15 @@ add_executable(${ROM}
     ${HEADERS}
 )
 
-target_link_libraries(${ROM}
+include(CompressCHR)
+compress_chr(SRC ${CMAKE_SOURCE_DIR}/chr/raw DEST ${CMAKE_SOURCE_DIR}/chr/compressed)
+include(GenerateCA65Binary)
+generate_ca65_binary(SRC ${CMAKE_SOURCE_DIR}/ca65bin)
+
+target_link_libraries(${ROM} PRIVATE
+    # first-party
+    CompressedCHR
+    GeneratedCA65Binaries
     # Second-party, included in llvm-mos
     neslib
     nesdoug

@@ -15,7 +15,7 @@
         "cacheVariables": {
           "CMAKE_BUILD_TYPE": "MinSizeRel",
           "CMAKE_PREFIX_PATH": "C:/dev/llvmmosdev/llvm-mos/outmsvc;C:/dev/llvmmosdev/llvm-mos/outmsvc/lib/cmake/llvm-mos-sdk",
-          "CMAKE_MODULE_PATH": "",
+          "CMAKE_MODULE_PATH": "${sourceDir}/cmake",
           "CMAKE_FRAMEWORK_PATH": "${sourceDir}/tools/${hostSystemName}/famistudio;${sourceDir}/scripts"
         }
       }

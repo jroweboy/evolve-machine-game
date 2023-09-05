@@ -4,7 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/dev/llvm-mos/**"
+                "C:/dev/llvmmosdev/llvm-mos/**"
             ],
             "defines": [
                 "_DEBUG",

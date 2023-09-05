@@ -28,7 +28,10 @@ add_compile_options(
 add_link_options(
     -g -gdwarf-4
     # -Wall -Wextra -Werror # Same goes for the linker
+    -mreserve-zp=19
 
+    # make functions non-recursive by default
+    -fnonreentrant
     # -Map generates a file with information about how the final binary's memory
     # is laid out. This will eventually be used to show the remaining space in
     # CHR-ROM, PRG-ROM, PRG-RAM, System RAM, and ZEROPAGE

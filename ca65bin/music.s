@@ -19,6 +19,7 @@ FAMISTUDIO_DPCM_OFF = $c000
 
 current_song: .res 1
 next_song:    .res 1
+sfx_queue:    .res 1
 
 .segment "BANKED"
 

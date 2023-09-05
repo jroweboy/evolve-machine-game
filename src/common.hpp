@@ -15,9 +15,15 @@ typedef int8_t    s8;
 typedef int16_t   s16;
 typedef int32_t   s32;
 
-// global functions defined in asm
-// This function is defined at 0xc000
-extern void donut_decompress_block();
+// global decompress function defined in asm
+// This raw decompress function is defined at 0xc000
+extern void donut_decompress(const void* data);
+
+enum class GameMode : u8 {
+    TitleScreen = 0,
+    GamePlay = 1,
+    Pause = 0x80,
+};
 
 #ifdef __cplusplus
 }

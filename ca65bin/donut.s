@@ -24,9 +24,9 @@
 .exportzp donut_stream_ptr
 .exportzp donut_block_count
 
-temp = $00  ; 15 bytes are used
+temp = $f0  ; 15 bytes are used
 
-donut_block_buffer = $0100  ; 64 bytes
+donut_block_buffer = $0120  ; 64 bytes
 
 .segment "ZEROPAGE"
 donut_stream_ptr:       .res 2

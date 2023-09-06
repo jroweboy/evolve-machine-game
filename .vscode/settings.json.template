@@ -9,8 +9,13 @@
             "task": "compile"
         },
     ],
-    "files.autoSave": "afterDelay",
-    "C_Cpp.default.compilerPath": "c:\\dev\\llvm-mos\\bin\\clang.exe",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "cmake.useCMakePresets": "auto",
+    "clangd.arguments": [
+        "--query-driver=[path/to/llvm-mos-sdk]/bin/*clang*"
+    ],
+    "clangd.path": "[path/to/llvm-mos-sdk]/bin/clangd",
+    "clangd.detectExtensionConflicts": true,
     "files.associations": {
         "*.c": "c",
         "algorithm": "cpp",

@@ -22,13 +22,20 @@ function(generate_ca65_binary)
   # if (NOT bin2h)
   #   message(FATAL_ERROR "Cannot generate ca65 output: Unable to find bin2h.py")
   # endif()
+
   set(out ${CMAKE_CURRENT_BINARY_DIR}/ca65)
+
+  if(WIN32)
+    set (GENCA65BIN_CL65 ${GEN_BINARY_SRC}/cl65)
+  else()
+    find_program(GENCA65BIN_CL65 cl65 REQUIRED)
+  endif()
 
   add_custom_command(
     OUTPUT ${outputfiles}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${out}
     # build the files into a raw dump. the linker file is setup to spit out the banks into different files
-    COMMAND ${GEN_BINARY_SRC}/cl65 -g -m ${out}/map.txt --ld-args --dbgfile,${out}/out.dbg --no-target-lib -C ${GEN_BINARY_SRC}/llvm.cfg ${GEN_BINARY_SRC}/music.s ${GEN_BINARY_SRC}/donut.s 
+    COMMAND ${GENCA65BIN_CL65} -g -m ${out}/map.txt --ld-args --dbgfile,${out}/out.dbg --no-target-lib -C ${GEN_BINARY_SRC}/llvm.cfg ${GEN_BINARY_SRC}/music.s ${GEN_BINARY_SRC}/donut.s 
     # Then run each file through bin2h
     # COMMAND ${PYTHON_EXECUTABLE} ${bin2h} ${CMAKE_CURRENT_BINARY_DIR}/ca65 -o ${ca65_artifacts}
     COMMAND ${CMAKE_COMMAND} -E copy ${out}/prg8.bin ${out}/prgc.bin ${GEN_BINARY_DEST}

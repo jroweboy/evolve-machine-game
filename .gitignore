@@ -1,1 +1,5 @@
 build*/
+.cache*/
+
+.vscode/settings.json
+CMakeUserPresets.json

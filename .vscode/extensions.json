@@ -1,9 +1,12 @@
 {
     "recommendations": [
         "alchemic-raker.alchemy65",
-        "ms-vscode.cpptools",
+        "llvm-vs-code-extensions.vscode-clangd",
         "ms-vscode.cmake-tools",
         "boukichi.watch-run",
         "rioj7.command-variable"
+    ],
+    "unwantedRecommendations": [
+        "ms-vscode.cpp-tools"
     ]
 }

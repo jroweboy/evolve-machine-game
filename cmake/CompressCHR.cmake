@@ -15,9 +15,9 @@ function(compress_chr)
   file(GLOB infiles "${COMPRESS_CHR_SRC}/*.chr")
   file(GLOB outputfiles "${COMPRESS_CHR_SRC}/*.chr")
   list(TRANSFORM outputfiles REPLACE "${COMPRESS_CHR_SRC}/(.*)\.chr" "${COMPRESS_CHR_DEST}/\\1\.bin")
-  # message(status "out ${outputfiles}")
 
-  find_package(PythonInterp 3 REQUIRED)
+  find_package(Python3 REQUIRED)
+
   find_file(compressor_script NAMES donut donut.py)
   if (NOT compressor_script)
     message(FATAL_ERROR "Cannot generate compressed CHR: Unable to find compressor script donut.py")

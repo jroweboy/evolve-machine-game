@@ -17,7 +17,7 @@ function(generate_ca65_binary)
   # list(TRANSFORM outputfiles REPLACE "${GEN_BINARY_SRC}/(.*)\.chr" "${GEN_BINARY_DEST}/\\1\.bin")
   set(outputfiles ${GEN_BINARY_DEST}/prg8.bin ${GEN_BINARY_DEST}/prgc.bin)
 
-  find_package(PythonInterp 3 REQUIRED)
+  find_package(Python3 REQUIRED)
   # find_file(bin2h NAMES bin2h bin2h.py)
   # if (NOT bin2h)
   #   message(FATAL_ERROR "Cannot generate ca65 output: Unable to find bin2h.py")
@@ -25,11 +25,7 @@ function(generate_ca65_binary)
 
   set(out ${CMAKE_CURRENT_BINARY_DIR}/ca65)
 
-  if(WIN32)
-    set (GENCA65BIN_CL65 ${GEN_BINARY_SRC}/cl65)
-  else()
-    find_program(GENCA65BIN_CL65 cl65 REQUIRED)
-  endif()
+  find_program(GENCA65BIN_CL65 cl65 REQUIRED HINTS ${GEN_BINARY_SRC})
 
   add_custom_command(
     OUTPUT ${outputfiles}

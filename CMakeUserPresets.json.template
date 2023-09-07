@@ -8,8 +8,8 @@
   "configurePresets": [
     {
       "name": "Default Configure",
-      "displayName": "Default Cmake Configure (with custom LLVM-MOS-SDK path)",
-      "description": "Default build using Ninja generator",
+      "displayName": "Default",
+      "description": "Default configure using Ninja generator with a custom LLVM-MOS path",
       "inherits": "default",
       "cacheVariables": {! "CMAKE_PREFIX_PATH": "[path/to/llvm-mos-sdk]"}
     }

@@ -33,7 +33,7 @@ namespace Titlescreen {
         vram_unrle(CHR::titlescreen_nametable);
 
         pal_bg(background_pal);
-        pal_fade_to(4, 0);
+        pal_bright(0);
 
         ppu_on_all();
 
@@ -43,6 +43,14 @@ namespace Titlescreen {
     }
 
     void update() {
-
+        u8 pressed = get_pad_new(0);
+        if (pressed & PAD_START) {
+            rng_seed = rand16();
+            pal_fade_to(4, 0);
+            play_song(0xfe);
+            game_mode = GameMode::GenerateSeed;
+            return;
+        }
+        // TODO: add a set seed option
     }
 }

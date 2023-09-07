@@ -6,6 +6,7 @@
 #include <bank.h>
 
 #include "music.hpp"
+#include "generate_seed.hpp"
 #include "title_screen.hpp"
 
 // constexpr char kScreenWidth = 32;
@@ -29,22 +30,33 @@
 GameMode game_mode;
 GameMode prev_game_mode;
 
+// u8 curr_pad_trigger;
+u16 rng_seed;
+
 int main() {
   prev_game_mode = (GameMode) 0xff;
+  
   // Disable the PPU so we can freely modify its state
   ppu_off();
+
+  set_mirroring(MIRROR_VERTICAL);
+
+  // set 8x16 sprite mode
+  oam_size(1);
 
   // Use lower half of PPU memory for background tiles
   bank_bg(0);
 
   while (true) {
-    __attribute__((unused)) const char pad_state = pad_poll(0);
-
+    pad_poll(0);
     // If we changed game modes, initialze the new one
     if (game_mode != prev_game_mode) {
       switch (game_mode) {
         case GameMode::TitleScreen:
           Titlescreen::init();
+          break;
+        case GameMode::GenerateSeed:
+          GenerateSeed::init();
           break;
         default:
           break;
@@ -56,6 +68,9 @@ int main() {
     switch (game_mode) {
       case GameMode::TitleScreen:
         Titlescreen::update();
+        break;
+      case GameMode::GenerateSeed:
+        GenerateSeed::update();
         break;
       default:
         break;

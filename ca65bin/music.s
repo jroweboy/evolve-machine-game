@@ -7,9 +7,9 @@ FAMISTUDIO_USE_RELEASE_NOTES = 1
 FAMISTUDIO_USE_PITCH_TRACK = 1
 FAMISTUDIO_USE_SLIDE_NOTES = 1
 FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1
-FAMISTUDIO_CFG_DPCM_SUPPORT = 1
 FAMISTUDIO_USE_DELTA_COUNTER = 1
-FAMISTUDIO_DPCM_OFF = $c000
+FAMISTUDIO_CFG_DPCM_SUPPORT = 1
+FAMISTUDIO_DPCM_OFF = evolve_machine_dpcm
 
 .define FAMISTUDIO_CA65_ZP_SEGMENT ZP
 .define FAMISTUDIO_CA65_RAM_SEGMENT RAM
@@ -56,3 +56,7 @@ continue_playing_song:
 ; include the actual song data in the same bank as the driver now.
 music_data:
 .include "evolve_machine.s"
+
+.segment "DPCM"
+evolve_machine_dpcm:
+.incbin "evolve_machine.dmc"

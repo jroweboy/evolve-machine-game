@@ -21,9 +21,15 @@ extern void donut_decompress(const void* data);
 
 enum class GameMode : u8 {
     TitleScreen = 0,
-    GamePlay = 1,
+    GenerateSeed = 1,
+    GamePlay = 2,
     Pause = 0x80,
 };
+
+extern GameMode game_mode;
+extern GameMode prev_game_mode;
+
+extern u16 rng_seed;
 
 #ifdef __cplusplus
 }

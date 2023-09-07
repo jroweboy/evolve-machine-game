@@ -32,8 +32,10 @@ after_donut_block:
 .section .text.donut,"ax",@progbits
 .globl donut_decompress
 donut_decompress:
+    lda __rc2
     sta $ed
-    stx $ee
+    lda __rc3
+    sta $ee
     lda #0
     sta $ef
     jmp donut_decompress_block
@@ -41,10 +43,6 @@ donut_decompress:
 ; set this to run after the ram clearing but before the find ppu frame wait
 .section .init.210,"axR",@progbits
 audio_init:
-    lda #$80
-    sta A53_REG_SELECT
-    lda #0b00011100
-    sta A53_REG_VALUE
     lda #$ff
     sta _next_music
     jsr __run_audio
@@ -52,7 +50,7 @@ audio_init:
     sta _next_music
     sta _current_music
 
-.section .nmi.100,"axR",@progbits
+.section .nmi.200,"axR",@progbits
     jsr __run_audio
 
 .section .text.audio,"ax",@progbits

@@ -27,23 +27,23 @@
             }
         }
     ],
-    "inputs": [
-        {
-            "id": "inputId",
-            "type": "command",
-            "command": "watch-run.getFilename",
-            "args" : "compile"
-        },
-        {
-            "id": "fileAsTarget",
-            "type": "command",
-            "command": "extension.commandvariable.transform",
-            "args": {
-                "text": "${command:extension.commandvariable.file.filePosix}",
-                "find": "^/c",
-                "replace": "C:",
-                "flags": ""
-            }
-        }
-    ]
+    // "inputs": [
+    //     {
+    //         "id": "inputId",
+    //         "type": "command",
+    //         "command": "watch-run.getFilename",
+    //         "args" : "compile"
+    //     },
+    //     {
+    //         "id": "fileAsTarget",
+    //         "type": "command",
+    //         "command": "extension.commandvariable.transform",
+    //         "args": {
+    //             "text": "${command:extension.commandvariable.file.filePosix}",
+    //             "find": "^/c",
+    //             "replace": "C:",
+    //             "flags": ""
+    //         }
+    //     }
+    // ]
 }

@@ -39,7 +39,7 @@ namespace Titlescreen {
 
         pal_fade_to(0, 4);
 
-        play_song(Music::INTRO);
+        play_song(Song::Intro);
     }
 
     void update() {
@@ -47,8 +47,8 @@ namespace Titlescreen {
         if (pressed & PAD_START) {
             rng_seed = rand16();
             pal_fade_to(4, 0);
-            play_song(0xfe);
-            game_mode = GameMode::GenerateSeed;
+            play_song(Song::StopMusic);
+            game_mode = GameMode::MapLoader;
             return;
         }
         // TODO: add a set seed option

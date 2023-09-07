@@ -8,14 +8,21 @@
 extern "C" {
 #endif
 
-__attribute__((leaf)) void play_song(u8 song);
-__attribute__((leaf)) void play_sfx(u8 song);
+enum class Song : u8 { 
+    Intro = 1,
+    TitleAmbience = 2,
+    Boss = 3,
+    Silence = 0xfd,
+    StopMusic = 0xfe,
+    InitEngine = 0xff,
+};
 
-namespace Music {
-constexpr u8 INTRO = 1;
-constexpr u8 TITLE_AMBIENCE = 2;
-constexpr u8 BOSS = 3;
-}
+enum Sfx {
+    EPSMDetected = 1 << 0,
+};
+
+__attribute__((leaf)) void play_song(Song song);
+__attribute__((leaf)) void play_sfx(Sfx song);
 
 
 #ifdef __cplusplus

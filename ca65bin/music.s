@@ -29,8 +29,11 @@ nmi_callback:
     ; special operation. check for init flag
     cmp #$ff
     beq init_famistudio
-    ; TODO add silence tracks and whatever
-    ; nothing to do until we add that
+    cmp #$fe
+    bne exit
+        jsr famistudio_music_stop
+        dec next_song
+exit:
     rts
 init_famistudio:
     ; if the next song is $ff, that means we need to init famistudio

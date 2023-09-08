@@ -62,6 +62,15 @@ __run_audio:
     sta A53_REG_VALUE
     jmp custom_audio
 
+.section .nmi.200,"axR",@progbits
+inc_global_timer:
+    inc global_timer
+    bne .L1
+        inc global_timer+1
+        bne .L1
+            inc global_timer+2
+.L1:
+
 .section .text.audio,"ax",@progbits
 .globl play_song
 play_song:

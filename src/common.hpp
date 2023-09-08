@@ -29,7 +29,9 @@ enum class GameMode : u8 {
 extern GameMode game_mode;
 extern GameMode prev_game_mode;
 
-extern u16 rng_seed;
+extern u32 seed;
+
+extern u8 global_timer[3];
 
 #ifdef __cplusplus
 }

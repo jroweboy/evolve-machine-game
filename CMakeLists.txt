@@ -51,9 +51,11 @@ add_executable(${ROM}
     src/chr.hpp
     src/chr.s
     src/common.hpp
-    src/generate_seed.cpp
-    src/generate_seed.hpp
+    src/map_loader.cpp
+    src/map_loader.hpp
     src/main.cpp
+    src/rand.cpp
+    src/rand.hpp
     src/title_screen.cpp
     src/title_screen.hpp
 )

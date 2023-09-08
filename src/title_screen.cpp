@@ -5,6 +5,7 @@
 
 #include "chr.hpp"
 #include "music.hpp"
+#include "rand.hpp"
 #include "title_screen.hpp"
 
 extern const char title_screen_bin;
@@ -45,12 +46,12 @@ namespace Titlescreen {
     void update() {
         u8 pressed = get_pad_new(0);
         if (pressed & PAD_START) {
-            rng_seed = rand16();
+            Rng::seed(nullptr);
             pal_fade_to(4, 0);
             play_song(Song::StopMusic);
             game_mode = GameMode::MapLoader;
             return;
         }
-        // TODO: add a set seed option
+        // TODO: add a set seed option?
     }
 }

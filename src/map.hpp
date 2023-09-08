@@ -7,12 +7,14 @@
 
 
 // This doesn't seem necessary. Consider removing it?
-enum class RoomType : u8 {
-    Root, // Starting room
-    Normal, // Average room. Maybe small chance to have a secret?
-    Leaf, // Intentionally a terminal room. Maybe always has a secret?
-    Boss, // TODO? Always has the key prize?
-};
+// enum class RoomType : u8 {
+//     Root, // Starting room
+//     Normal, // Average room. Maybe small chance to have a secret?
+//     Leaf, // Intentionally a terminal room. Maybe always has a secret?
+//     Boss, // TODO? Always has the key prize?
+// };
+
+// enum class 
 
 enum class PrizeType : u8 {
     None,
@@ -22,12 +24,13 @@ enum class PrizeType : u8 {
 
 // Should each exit type is numbered for variations? Thats the current thought, but
 // there's probably a better way to roll variations of exit types. Maybe use a bitfield
-enum class ExitType : u8 {
+enum ExitType {
     Blocked,
     Open,
     KeyRequired,
     LevelExit,
 };
+
 
 // This struct matches the `check_collision` call from nesdoug
 struct Hitbox {
@@ -48,18 +51,34 @@ struct Hazard {
     Hitbox hitbox;
 };
 
+struct SpriteSpawn {
+    u8 object_id;
+    
+    s16 x;
+    s16 y;
+};
+
 struct Room {
     // TODO: Do we need this?
-    RoomType room_type;
+    // RoomType room_type;
+    
+    // Hold the room_id for each exit for this and the buddy room.
+    // I think this is only useful for map generation? Doesn't hurt either way
+    u8 room_id;
+    u8 position;
+    u8 buddy;
 
     PrizeType prize;
 
-    // Hold the metatile for this type of exit
-    std::array<ExitType, 6> exit;
+    std::array<u8, 4> main_exit;
+    std::array<u8, 4> buddy_exit;
 
     // All data for this hazard slot.
-    std::array<Hazard, 10> hazard_slot;
+    std::array<SpriteSpawn, 8> hazard_slot;
 
     std::array<u8, 16> decoration;
 
 };
+
+// The global RAM allocation for the current room.
+extern Room room;

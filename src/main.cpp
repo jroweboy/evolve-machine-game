@@ -6,13 +6,13 @@
 #include <bank.h>
 
 #include "common.hpp"
-#include "generate_seed.hpp"
+#include "map_loader.hpp"
 #include "title_screen.hpp"
 
 GameMode game_mode;
 GameMode prev_game_mode;
 
-u16 rng_seed;
+u8 global_timer[3];
 
 int main() {
   prev_game_mode = (GameMode) 0xff;
@@ -30,7 +30,7 @@ int main() {
 
   while (true) {
     ppu_wait_nmi();
-    
+
     pad_poll(0);
     // If we changed game modes, initialze the new one
     if (game_mode != prev_game_mode) {

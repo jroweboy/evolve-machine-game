@@ -1,6 +1,4 @@
 
-
-
 FAMISTUDIO_CFG_EXTERNAL = 1
 FAMISTUDIO_EXP_EPSM = 1
 FAMISTUDIO_USE_RELEASE_NOTES = 1
@@ -52,7 +50,6 @@ continue_playing_song:
     ; finally update famistudio
     jmp famistudio_update
     ; rts
-
 
 .include "famistudio_ca65.s"
 

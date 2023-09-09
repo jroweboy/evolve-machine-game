@@ -51,34 +51,46 @@ struct Hazard {
     Hitbox hitbox;
 };
 
-struct SpriteSpawn {
+struct ObjectSpawn {
     u8 object_id;
     
     s16 x;
     s16 y;
 };
 
+// A room is made up of 1 or 2 sections representing a single screen worth of data called a section
 struct Room {
-    // TODO: Do we need this?
-    // RoomType room_type;
-    
-    // Hold the room_id for each exit for this and the buddy room.
-    // I think this is only useful for map generation? Doesn't hurt either way
-    u8 room_id;
-    u8 position;
-    u8 buddy;
+    // Hold the map position for the lead and side room
+    // If there is no side room (meaning we are a 1x1 room) then it will be an invalid id
+    u8 lead_id;
+    u8 side_id;
 
+    // The object type that drops when this room is cleared
+    // Update this if the prize has been grabbed
     PrizeType prize;
+};
 
-    std::array<u8, 4> main_exit;
-    std::array<u8, 4> buddy_exit;
+struct Section {
+    // When changing rooms, we go to a new section first, and use this ID to look up the room
+    u8 room_id;
 
-    // All data for this hazard slot.
-    std::array<SpriteSpawn, 8> hazard_slot;
+    // Store which nametable to draw this section into.
+    u8 nametable;
 
-    std::array<u8, 16> decoration;
+    // An exit refers to the section ID for the new section that we are moving to
+    // Store the list of exits for this room in this order
+    //    0   
+    // 3 [ ] 1
+    //    2   
+    std::array<u8, 4> exit;
+    // When moving from room to room, we can use the GetDirection to find what side
+    // of the next section to spawn on.
+
+    std::array<ObjectSpawn, 6> objects;
 
 };
 
-// The global RAM allocation for the current room.
+// The global RAM allocation for the room that the player is entering.
 extern Room room;
+extern Section lead;
+extern Section side;

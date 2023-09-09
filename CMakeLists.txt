@@ -51,6 +51,8 @@ add_executable(${ROM}
     src/chr.hpp
     src/chr.s
     src/common.hpp
+    src/dungeon_generator.cpp
+    src/dungeon_generator.hpp
     src/map_loader.cpp
     src/map_loader.hpp
     src/main.cpp
@@ -59,13 +61,14 @@ add_executable(${ROM}
     src/title_screen.cpp
     src/title_screen.hpp
 )
+target_compile_definitions(${ROM} PRIVATE NES)
 
 target_include_directories(${ROM} PRIVATE gen)
 
 include(CompressCHR)
-compress_chr(SRC ${CMAKE_SOURCE_DIR}/chr/raw DEST ${CMAKE_SOURCE_DIR}/gen/chr)
+compress_chr(SRC ${CMAKE_SOURCE_DIR}/chr/raw DEST ${CMAKE_CURRENT_BINARY_DIR}/gen/chr)
 include(GenerateCA65Binary)
-generate_ca65_binary(SRC ${CMAKE_SOURCE_DIR}/ca65bin DEST ${CMAKE_SOURCE_DIR}/gen/ca65)
+generate_ca65_binary(SRC ${CMAKE_SOURCE_DIR}/ca65bin DEST ${CMAKE_CURRENT_BINARY_DIR}/gen/ca65)
 
 target_link_libraries(${ROM} PRIVATE
     # first-party

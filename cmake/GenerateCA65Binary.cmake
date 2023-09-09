@@ -30,14 +30,21 @@ function(generate_ca65_binary)
   add_custom_command(
     OUTPUT ${outputfiles}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${out}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${GEN_BINARY_DEST}
     # build the files into a raw dump. the linker file is setup to spit out the banks into different files
     COMMAND ${GENCA65BIN_CL65} -g -m ${out}/map.txt --ld-args --dbgfile,${out}/out.dbg --no-target-lib -C ${GEN_BINARY_SRC}/llvm.cfg ${GEN_BINARY_SRC}/music.s ${GEN_BINARY_SRC}/donut.s 
     # Then run each file through bin2h
     # COMMAND ${PYTHON_EXECUTABLE} ${bin2h} ${CMAKE_CURRENT_BINARY_DIR}/ca65 -o ${ca65_artifacts}
     COMMAND ${CMAKE_COMMAND} -E copy ${out}/prg8.bin ${out}/prgc.bin ${GEN_BINARY_DEST}
-    DEPENDS ${compressor_script} ${GEN_BINARY_SRC}/evolve_machine.s ${GEN_BINARY_SRC}/famistudio_ca65.s ${GEN_BINARY_SRC}/llvm.cfg ${GEN_BINARY_SRC}/music.s ${GEN_BINARY_SRC}/donut.s
+    DEPENDS ${compressor_script}
+    DEPENDS ${GEN_BINARY_SRC}/evolve_machine.s
+    DEPENDS ${GEN_BINARY_SRC}/famistudio_ca65.s
+    DEPENDS ${GEN_BINARY_SRC}/llvm.cfg
+    DEPENDS ${GEN_BINARY_SRC}/music.s
+    DEPENDS ${GEN_BINARY_SRC}/donut.s
     COMMENT "Building CA65 artifacts and copying to gen folder"
   )
+  message("${compressor_script} ${GEN_BINARY_SRC}/evolve_machine.s ${GEN_BINARY_SRC}/famistudio_ca65.s ${GEN_BINARY_SRC}/llvm.cfg ${GEN_BINARY_SRC}/music.s ${GEN_BINARY_SRC}/donut.s")
   add_library(GeneratedCA65Binaries ${outputfiles})
   set_target_properties(GeneratedCA65Binaries PROPERTIES LINKER_LANGUAGE CXX)
   # target_include_directories(GeneratedCA65Binaries PUBLIC ${GEN_BINARY_DEST})

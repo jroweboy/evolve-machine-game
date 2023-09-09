@@ -6,6 +6,7 @@
 #include <bank.h>
 
 #include "common.hpp"
+#include "dungeon_generator.hpp"
 #include "map_loader.hpp"
 #include "title_screen.hpp"
 
@@ -38,6 +39,10 @@ int main() {
         case GameMode::TitleScreen:
           Titlescreen::init();
           break;
+        case GameMode::GenerateDungeon:
+          generate_dungeon();
+          game_mode = GameMode::MapLoader;
+          // FALLTHROUGH
         case GameMode::MapLoader:
           MapLoader::init();
           break;

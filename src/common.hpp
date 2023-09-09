@@ -21,8 +21,9 @@ extern void donut_decompress(const void* data);
 
 enum class GameMode : u8 {
     TitleScreen = 0,
-    MapLoader = 1,
-    GamePlay = 2,
+    GenerateDungeon = 1,
+    MapLoader = 2,
+    GamePlay = 3,
     Pause = 0x80,
 };
 

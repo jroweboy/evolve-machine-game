@@ -5622,16 +5622,16 @@ famistudio_vrc7_note_table_msb:
 .endif
 
 .if FAMISTUDIO_EXP_EPSM
-.segment "BANKEDb"
+.pushseg
+.segment "ALIGNED_MUSIC"
+
 .macro write_epsm_value op1, op2, op3
   BRK
   STA $4016
   .byte op1, op2, op3
   RTS
 .endmacro
-;.align 128
-;.byte $f0, $f1, $f2, $f4, $f5, $f6
-;.align 256
+
 EpsmWriteHandlers:
 write_epsm_value $01, epsm_safe_write_byte-1, $60  ; ORA (epsm_safe_write_byte-1,X)
 write_epsm_value $05, epsm_safe_write_byte,   $60  ; ORA <epsm_safe_write_byte
@@ -5697,6 +5697,9 @@ write_epsm_value $F0, $00,                    $60  ; BEQ #$00
 write_epsm_value $F5, epsm_safe_write_byte,   $60  ; SBC <epsm_safe_write_byte,X
 write_epsm_value $F9, $00,                    $00  ; SBC $0000,Y
 write_epsm_value $FD, epsm_safe_write_byte,   $00  ; SBC <>epsm_safe_write_byte,X
+
+.popseg
+
 WriteToEpsm:
 	TAX
 	ASL

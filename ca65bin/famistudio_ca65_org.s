@@ -879,11 +879,6 @@ famistudio_r2:   .res 1
 famistudio_ptr0: .res 2
 famistudio_ptr1: .res 2
 
-.if FAMISTUDIO_EXP_EPSM
-epsm_safe_write_byte: .res 1
-.assert epsm_safe_write_byte <= $FF, error, "epsm_safe_write_byte is too large."
-.endif
-
 famistudio_ptr0_lo = famistudio_ptr0+0
 famistudio_ptr0_hi = famistudio_ptr0+1
 famistudio_ptr1_lo = famistudio_ptr1+0
@@ -1219,21 +1214,21 @@ famistudio_init:
 @init_epsm:
 .if FAMISTUDIO_EXP_EPSM
     lda #FAMISTUDIO_EPSM_REG_TONE
-    jsr PrepareEpsmAddr0
+    sta FAMISTUDIO_EPSM_ADDR
     lda #$38 ; No noise, just 3 tones for now.
-    jsr PrepareEpsmData0
+    sta FAMISTUDIO_EPSM_DATA
     lda #$29
-    jsr PrepareEpsmAddr0
+    sta FAMISTUDIO_EPSM_ADDR
     lda #$80 
-    jsr PrepareEpsmData0
+    sta FAMISTUDIO_EPSM_DATA
     lda #$27
-    jsr PrepareEpsmAddr0
+    sta FAMISTUDIO_EPSM_ADDR
     lda #$00 
-    jsr PrepareEpsmData0
+    sta FAMISTUDIO_EPSM_DATA
     lda #$11
-    jsr PrepareEpsmAddr0
+    sta FAMISTUDIO_EPSM_ADDR
     lda #$37 
-    jsr PrepareEpsmData0
+    sta FAMISTUDIO_EPSM_DATA
 .endif
 
 .if FAMISTUDIO_EXP_MMC5
@@ -2326,19 +2321,19 @@ famistudio_epsm_channel_key_table:
 famistudio_update_epsm_fm_channel_sound:
 
     @pitch      = famistudio_ptr1
-    @reg_offset = famistudio_r2
+    @reg_offset = famistudio_r1
     @vol_offset = famistudio_r0
 
     lda #0
     sta famistudio_chn_inst_changed,y
 
     ; If the writes are done to channels 0-2, use FAMISTUDIO_EPSM_REG_SEL0 if 3-5 use FAMISTUDIO_EPSM_REG_SEL1
-    ; This reg_offset stores the difference so we can later load it into x and do jsr PrepareEpsmAddr0, x
+    ; This reg_offset stores the difference so we can later load it into x and do sta FAMISTUDIO_EPSM_REG_SEL0, x
     ; to account for the difference
     lda #0
     cpy #3
     bcc @fm_0_2
-        lda #4
+        lda #2
     @fm_0_2:
     sta @reg_offset
 
@@ -2350,27 +2345,27 @@ famistudio_update_epsm_fm_channel_sound:
 @cut:  
     ; Untrigger note.  
     lda #FAMISTUDIO_EPSM_REG_KEY
-    jsr PrepareEpsmAddr0
+    sta FAMISTUDIO_EPSM_REG_SEL0
     
     lda famistudio_epsm_channel_key_table, y
     and #$0f ; remove trigger
-    jsr PrepareEpsmData0
+    sta FAMISTUDIO_EPSM_REG_WRITE0
     
     ;Mute channel
-    ;ldx @reg_offset
+    ldx @reg_offset
     lda famistudio_epsm_fm_stereo_reg_table,y
-    jsr PrepareEpsmAddrDyn
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
     lda #$00
-    jsr PrepareEpsmDataDyn
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
     rts
 
 @nocut:
 
-    ;ldx @reg_offset
+    ldx @reg_offset
     lda famistudio_epsm_fm_stereo_reg_table,y
-    jsr PrepareEpsmAddrDyn
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
     lda famistudio_chn_epsm_fm_stereo,y
-    jsr PrepareEpsmDataDyn
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CHAN_FM_START,y
     ; Read note, apply arpeggio
     clc
@@ -2421,11 +2416,11 @@ famistudio_update_epsm_fm_channel_sound:
     @untrigger_prev_note:
         ; Untrigger note.  
         lda #FAMISTUDIO_EPSM_REG_KEY
-        jsr PrepareEpsmAddr0
+        sta FAMISTUDIO_EPSM_REG_SEL0
 
         lda famistudio_epsm_channel_key_table, y
         and #$0f ; remove trigger
-        jsr PrepareEpsmData0
+        sta FAMISTUDIO_EPSM_REG_WRITE0
         nop
         nop
         nop
@@ -2438,17 +2433,17 @@ famistudio_update_epsm_fm_channel_sound:
 
 
     ; Write pitch (hi)
-    ;ldx @reg_offset
+    ldx @reg_offset
     lda famistudio_epsm_reg_table_hi,y
-    jsr PrepareEpsmAddrDyn
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
     lda @pitch+1
-    jsr PrepareEpsmDataDyn
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
 
     ; Write pitch (lo)
     lda famistudio_epsm_reg_table_lo,y
-    jsr PrepareEpsmAddrDyn
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
     lda @pitch+0
-    jsr PrepareEpsmDataDyn
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
 
     ; Read/multiply volume
     ldx famistudio_epsm_fm_env_table,y
@@ -2483,8 +2478,8 @@ famistudio_update_epsm_fm_channel_sound:
     ; todo
     @op_1_2_3_4:
         lda famistudio_epsm_vol_table_op1,y
-        ;ldx @reg_offset
-        jsr PrepareEpsmAddrDyn
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0,x
         ldx @vol_offset
         lda famistudio_chn_epsm_vol_op1,y
         clc
@@ -2493,12 +2488,12 @@ famistudio_update_epsm_fm_channel_sound:
         bmi @save_op1
         lda #127
     @save_op1:
-        ;ldx @reg_offset
-        jsr PrepareEpsmDataDyn
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
     @op_2_3_4:
         lda famistudio_epsm_vol_table_op3,y
-        ;ldx @reg_offset
-        jsr PrepareEpsmAddrDyn
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0,x
         ldx @vol_offset
         lda famistudio_chn_epsm_vol_op3,y
         clc
@@ -2507,12 +2502,12 @@ famistudio_update_epsm_fm_channel_sound:
         bmi @save_op3
         lda #127
     @save_op3:
-        ;ldx @reg_offset
-        jsr PrepareEpsmDataDyn
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
     @op_2_4:
         lda famistudio_epsm_vol_table_op2,y
-        ;ldx @reg_offset
-        jsr PrepareEpsmAddrDyn
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0,x
         ldx @vol_offset
         lda famistudio_chn_epsm_vol_op2,y
         clc
@@ -2521,13 +2516,13 @@ famistudio_update_epsm_fm_channel_sound:
         bmi @save_op2
         lda #127
     @save_op2:
-        ;ldx @reg_offset
-        jsr PrepareEpsmDataDyn
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
     @op_4:
         ; Write volume
         lda famistudio_epsm_vol_table_op4,y
-        ;ldx @reg_offset
-        jsr PrepareEpsmAddrDyn
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0,x
         ldx @vol_offset
         lda famistudio_chn_epsm_vol_op4,y
         clc
@@ -2536,8 +2531,10 @@ famistudio_update_epsm_fm_channel_sound:
         bmi @save_op4
         lda #127
     @save_op4:
-        ;ldx @reg_offset
-        jsr PrepareEpsmDataDyn
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+		
+        nop
         clc
 		lda famistudio_chn_epsm_trigger,y
 		bpl @no_release
@@ -2545,20 +2542,20 @@ famistudio_update_epsm_fm_channel_sound:
 @release:
 		; Untrigger note.  
 		lda #FAMISTUDIO_EPSM_REG_KEY
-		jsr PrepareEpsmAddr0
+		sta FAMISTUDIO_EPSM_REG_SEL0
 
 		lda famistudio_epsm_channel_key_table, y
 		and #$0f ; remove trigger
-		jsr PrepareEpsmData0
+		sta FAMISTUDIO_EPSM_REG_WRITE0
 
 		rts
 @no_release:
         lda #0
         sta famistudio_chn_epsm_trigger,y
         lda #FAMISTUDIO_EPSM_REG_KEY
-        jsr PrepareEpsmAddr0
+        sta FAMISTUDIO_EPSM_REG_SEL0
         lda famistudio_epsm_channel_key_table, y
-        jsr PrepareEpsmData0
+        sta FAMISTUDIO_EPSM_REG_WRITE0
 
     rts
 
@@ -3876,19 +3873,15 @@ famistudio_set_s5b_instrument:
     .local @loop_extra_patch
 
     ldx #0
-	stx @temp_x
     @loop_main_patch:
-		ldx @temp_x
         lda famistudio_epsm_register_order,x
         clc
         adc @reg_offset
-        jsr select
+        sta select
         lda (@ptr),y
-        jsr write
-		ldx @temp_x
+        sta write
         iny
         inx
-		stx @temp_x
         ; we have 4 bytes in the instrument_exp instead of padding. The rest is in ex_patch
         cpx #4
         bne @loop_main_patch
@@ -3898,13 +3891,11 @@ famistudio_set_s5b_instrument:
         lda famistudio_epsm_register_order,x
         clc
         adc @reg_offset
-        jsr select
+        sta select
         lda (@ex_patch),y
-        jsr write
-		ldx @temp_x
+        sta write
         iny
         inx
-		stx @temp_x
         cpx #30
         bne @loop_extra_patch
 .endmacro
@@ -3925,7 +3916,6 @@ famistudio_set_epsm_instrument:
     @ex_patch   = famistudio_ptr1
     @reg_offset = famistudio_r0
     @chan_idx   = famistudio_r1
-	@temp_x     = famistudio_r2
 
     famistudio_set_exp_instrument
 
@@ -3955,14 +3945,12 @@ famistudio_set_epsm_instrument:
     tax
     lda famistudio_channel_epsm_chan_table,x
     sta @reg_offset
-    stx @temp_x
+    
         lda #FAMISTUDIO_EPSM_REG_KEY
-        jsr PrepareEpsmAddr0
-		ldx @temp_x
+        sta FAMISTUDIO_EPSM_REG_SEL0
         lda famistudio_epsm_channel_key_table, x
         and #$0f ; remove trigger
-        jsr PrepareEpsmData0
-		ldx @temp_x
+        sta FAMISTUDIO_EPSM_REG_WRITE0
     
     ; Now we need to store the algorithm and 1st operator volume for later use
         lda (@ptr),y
@@ -3980,15 +3968,15 @@ famistudio_set_epsm_instrument:
         dey
 
     @reg_set_0:
-        famistudio_epsm_write_patch_registers PrepareEpsmAddr0, PrepareEpsmData0
+        famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL0, FAMISTUDIO_EPSM_REG_WRITE0
     
     @last_reg:
         lda famistudio_epsm_register_order,x
         clc
         adc @reg_offset
-        jsr PrepareEpsmAddr0
+        sta FAMISTUDIO_EPSM_REG_SEL0
         lda (@ex_patch),y
-        jsr PrepareEpsmData0
+        sta FAMISTUDIO_EPSM_REG_WRITE0
         
         lda @chan_idx    
         sbc #(FAMISTUDIO_EPSM_CHAN_FM_START - 1) ; Carry is not set, so - 1.
@@ -5622,174 +5610,6 @@ famistudio_vrc7_note_table_msb:
 .endif
 
 .if FAMISTUDIO_EXP_EPSM
-.segment "BANKEDb"
-.macro write_epsm_value op1, op2, op3
-  BRK
-  STA $4016
-  .byte op1, op2, op3
-  RTS
-.endmacro
-;.align 128
-;.byte $f0, $f1, $f2, $f4, $f5, $f6
-;.align 256
-EpsmWriteHandlers:
-write_epsm_value $01, epsm_safe_write_byte-1, $60  ; ORA (epsm_safe_write_byte-1,X)
-write_epsm_value $05, epsm_safe_write_byte,   $60  ; ORA <epsm_safe_write_byte
-write_epsm_value $0A, $60,                    $60  ; ASL
-write_epsm_value $0D, epsm_safe_write_byte,   $00  ; ORA <>epsm_safe_write_byte
-write_epsm_value $10, $00,                    $60  ; BPL #$00
-write_epsm_value $15, epsm_safe_write_byte,   $60  ; ORA <epsm_safe_write_byte,X
-write_epsm_value $18, $60,                    $60  ; CLC
-write_epsm_value $1D, epsm_safe_write_byte,   $00  ; ORA <>epsm_safe_write_byte,X
-write_epsm_value $21, epsm_safe_write_byte-1, $60  ; AND (epsm_safe_write_byte-1,X)
-write_epsm_value $25, epsm_safe_write_byte,   $60  ; AND <epsm_safe_write_byte
-write_epsm_value $2A, $60,                    $60  ; ROL
-write_epsm_value $2D, epsm_safe_write_byte,   $00  ; AND <>epsm_safe_write_byte
-write_epsm_value $30, $00,                    $60  ; BMI #$00
-write_epsm_value $35, epsm_safe_write_byte,   $60  ; AND <epsm_safe_write_byte,X
-write_epsm_value $38, $60,                    $60  ; SEC
-write_epsm_value $3D, epsm_safe_write_byte,   $00  ; AND <>epsm_safe_write_byte,X
-write_epsm_value $41, epsm_safe_write_byte-1, $60  ; EOR (epsm_safe_write_byte-1,X)
-write_epsm_value $45, epsm_safe_write_byte,   $60  ; EOR <epsm_safe_write_byte
-write_epsm_value $4A, $60,                    $60  ; LSR
-write_epsm_value $4D, epsm_safe_write_byte,   $00  ; EOR <>epsm_safe_write_byte
-write_epsm_value $50, $00,                    $60  ; BVC #$00
-write_epsm_value $55, epsm_safe_write_byte,   $60  ; EOR <epsm_safe_write_byte,X
-write_epsm_value $59, $00,                    $00  ; EOR $0000,Y
-write_epsm_value $5D, epsm_safe_write_byte,   $00  ; EOR <>epsm_safe_write_byte,X
-write_epsm_value $61, epsm_safe_write_byte-1, $60  ; ADC (epsm_safe_write_byte-1,X)
-write_epsm_value $65, epsm_safe_write_byte,   $60  ; ADC <epsm_safe_write_byte
-write_epsm_value $6A, $60,                    $60  ; ROR
-write_epsm_value $6D, epsm_safe_write_byte,   $00  ; ADC <>epsm_safe_write_byte
-write_epsm_value $70, $00,                    $60  ; BVS #$00
-write_epsm_value $75, epsm_safe_write_byte,   $60  ; ADC <epsm_safe_write_byte,X
-write_epsm_value $79, $00,                    $00  ; ADC $0000,Y
-write_epsm_value $7D, epsm_safe_write_byte,   $00  ; ADC <>epsm_safe_write_byte,X
-write_epsm_value $80, $00,                    $60  ; NOP #$00 (illegal)
-write_epsm_value $86, epsm_safe_write_byte,   $60  ; STX <epsm_safe_write_byte
-write_epsm_value $8A, $60,                    $60  ; TXA
-write_epsm_value $8E, epsm_safe_write_byte,   $00  ; STX <>epsm_safe_write_byte
-write_epsm_value $90, $00,                    $60  ; BCC #$00
-write_epsm_value $95, epsm_safe_write_byte,   $60  ; STA <epsm_safe_write_byte,X
-write_epsm_value $98, $60,                    $60  ; TYA
-write_epsm_value $9D, epsm_safe_write_byte,   $00  ; STA <>epsm_safe_write_byte,X
-write_epsm_value $A2, $00,                    $60  ; LDX #$00
-write_epsm_value $A5, epsm_safe_write_byte,   $60  ; LDA <epsm_safe_write_byte
-write_epsm_value $A9, $00,                    $60  ; LDA #$00
-write_epsm_value $AD, epsm_safe_write_byte,   $00  ; LDA <>epsm_safe_write_byte
-write_epsm_value $B0, $00,                    $60  ; BCS #$00
-write_epsm_value $B5, epsm_safe_write_byte,   $60  ; LDA <epsm_safe_write_byte,X
-write_epsm_value $B8, $60,                    $60  ; CLV
-write_epsm_value $BD, epsm_safe_write_byte,   $00  ; LDA <>epsm_safe_write_byte,X
-write_epsm_value $C0, $00,                    $60  ; CPY #$00
-write_epsm_value $C5, epsm_safe_write_byte,   $60  ; CMP <epsm_safe_write_byte
-write_epsm_value $C9, $00,                    $60  ; CMP #$00
-write_epsm_value $CD, epsm_safe_write_byte,   $00  ; CMP <>epsm_safe_write_byte
-write_epsm_value $D0, $00,                    $60  ; BNE #$00
-write_epsm_value $D5, epsm_safe_write_byte,   $60  ; CMP <epsm_safe_write_byte,X
-write_epsm_value $D9, $00,                    $00  ; CMP $0000,Y
-write_epsm_value $DD, epsm_safe_write_byte,   $00  ; CMP <>epsm_safe_write_byte,X
-write_epsm_value $E0, $00,                    $60  ; CPX #$00
-write_epsm_value $E4, epsm_safe_write_byte,   $60  ; CPX <epsm_safe_write_byte
-write_epsm_value $EA, $60,                    $60  ; NOP
-write_epsm_value $EC, epsm_safe_write_byte,   $00  ; CPX <>epsm_safe_write_byte
-write_epsm_value $F0, $00,                    $60  ; BEQ #$00
-write_epsm_value $F5, epsm_safe_write_byte,   $60  ; SBC <epsm_safe_write_byte,X
-write_epsm_value $F9, $00,                    $00  ; SBC $0000,Y
-write_epsm_value $FD, epsm_safe_write_byte,   $00  ; SBC <>epsm_safe_write_byte,X
-WriteToEpsm:
-	TAX
-	ASL
-	LDA #>EpsmWriteHandlers
-	ADC #$00
-	PHA
-	TXA
-	AND #$FC
-	ASL
-	PHA
-
-	TXA
-	LDX #$00
-	STX epsm_safe_write_byte
-	RTS
-PrepareEpsmAddrDyn:
-@reg_offset = famistudio_r2
- 	PHA
-	AND #$F0
-	ORA #$2
-	ORA @reg_offset
-	jsr WriteToEpsm
-	PLA
-	ROL
-	ROL
-	ROL
-	ROL
-	AND #$F0
-	jmp WriteToEpsm
-PrepareEpsmDataDyn:
-@reg_offset = famistudio_r2
-	PHA
-	AND #$F0
-	ORA #$A
-	ORA @reg_offset
-	jsr WriteToEpsm
-	PLA
-	ROL
-	ROL
-	ROL
-	ROL
-	AND #$F0
-	jmp WriteToEpsm
-PrepareEpsmAddr0:
- 	PHA
-	AND #$F0
-	ORA #$2
-	jsr WriteToEpsm
-	PLA
-	ROL
-	ROL
-	ROL
-	ROL
-	AND #$F0
-	jmp WriteToEpsm
-PrepareEpsmData0:
-	PHA
-	AND #$F0
-	ORA #$A
-	jsr WriteToEpsm
-	PLA
-	ROL
-	ROL
-	ROL
-	ROL
-	AND #$F0
-	jmp WriteToEpsm
-PrepareEpsmAddr1:
- 	PHA
-	AND #$F0
-	ORA #$6
-	jsr WriteToEpsm
-	PLA
-	ROL
-	ROL
-	ROL
-	ROL
-	AND #$F0
-	jmp WriteToEpsm
-PrepareEpsmData1:
-	PHA
-	AND #$F0
-	ORA #$E
-	jsr WriteToEpsm
-	PLA
-	ROL
-	ROL
-	ROL
-	ROL
-	AND #$F0
-	jmp WriteToEpsm
-
-.segment .string(FAMISTUDIO_CA65_CODE_SEGMENT)
 famistudio_epsm_note_table_lsb:
     .byte $00
     .byte $9a, $a3, $ad, $b7, $c2, $cd, $da, $e7, $f4, $03, $12, $23 ; Octave 0
@@ -6445,4 +6265,3 @@ _famistudio_sfx_play:
 
 .endif
 .endif
-

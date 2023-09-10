@@ -9,7 +9,7 @@
     {
       "name": "Default Configure",
       "displayName": "Default",
-      "description": "Default configure using Ninja generator with a custom LLVM-MOS path",
+      "description": "Default config using Ninja generator with a custom LLVM-MOS path",
       "inherits": "default",
       "cacheVariables": {! "CMAKE_PREFIX_PATH": "[path/to/llvm-mos-sdk]"}
     }

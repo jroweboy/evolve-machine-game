@@ -8,8 +8,8 @@
     "configurePresets": [
       {
         "name": "default",
-        "displayName": "Default Config",
-        "description": "Default build using Ninja generator",
+        "displayName": "Default",
+        "description": "Default config using Ninja generator",
         "generator": "Ninja",
         "binaryDir": "${sourceDir}/build/",
         "cacheVariables": {

@@ -40,6 +40,7 @@ constexpr u16 SectionOffset = sizeof(Room) * ROOM_LIMIT;
 
 constexpr u8 NO_EXIT = 0xff;
 constexpr u8 EXIT_PENDING = 0xfe;
+constexpr u8 SIDE_ROOM = 0xe0;
 
 // A stack allocated page of bytes defining the map structure.
 using MapId = std::array<u8, DUNGEON_SIZE>;
@@ -83,11 +84,11 @@ static void vram_write(const u8* vals, int len) { for (int i = 0; i < len; ++i) 
 //    2
 #include <unordered_map>
 static std::unordered_map<u8, std::wstring> LUT { 
-    {0b0000, L"◼"},
-    {0b0001, L"◀"},
-    {0b0010, L"▼"},
-    {0b0100, L"▲"},
-    {0b1000, L"▶"},
+    {0b0000, L"╳"}, // THIS SHOULDN'T HAPPEN EXCEPT THE ROOT ON THE FIRST ITERATION
+    {0b0001, L"▽"},
+    {0b0010, L"◁"},
+    {0b0100, L"△"},
+    {0b1000, L"▷"},
     {0b0011, L"╚"},
     {0b0101, L"║"},
     {0b1001, L"╝"},
@@ -110,7 +111,7 @@ static void dump_map(const MapId& map, const MapId& to_fill) {
             auto filling = std::find(to_fill.begin(), to_fill.end(), id);
             if (map[id] == NO_EXIT) {
                 first << ((filling != to_fill.end()) ? L"▧" : L"◦");
-                second << L"◦";
+                second << L"·";
             } else {
                 u16 start = SectionOffset + (u16)id * sizeof(Section) + offsetof(Section, exit);
                 u8 out = 0;
@@ -120,10 +121,10 @@ static void dump_map(const MapId& map, const MapId& to_fill) {
                 for (u8 k = 0; k < 4; ++k) {
                     u8 exit_id = vram[start + k];
                     if (exit_id < DUNGEON_SIZE) {
-                        if (exit_id == id) {
+                        if (map[exit_id] == map[id]) {
                             has_side = true;
                         }
-                        out |= 1 << (3 - k);
+                        out |= 1 << k;
                     }
                     /*if (exit_id == EXIT_PENDING) {
                         has_unmatched = true;
@@ -271,10 +272,10 @@ static void add_sections_to_fill(Section& section, MapId& to_fill, u8& fill_writ
     }
 }
 
-static void update_section_exits(Section& section, u8 me) {
+static void update_section_exits(const MapId& map, Section& section, u8 me) {
     for (u8 i = 0; i < 4; ++i) {
         u8 neighbor = GetNeighborId(me, i);
-        if (neighbor == NO_EXIT) continue;
+        if (neighbor >= DUNGEON_SIZE || map[neighbor] == NO_EXIT) continue;
 
         // if we have a neighbor that was waiting for us to add the exit, then
         // update their exits now. Get the direction *from* me to the neighbor
@@ -367,7 +368,7 @@ void generate_dungeon() {
         // Step 2: Update the neighboring room's exits.
         // Load each of the neighbor rooms and see if what their exit looks like.
         // If its EXIT_PENDING, then its ready for us to overwrite it with our ID
-        update_section_exits(lead, lead_id);
+        update_section_exits(map, lead, lead_id);
 
         ////////////////////
         // Step 3: Randomly add sections to fill (try for at least one)
@@ -384,18 +385,6 @@ void generate_dungeon() {
         }
         bool has_side = side_id < DUNGEON_SIZE;
 
-        if (has_side) {
-            // if we have a side cell, then we should update its neighbors exits
-            map[side_id] = id;
-            room.side_id = side_id;
-            side.room_id = id;
-            for (auto& num : side.exit) { num = 0xff; }
-
-            update_section_exits(side, side_id);
-
-            // And also try to add new rooms to fill
-            add_sections_to_fill(side, to_fill, fill_write, side_id);
-        }
 
 
         ///////////////////
@@ -411,7 +400,11 @@ void generate_dungeon() {
             u8 dir = GetDirection(side_id, lead_id);
             lead.nametable = LeadLUT[dir];
             side.nametable = SideLUT[dir];
-        } else {
+            
+            // Since we know we have a side and we know the direction, update this info here
+            lead.exit[dir] = side_id;
+        }
+        else {
             lead.nametable = 0;
         }
 
@@ -420,6 +413,22 @@ void generate_dungeon() {
         // Step 5: Generate spawns for both the lead and side rooms
         generate_room_spawns();
 
+        // write out the lead section. we need to do this before the side because
+        // we will update the neighbor afterwards
+        write_section_lead(room.lead_id);
+
+        if (has_side) {
+            // if we have a side cell, then we should update its neighbors exits
+            map[side_id] = id;
+            room.side_id = side_id;
+            side.room_id = id;
+            for (auto& num : side.exit) { num = 0xff; }
+
+            update_section_exits(map, side, side_id);
+
+            // And also try to add new rooms to fill
+            add_sections_to_fill(side, to_fill, fill_write, side_id);
+        }
         //auto room_location = room_id * 0x100;
         //auto offset = room_location + offsetof(Room, lead_pos);
 
@@ -456,8 +465,6 @@ void generate_dungeon() {
 
         write_room_to_chrram(id);
 
-        // also write out the current sections
-        write_section_lead(room.lead_id);
         if (has_side) {
             write_section_side(room.side_id);
         }

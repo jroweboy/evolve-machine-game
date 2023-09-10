@@ -10,7 +10,6 @@
 // enum class 
 
 #include <array>
-#include <climits>
 #include "map.hpp"
 
 #ifndef NES
@@ -56,6 +55,8 @@ static constexpr u8 GetDirection(u8 me, u8 neighbor) {
         return 0;
     case DUNGEON_WIDTH:
         return 2;
+    default:
+        return NO_EXIT;
     }
 }
 
@@ -100,16 +101,17 @@ static std::unordered_map<u8, std::wstring> LUT {
     {0b1111, L"╬"},
 };
 
-static void dump_map(const MapId& map) {
+static void dump_map(const MapId& map, const MapId& to_fill) {
     std::wstringstream first;
     for (int i = 0; i < DUNGEON_HEIGHT; i++) {
         std::wstringstream second;
         for (int j = 0; j < DUNGEON_WIDTH; j++) {
-            if (map[i * DUNGEON_HEIGHT + j] == NO_EXIT) {
-                first << L"◦";
+            u8 id = i * DUNGEON_HEIGHT + j;
+            auto filling = std::find(to_fill.begin(), to_fill.end(), id);
+            if (map[id] == NO_EXIT) {
+                first << ((filling != to_fill.end()) ? L"▧" : L"◦");
                 second << L"◦";
             } else {
-                u8 id = i * DUNGEON_HEIGHT + j;
                 u16 start = SectionOffset + (u16)id * sizeof(Section) + offsetof(Section, exit);
                 u8 out = 0;
 
@@ -118,11 +120,10 @@ static void dump_map(const MapId& map) {
                 for (u8 k = 0; k < 4; ++k) {
                     u8 exit_id = vram[start + k];
                     if (exit_id < DUNGEON_SIZE) {
-
-                        if (exit_id == map[id]) {
+                        if (exit_id == id) {
                             has_side = true;
                         }
-                        out |= 1 << k;
+                        out |= 1 << (3 - k);
                     }
                     /*if (exit_id == EXIT_PENDING) {
                         has_unmatched = true;
@@ -133,7 +134,7 @@ static void dump_map(const MapId& map) {
                 second << ((has_side) ? L'b' : L'a');
             }
         }
-        first << "\t" << second.str() << std::endl;
+        first << "  " << second.str() << std::endl;
     }
     first << std::endl;
     //second << std::endl;
@@ -242,7 +243,7 @@ static u8 get_side_cell(const MapId& map, u8 position) {
         i--;
     }
     // Uh-oh all the side cells are full!
-    return 0xff;
+    return NO_EXIT;
 }
 
 // Load up stuff into the current room
@@ -276,9 +277,9 @@ static void update_section_exits(Section& section, u8 me) {
         if (neighbor == NO_EXIT) continue;
 
         // if we have a neighbor that was waiting for us to add the exit, then
-        // update their exits now. Get the direction *from* the neighbor to this
+        // update their exits now. Get the direction *from* me to the neighbor
         // section and write that.
-        u8 direction = GetDirection(neighbor, me);
+        u8 direction = GetDirection(me, neighbor);
         bool updated = update_section_exit(neighbor, direction, me);
         // and then if the neighbor was pending a new room, update our exit
         // with the opposite direction
@@ -323,8 +324,8 @@ void generate_dungeon() {
 
     // clear out the exits for the room sections. we'll update the exits with
     // the ids to the next rooom when we process that room.
-    lead.exit = {};
-    side.exit = {};
+    for (auto& num : lead.exit) { num = 0xff; }
+    for (auto& num : side.exit) { num = 0xff; }
 
     // Keep trying to add rooms to the todo list until we actually add one.
     while (fill_read == fill_write) {
@@ -344,7 +345,7 @@ void generate_dungeon() {
     std::wcout << L"id: " << id << std::endl;
     std::wcout << L"fill_read: " << fill_read << std::endl;
     std::wcout << L"fill_write: " << fill_write << std::endl;
-    dump_map(map);
+    dump_map(map, to_fill);
 #endif
 
     while ((++id) < ROOM_LIMIT && fill_read < fill_write) {
@@ -360,6 +361,7 @@ void generate_dungeon() {
         map[lead_id] = id;
         room.lead_id = lead_id;
         lead.room_id = id;
+        for (auto& num : lead.exit) { num = 0xff; }
 
         ////////////////////
         // Step 2: Update the neighboring room's exits.
@@ -385,8 +387,10 @@ void generate_dungeon() {
         if (has_side) {
             // if we have a side cell, then we should update its neighbors exits
             map[side_id] = id;
-            side.room_id = id;
             room.side_id = side_id;
+            side.room_id = id;
+            for (auto& num : side.exit) { num = 0xff; }
+
             update_section_exits(side, side_id);
 
             // And also try to add new rooms to fill
@@ -494,14 +498,14 @@ void generate_dungeon() {
         std::wcout << L"id: " << id << std::endl;
         std::wcout << L"fill_read: " << fill_read << std::endl;
         std::wcout << L"fill_write: " << fill_write << std::endl;
-        dump_map(map);
+        dump_map(map, to_fill);
 #endif
     }
 #ifndef NES
     std::wcout << L"id: " << id << std::endl;
     std::wcout << L"fill_read: " << fill_read << std::endl;
     std::wcout << L"fill_write: " << fill_write << std::endl;
-    dump_map(map);
+    dump_map(map, to_fill);
 #endif
 }
 

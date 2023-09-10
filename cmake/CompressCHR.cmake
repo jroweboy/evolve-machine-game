@@ -38,5 +38,5 @@ function(compress_chr)
   )
   add_library(CompressedCHR ${outputfiles})
   set_target_properties(CompressedCHR PROPERTIES LINKER_LANGUAGE CXX)
-
+  target_include_directories(CompressedCHR PUBLIC ${COMPRESS_CHR_DEST})
 endfunction()

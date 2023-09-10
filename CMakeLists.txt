@@ -66,9 +66,9 @@ target_compile_definitions(${ROM} PRIVATE NES)
 target_include_directories(${ROM} PRIVATE gen)
 
 include(CompressCHR)
-compress_chr(SRC ${CMAKE_SOURCE_DIR}/chr/raw DEST ${CMAKE_CURRENT_BINARY_DIR}/gen/chr)
+compress_chr(SRC ${CMAKE_SOURCE_DIR}/chr/raw DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 include(GenerateCA65Binary)
-generate_ca65_binary(SRC ${CMAKE_SOURCE_DIR}/ca65bin DEST ${CMAKE_CURRENT_BINARY_DIR}/gen/ca65)
+generate_ca65_binary(SRC ${CMAKE_SOURCE_DIR}/ca65bin DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 
 target_link_libraries(${ROM} PRIVATE
     # first-party

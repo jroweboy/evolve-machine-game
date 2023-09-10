@@ -30,6 +30,9 @@ constexpr u8 DUNGEON_WIDTH = 8;
 constexpr u8 DUNGEON_HEIGHT = 8;
 constexpr u8 DUNGEON_SIZE = DUNGEON_WIDTH * DUNGEON_HEIGHT;
 
+static constexpr u8 LeadLUT[4] = { 0x20, 0x24, 0x28, 0x20 };
+static constexpr u8 SideLUT[4] = { 0x28, 0x20, 0x20, 0x24 };
+
 // TODO maybe increase the room limit each level you beat?
 constexpr u8 ROOM_LIMIT = 32;
 
@@ -44,14 +47,14 @@ using MapId = std::array<u8, DUNGEON_SIZE>;
 using Exits = std::array<u8, ROOM_LIMIT>;
 
 static constexpr u8 GetDirection(u8 me, u8 neighbor) {
-    switch (me - neighbor) {
+    switch ((s8)me - (s8)neighbor) {
     case -1:
         return 3;
     case 1:
         return 1;
-    case -16:
+    case -DUNGEON_WIDTH:
         return 0;
-    case 16:
+    case DUNGEON_WIDTH:
         return 2;
     }
 }
@@ -63,6 +66,9 @@ static constexpr u8 OppositeDirection(u8 direction) {
 #ifndef NES
 u16 addr;
 u8 vram[0x2000] = {};
+void init() {
+    for (int i = 0; i < 0x2000; ++i) vram[i] = 0xff;
+}
 Room room;
 Section lead;
 Section side;
@@ -96,35 +102,44 @@ static std::unordered_map<u8, std::wstring> LUT {
 
 static void dump_map(const MapId& map) {
     std::wstringstream first;
-    std::wstringstream second;
     for (int i = 0; i < DUNGEON_HEIGHT; i++) {
+        std::wstringstream second;
         for (int j = 0; j < DUNGEON_WIDTH; j++) {
             if (map[i * DUNGEON_HEIGHT + j] == NO_EXIT) {
-                first << "  ";
-                second << "  ";
+                first << L"◦";
+                second << L"◦";
             } else {
-                u8 id = map[i * DUNGEON_HEIGHT + j];
-                u8 start = SectionOffset + id * sizeof(Section) + offsetof(Section, exit);
+                u8 id = i * DUNGEON_HEIGHT + j;
+                u16 start = SectionOffset + (u16)id * sizeof(Section) + offsetof(Section, exit);
                 u8 out = 0;
+
+                bool has_side = false;
+                bool has_unmatched = false;
                 for (u8 k = 0; k < 4; ++k) {
-                    if (vram[start + k] == id) {
-                        second << "b";
-                    }
-                    else if (vram[start + k] < DUNGEON_SIZE) {
+                    u8 exit_id = vram[start + k];
+                    if (exit_id < DUNGEON_SIZE) {
+
+                        if (exit_id == map[id]) {
+                            has_side = true;
+                        }
                         out |= 1 << k;
                     }
+                    /*if (exit_id == EXIT_PENDING) {
+                        has_unmatched = true;
+                    }*/
                 }
-                first << LUT[out];
+
+                first << ((has_unmatched) ? L"◳" : LUT[out]);
+                second << ((has_side) ? L'b' : L'a');
             }
         }
-        first << std::endl;
-        second << std::endl;
+        first << "\t" << second.str() << std::endl;
     }
     first << std::endl;
-    second << std::endl;
+    //second << std::endl;
 
     std::wcout << first.str() << std::endl;
-    std::wcout << second.str() << std::endl;
+    //std::wcout << second.str() << std::endl;
 
 }
 #endif
@@ -138,9 +153,9 @@ static u8 GetNeighborId(u8 me, u8 direction) {
     switch (direction) {
         // The y bounds check will happen after the function by checking if its < DUNGEON_WIDTH * DUNGEON_HEIGHT
     case 0:
-        return me - 16;
+        return me - DUNGEON_WIDTH;
     case 2:
-        return me + 16;
+        return me + DUNGEON_WIDTH;
     case 1:
         if (me == DUNGEON_WIDTH - 1)
             return 0xff;
@@ -159,7 +174,7 @@ static u8 GetNeighborId(u8 me, u8 direction) {
 // if its EXIT_PENDING or return false if theres no exit
 static bool update_section_exit(u8 my_id, u8 direction, u8 new_exit) {
     // Read out this particular exit from the section
-    auto offset = SectionOffset + my_id * sizeof(Section) + offsetof(Section, exit) + direction;
+    u16 offset = SectionOffset + my_id * sizeof(Section) + offsetof(Section, exit) + direction;
     vram_adr(offset);
     u8 exit;
     vram_read(&exit, 1);
@@ -205,10 +220,6 @@ static void write_room_to_chrram(u8 id) {
 
     const u8* cast = reinterpret_cast<const u8*>(&room);
     vram_write(cast, sizeof(Room));
-
-    // also write out the current sections
-    write_section_lead(room.lead_id);
-    write_section_side(room.side_id);
 }
 
 // Loads the exit data for a different room in the map
@@ -243,10 +254,7 @@ static void generate_room_spawns() {
 static void add_sections_to_fill(Section& section, MapId& to_fill, u8& fill_write, u8 me) {
 
     // Get a random list of exits to leave from in this first room
-    u8 todo = 0;
-    while (todo == 0) {
-        todo = ((u8)rand()) & 0b11;
-    }
+    u8 todo = ((u8)rand()) & 0b1111;
     // Add all of the new exits to the todo list so we can fill them
     for (u8 i = 0; i < 4; ++i) {
         // If we didn't roll a random number that has an exit at this spot, skip it
@@ -265,7 +273,7 @@ static void add_sections_to_fill(Section& section, MapId& to_fill, u8& fill_writ
 static void update_section_exits(Section& section, u8 me) {
     for (u8 i = 0; i < 4; ++i) {
         u8 neighbor = GetNeighborId(me, i);
-        if (neighbor != EXIT_PENDING) continue;
+        if (neighbor == NO_EXIT) continue;
 
         // if we have a neighbor that was waiting for us to add the exit, then
         // update their exits now. Get the direction *from* the neighbor to this
@@ -329,7 +337,17 @@ void generate_dungeon() {
     // and then save our first room to CHR RAM.
     write_room_to_chrram(id);
 
-    while (id < ROOM_LIMIT && fill_read < fill_write) {
+    // also write out the current sections
+    write_section_lead(room.lead_id);
+    write_section_side(room.side_id);
+#ifndef NES
+    std::wcout << L"id: " << id << std::endl;
+    std::wcout << L"fill_read: " << fill_read << std::endl;
+    std::wcout << L"fill_write: " << fill_write << std::endl;
+    dump_map(map);
+#endif
+
+    while ((++id) < ROOM_LIMIT && fill_read < fill_write) {
         ////////////////////
         // Step 1: Find the next room's position.
         // Read the next item on the todo list and add another room.
@@ -339,6 +357,7 @@ void generate_dungeon() {
             // If we did its fine to just skip it
             continue;
         }
+        map[lead_id] = id;
         room.lead_id = lead_id;
         lead.room_id = id;
 
@@ -365,6 +384,7 @@ void generate_dungeon() {
 
         if (has_side) {
             // if we have a side cell, then we should update its neighbors exits
+            map[side_id] = id;
             side.room_id = id;
             room.side_id = side_id;
             update_section_exits(side, side_id);
@@ -373,8 +393,28 @@ void generate_dungeon() {
             add_sections_to_fill(side, to_fill, fill_write, side_id);
         }
 
+
+        ///////////////////
+        // Step 4: Determine which room goes in what nametable each room belongs
+        // The map drawing routine needs to know what nametable is when laying it out
+        // so that it can pick the right art base for it.
+
+        if (has_side) {
+            // Lookup table to get the nametable from the direction.
+            // I did the GetDirection backwards so it lines up that the
+            // lead will be up and left in this setup. (So if direction is UP,
+            // then the lead is the first nametable.)
+            u8 dir = GetDirection(side_id, lead_id);
+            lead.nametable = LeadLUT[dir];
+            side.nametable = SideLUT[dir];
+        } else {
+            lead.nametable = 0;
+        }
+
+
         ////////////////////
-        // Step 4:
+        // Step 5: Generate spawns for both the lead and side rooms
+        generate_room_spawns();
 
         //auto room_location = room_id * 0x100;
         //auto offset = room_location + offsetof(Room, lead_pos);
@@ -408,8 +448,15 @@ void generate_dungeon() {
         //room.side_pos = new_side;
 
         ////////////////
+        // Step 6: Save them to disk
 
         write_room_to_chrram(id);
+
+        // also write out the current sections
+        write_section_lead(room.lead_id);
+        if (has_side) {
+            write_section_side(room.side_id);
+        }
 
 
         //for (u8 i = 0; i < 4; ++i) {
@@ -443,17 +490,32 @@ void generate_dungeon() {
         //    assert(true, "test1");
         //}
         // TODO: we should check to see if this ever fails. assert would be nice here
+#ifndef NES
+        std::wcout << L"id: " << id << std::endl;
+        std::wcout << L"fill_read: " << fill_read << std::endl;
+        std::wcout << L"fill_write: " << fill_write << std::endl;
+        dump_map(map);
+#endif
     }
 #ifndef NES
+    std::wcout << L"id: " << id << std::endl;
+    std::wcout << L"fill_read: " << fill_read << std::endl;
+    std::wcout << L"fill_write: " << fill_write << std::endl;
     dump_map(map);
 #endif
 }
 
 #ifndef NES
+#include <io.h>
+#include <fcntl.h>
 int main()
 {
-    //srand(0);
-    srand(time(NULL));
+
+    init();
+    // srand(time(NULL));
+    srand(0);
+    //system("chcp 65001");
+    _setmode(_fileno(stdout), _O_U16TEXT);
     generate_dungeon();
 }
 #endif

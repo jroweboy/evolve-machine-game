@@ -334,8 +334,9 @@ void generate_dungeon() {
         add_sections_to_fill(lead, to_fill, fill_write, lead_id);
     }
 
+    // We need to hard code the item spawns in the room.
     // spawn random things into the room itself
-    generate_room_spawns();
+    //generate_room_spawns();
 
     // and then save our first room to CHR RAM.
     write_room_to_chrram(id);

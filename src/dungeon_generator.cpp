@@ -110,7 +110,7 @@ static void dump_map(const MapId& map, const MapId& to_fill) {
             u8 id = i * DUNGEON_HEIGHT + j;
             auto filling = std::find(to_fill.begin(), to_fill.end(), id);
             if (map[id] == NO_EXIT) {
-                first << ((filling != to_fill.end()) ? L"▧" : L"◦");
+                first << ((filling != to_fill.end()) ? L"▧" : L"·");
                 second << L"·";
             } else {
                 u16 start = SectionOffset + (u16)id * sizeof(Section) + offsetof(Section, exit);
@@ -159,11 +159,11 @@ static u8 GetNeighborId(u8 me, u8 direction) {
     case 2:
         return me + DUNGEON_WIDTH;
     case 1:
-        if (me == DUNGEON_WIDTH - 1)
+        if ((me & 0b111) == DUNGEON_WIDTH - 1)
             return 0xff;
         return me + 1;
     case 3:
-        if (me == 0)
+        if ((me & 0b111) == 0)
             return 0xff;
         return me - 1;
     default:
@@ -260,7 +260,8 @@ static void add_sections_to_fill(Section& section, MapId& to_fill, u8& fill_writ
     // Add all of the new exits to the todo list so we can fill them
     for (u8 i = 0; i < 4; ++i) {
         // If we didn't roll a random number that has an exit at this spot, skip it
-        if ((todo & (1 << i)) == 0) continue;
+        // if we rolled a side that already has an exit skip it.
+        if ((todo & (1 << i)) == 0 || section.exit[i] < DUNGEON_SIZE) continue;
 
         u8 map_pos = GetNeighborId(me, i);
         // If the index goes out of bounds, then skip it too
@@ -333,8 +334,9 @@ void generate_dungeon() {
         add_sections_to_fill(lead, to_fill, fill_write, lead_id);
     }
 
+    // We need to hard code the item spawns in the room.
     // spawn random things into the room itself
-    generate_room_spawns();
+    //generate_room_spawns();
 
     // and then save our first room to CHR RAM.
     write_room_to_chrram(id);
@@ -429,78 +431,16 @@ void generate_dungeon() {
             // And also try to add new rooms to fill
             add_sections_to_fill(side, to_fill, fill_write, side_id);
         }
-        //auto room_location = room_id * 0x100;
-        //auto offset = room_location + offsetof(Room, lead_pos);
-
-        //u8 lead_pos, side_pos;
-        //vram_adr(offset);
-        //vram_read(&lead_pos, 1);
-        //vram_read(&side_pos, 1);
-
-
-        //offset = room_location + offsetof(Room, exit);
-        //std::array<u8, 8> exit;
-        //std::array<u8, 8> entrance;
-        //vram_adr(offset);
-        //vram_read(&*exit.begin(), 8);
-        //vram_read(&*entrance.begin(), 8);
-
-
-        /////////////////
-        //// Step 4: Generate a side room (or not randomly)
-        //u8 new_side = 0xff;
-        //// Give a room a 25% chance to become a single size room
-        //if ((rand() & 0b11) != 0b11) {
-        //    new_side = get_side_cell(map, new_main);
-        //}
-
-        //map[lead_pos] = new_lead;
-        //map[side_pos] = new_side;
-        //room.room_id = id;
-        //room.lead_pos = new_position;
-        //room.side_pos = new_side;
 
         ////////////////
         // Step 6: Save them to disk
-
-        write_room_to_chrram(id);
 
         if (has_side) {
             write_section_side(room.side_id);
         }
 
+        write_room_to_chrram(id);
 
-        //for (u8 i = 0; i < 4; ++i) {
-        //    u8 neighbor_id = map[GetIdx(position, i)];
-        //    if (neighbor_id != 0 && neighbor_id != room_id) {
-        //        lead_exit[i] = neighbor_id;
-        //    }
-        //}
-        //for (u8 i = 0; i < 4; ++i) {
-        //    u8 neighbor_id = map[GetIdx(position, i)];
-        //    if (neighbor_id != 0 && neighbor_id != room_id) {
-        //        side_exit[i] = neighbor_id;
-        //    }
-        //}
-
-        //// update the exit
-        //vram_adr(offset);
-        //vram_write(&*lead_exit.begin(), 4);
-        //vram_write(&*side_exit.begin(), 4);
-        //// Try and find an opening for the next room. randomly check either the side or the main spot for available neighbors.
-        //// No side spots available here, so we need to back up and try the previous slot
-        //if (!has_side) {
-        //    // assert(true, "test3");
-        //    u8 neighbor = rand();
-        //    u8& pos_or_side = (neighbor & 0b10000000) ? prev_position : prev_side;
-        //    if (!(has_side = get_side_cell(map, pos_or_side, new_position))) {
-        //        has_side = get_side_cell(map, (neighbor & 0b10000000) ? prev_side : prev_position, new_position);
-        //    }
-        //}
-        //if (!has_side) {
-        //    assert(true, "test1");
-        //}
-        // TODO: we should check to see if this ever fails. assert would be nice here
 #ifndef NES
         std::wcout << L"id: " << id << std::endl;
         std::wcout << L"fill_read: " << fill_read << std::endl;
@@ -523,8 +463,8 @@ int main()
 {
 
     init();
-    // srand(time(NULL));
-    srand(0);
+    srand(time(NULL));
+    //srand(0);
     //system("chcp 65001");
     _setmode(_fileno(stdout), _O_U16TEXT);
     generate_dungeon();

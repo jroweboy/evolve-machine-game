@@ -1,10 +1,13 @@
 
 function(compress_chr)
   set(options)
-  set(oneValueArgs SRC DEST)
+  set(oneValueArgs TARGET SRC DEST)
   set(multiValueArgs)
   cmake_parse_arguments(COMPRESS_CHR "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+  if (NOT COMPRESS_CHR_TARGET)
+    message(FATAL_ERROR "Compressed CHR Gen TARGET is required!")
+  endif()
   if (NOT COMPRESS_CHR_SRC)
     message(FATAL_ERROR "Compressed CHR Gen SRC folder is required!")
   endif()
@@ -32,7 +35,12 @@ function(compress_chr)
     DEPENDS ${infiles}
     COMMENT "Generating compressed CHR files into gen folder"
   )
+
   add_library(CompressedCHR ${outfiles})
   set_target_properties(CompressedCHR PROPERTIES LINKER_LANGUAGE CXX)
   target_include_directories(CompressedCHR PUBLIC ${COMPRESS_CHR_DEST})
+
+  foreach(FILE IN ITEMS ${outfiles})
+    set_source_files_properties(${COMPRESS_CHR_TARGET} PROPERTIES OBJECT_DEPENDS ${FILE})
+  endforeach()
 endfunction()

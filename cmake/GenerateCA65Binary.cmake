@@ -1,10 +1,13 @@
 
 function(generate_ca65_binary)
   set(options)
-  set(oneValueArgs SRC DEST)
+  set(oneValueArgs TARGET SRC DEST)
   set(multiValueArgs)
   cmake_parse_arguments(GEN_BINARY "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+  if (NOT GEN_BINARY_TARGET)
+    message(FATAL_ERROR "CA65 Build TARGET is required!")
+  endif()
   if (NOT GEN_BINARY_SRC)
     message(FATAL_ERROR "CA65 Build SRC folder is required!")
   endif()
@@ -17,7 +20,7 @@ function(generate_ca65_binary)
   # set(ca65_artifacts ${GEN_BINARY_DEST}/ca65_build_output.h)
   # file(GLOB outputfiles "${GEN_BINARY_SRC}/*.chr")
   # list(TRANSFORM outputfiles REPLACE "${GEN_BINARY_SRC}/(.*)\.chr" "${GEN_BINARY_DEST}/\\1\.bin")
-  set(outputfiles ${DEST}/prg8.bin ${DEST}/prgc.bin)
+  set(outfiles ${DEST}/prg8.bin ${DEST}/prgc.bin)
 
   find_package(Python3 REQUIRED)
   # find_file(bin2h NAMES bin2h bin2h.py)
@@ -30,7 +33,7 @@ function(generate_ca65_binary)
   find_program(GENCA65BIN_CL65 cl65 REQUIRED HINTS ${GEN_BINARY_SRC})
 
   add_custom_command(
-    OUTPUT ${outputfiles}
+    OUTPUT ${outfiles}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${out}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DEST}
@@ -47,8 +50,12 @@ function(generate_ca65_binary)
     DEPENDS ${GEN_BINARY_SRC}/donut.s
     COMMENT "Building CA65 artifacts and copying to gen folder"
   )
-  message("${compressor_script} ${GEN_BINARY_SRC}/evolve_machine.s ${GEN_BINARY_SRC}/famistudio_ca65.s ${GEN_BINARY_SRC}/llvm.cfg ${GEN_BINARY_SRC}/music.s ${GEN_BINARY_SRC}/donut.s")
-  add_library(GeneratedCA65Binaries ${outputfiles})
+
+  add_library(GeneratedCA65Binaries ${outfiles})
   set_target_properties(GeneratedCA65Binaries PROPERTIES LINKER_LANGUAGE CXX)
   target_include_directories(GeneratedCA65Binaries PUBLIC ${GEN_BINARY_DEST})
+  
+  foreach(FILE IN ITEMS ${outfiles})
+    set_source_files_properties(${GEN_BINARY_TARGET} PROPERTIES OBJECT_DEPENDS ${FILE})
+  endforeach()
 endfunction()

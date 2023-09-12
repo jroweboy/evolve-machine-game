@@ -3,12 +3,13 @@
 #include <nesdoug.h>
 #include <neslib.h>
 
-#include "chr.hpp"
+#include "common.hpp"
 #include "music.hpp"
 #include "rand.hpp"
 #include "title_screen.hpp"
 
-extern const char title_screen_bin;
+extern const char title_chr[];
+extern const char title_bin[];
 
 constexpr char background_pal[] = {
     0x0f, 0x16, 0x27, 0x2d,
@@ -28,10 +29,10 @@ namespace Titlescreen {
         // set the address to the start of CHR RAM and decompress the CHR
         set_chr_bank(0);
         vram_adr(0x00);
-        donut_decompress(&title_screen_bin);
+        donut_decompress(&title_chr);
 
         vram_adr(NAMETABLE_A);
-        vram_unrle(CHR::titlescreen_nametable);
+        donut_decompress(&title_bin);
 
         pal_bg(background_pal);
         pal_bright(0);
@@ -49,7 +50,8 @@ namespace Titlescreen {
             Rng::seed(nullptr);
             pal_fade_to(4, 0);
             play_song(Song::StopMusic);
-            game_mode = GameMode::GenerateDungeon;
+            // game_mode = GameMode::GenerateDungeon;
+            game_mode = GameMode::MapLoader;
             return;
         }
         // TODO: add a set seed option?

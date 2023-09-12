@@ -434,7 +434,7 @@ def main(argv=None):
     import argparse
 
     parser = argparse.ArgumentParser(description='Donut NES Codec', usage='%(prog)s [options] [-d] input [-o] output')
-    parser.add_argument('--version', action='version', version='%(prog)s 1.7')
+    parser.add_argument('--version', action='version', version='%(prog)s 1.7.1')
     parser.add_argument('input', metavar='files', help='Path to the folder with the input files')
     parser.add_argument('output', metavar='FILE', help='Path to the output folder')
     parser.add_argument('-d', '--decompress', help='decompress the input files', action='store_true')
@@ -459,7 +459,7 @@ def main(argv=None):
     indir = Path(options.input)
     outdir = Path(options.output)
     outdir.mkdir(parents=True, exist_ok=True)
-    for fn in indir.glob("*.chr"):
+    for fn in indir.glob("*"):
         with FileIterContextHack(outdir.joinpath(fn.stem + '.bin'), output_file_mode, ask_for_overwrite) as output_file:
             total_input_bytes = 0
             total_output_bytes = 0

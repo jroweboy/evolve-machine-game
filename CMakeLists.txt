@@ -47,9 +47,7 @@ add_link_options(
 set(ROM ${CMAKE_PROJECT_NAME}.nes)
 add_executable(${ROM}
     src/ca65.s
-    src/chr.cpp
-    src/chr.hpp
-    src/chr.s
+    src/graphics.s
     src/common.hpp
     src/dungeon_generator.cpp
     src/dungeon_generator.hpp
@@ -65,14 +63,14 @@ target_compile_definitions(${ROM} PRIVATE NES)
 
 target_include_directories(${ROM} PRIVATE gen)
 
-include(CompressCHR)
-compress_chr(TARGET ${CMAKE_SOURCE_DIR}/src/chr.s SRC ${CMAKE_SOURCE_DIR}/chr/raw DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 include(GenerateCA65Binary)
 generate_ca65_binary(TARGET ${CMAKE_SOURCE_DIR}/src/ca65.s SRC ${CMAKE_SOURCE_DIR}/ca65bin DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
+include(BuildNESTiles)
+build_nes_tiles(TARGET ${CMAKE_SOURCE_DIR}/src/graphics.s SRC ${CMAKE_SOURCE_DIR}/chr DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 target_include_directories(${ROM} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen)
 
 target_link_libraries(${ROM} PRIVATE
-    CompressedCHR
+    GraphicsAssets
     GeneratedCA65Binaries
     # Second-party, included in llvm-mos
     neslib

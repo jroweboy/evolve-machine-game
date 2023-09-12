@@ -84,7 +84,7 @@ static void vram_write(const u8* vals, int len) { for (int i = 0; i < len; ++i) 
 //    2
 #include <unordered_map>
 static std::unordered_map<u8, std::wstring> LUT { 
-    {0b0000, L"╳"}, // THIS SHOULDN'T HAPPEN EXCEPT THE ROOT ON THE FIRST ITERATION
+    {0b0000, L"╳"},
     {0b0001, L"▽"},
     {0b0010, L"◁"},
     {0b0100, L"△"},
@@ -126,11 +126,13 @@ static void dump_map(const MapId& map, const MapId& to_fill) {
                         }
                         out |= 1 << k;
                     }
-                    /*if (exit_id == EXIT_PENDING) {
-                        has_unmatched = true;
-                    }*/
+                    //if (exit_id == EXIT_PENDING) {
+                    //    has_unmatched = true;
+                    //}
                 }
-
+                if (map[id] == 0) {
+                    out = 0; // Keep the start location drawn with an X
+                }
                 first << ((has_unmatched) ? L"◳" : LUT[out]);
                 second << ((has_side) ? L'b' : L'a');
             }

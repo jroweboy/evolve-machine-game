@@ -4,13 +4,13 @@
 #include <neslib.h>
 #include <peekpoke.h>
 
-#include "chr.hpp"
 #include "map_loader.hpp"
 #include "map.hpp"
 #include "music.hpp"
 #include "rand.hpp"
 
-extern const char test_map_bin;
+extern const char room_chr[];
+extern const char start_bin[];
 
 Room room;
 Section lead;
@@ -37,12 +37,12 @@ namespace MapLoader {
         
         set_chr_bank(0);
         vram_adr(0x00);
-        donut_decompress(&test_map_bin);
+        donut_decompress(&room_chr);
 
         vram_adr(NAMETABLE_A);
-        vram_unrle(CHR::test_bg_nametable1);
-        vram_adr(NAMETABLE_B);
-        vram_unrle(CHR::test_bg_nametable2);
+        donut_decompress(&start_bin);
+        // vram_adr(NAMETABLE_B);
+        // vram_unrle(CHR::test_bg_nametable2);
 
         pal_bg(background_pal);
         pal_bright(0);

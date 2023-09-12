@@ -45,7 +45,7 @@ check_for_song_change:
     beq continue_playing_song
         ; song changed so switch to the new track
         sta current_song
-        jsr famistudio_music_play 
+        jsr famistudio_music_play
 continue_playing_song:
     ; finally update famistudio
     jmp famistudio_update

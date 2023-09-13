@@ -13,7 +13,7 @@
 GameMode game_mode;
 GameMode prev_game_mode;
 
-u8 global_timer[3];
+__attribute__((section(".zp"))) u8 global_timer[3];
 
 int main() {
   prev_game_mode = (GameMode) 0xff;

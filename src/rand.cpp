@@ -61,7 +61,7 @@ extern "C" u16 galois_rand16();
 namespace Rng {
     void seed(const u8* buffer) {
         if (buffer == nullptr) {
-            u8* cast = reinterpret_cast<u8*>(::seed);
+            u8* cast = reinterpret_cast<u8*>(&::seed);
             cast[0] = global_timer[0];
             cast[1] = global_timer[1];
             cast[2] = global_timer[2];

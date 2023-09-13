@@ -50,8 +50,8 @@ namespace Titlescreen {
             Rng::seed(nullptr);
             pal_fade_to(4, 0);
             play_song(Song::StopMusic);
-            // game_mode = GameMode::GenerateDungeon;
-            game_mode = GameMode::MapLoader;
+            game_mode = GameMode::GenerateDungeon;
+            // game_mode = GameMode::MapLoader;
             return;
         }
         // TODO: add a set seed option?

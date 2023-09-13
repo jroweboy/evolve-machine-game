@@ -23,7 +23,7 @@ jobs:
       - name: Get llvm-mos
         run: mkdir -p build && wget -c https://github.com/llvm-mos/llvm-mos-sdk/releases/download/v3.1.0/llvm-mos-linux.tar.xz -O - | tar -xJ -C build
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_PREFIX_PATH=./build/llvm-mos -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_MODULE_PATH=./cmake "-DCMAKE_FRAMEWORK_PATH=./tools/Linux/famistudio;./scripts" -G Ninja
+        run: cmake -S . -B build -DCMAKE_PREFIX_PATH=./build/llvm-mos -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_MODULE_PATH=./cmake "-DCMAKE_FRAMEWORK_PATH=./tools/Linux/famistudio;./tools/Linux/nestiler;./scripts" -G Ninja
       - name: Build
         run: cmake --build build 
       - name: Start xvfb 

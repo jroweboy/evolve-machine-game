@@ -21,18 +21,22 @@ sfx_queue:    .res 1
 
 .segment "BANKED"
 
+Silence = $fd
+StopMusic = $fe
+InitEngine = $ff
+
 nmi_callback:
     lda next_song
     bpl check_for_song_change
     ; special operation. check for init flag
-    cmp #$ff
+    cmp #InitEngine
     beq init_famistudio
-    cmp #$fe
-    bne exit
+    cmp #StopMusic
+    bne continue_playing_song
         jsr famistudio_music_stop
         dec next_song
-exit:
-    rts
+        jmp continue_playing_song
+
 init_famistudio:
     ; if the next song is $ff, that means we need to init famistudio
     lda #1

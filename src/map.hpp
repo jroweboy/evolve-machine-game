@@ -14,8 +14,6 @@
 //     Boss, // TODO? Always has the key prize?
 // };
 
-// enum class 
-
 enum class PrizeType : u8 {
     None,
     Key,
@@ -29,26 +27,6 @@ enum ExitType {
     Open,
     KeyRequired,
     LevelExit,
-};
-
-
-// This struct matches the `check_collision` call from nesdoug
-struct Hitbox {
-    u8 screen_x;
-    u8 screen_y;
-    u8 width;
-    u8 height;
-};
-
-// TODO this is pretty much just a basic "object" and it overlaps with the player struct too
-struct Hazard {
-
-    u8 metasprite;
-    
-    s16 x;
-    s16 y;
-    
-    Hitbox hitbox;
 };
 
 struct ObjectSpawn {

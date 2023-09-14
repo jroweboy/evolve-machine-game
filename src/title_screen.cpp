@@ -1,8 +1,8 @@
 
 #include <bank.h>
-#include <nesdoug.h>
 #include <neslib.h>
 
+#include "nes_extra.hpp"
 #include "common.hpp"
 #include "music.hpp"
 #include "rand.hpp"
@@ -19,6 +19,14 @@ constexpr char background_pal[] = {
 };
 
 namespace Titlescreen {
+
+    enum class State {
+        Waiting,
+        EnterSeed,
+    };
+
+    State state;
+
     void init() {
         // copy all chr for the title screen into CHR RAM bank 0
         ppu_off();
@@ -39,21 +47,39 @@ namespace Titlescreen {
 
         ppu_on_all();
 
-        pal_fade_to(0, 4);
+        pal_fade_to(0, 4, 4);
+
+        state = State::Waiting;
+        
+        // Set the initial RNG seed to the frame counter here. This
+        // isn't good enough to get a real RNG seed.
+        Rng::seed(nullptr);
 
         play_song(Song::Intro);
     }
 
     void update() {
-        u8 pressed = get_pad_new(0);
-        if (pressed & PAD_START) {
-            Rng::seed(nullptr);
-            pal_fade_to(4, 0);
-            play_song(Song::StopMusic);
-            game_mode = GameMode::GenerateDungeon;
-            // game_mode = GameMode::MapLoader;
-            return;
+        // TODO: make the stars palette cycle
+        if (state == State::Waiting) {
+            // Burn through some RNG numbers while waiting.
+            for (u8 i=0; i < 50; ++i) {
+                u8 pressed = pad_poll(0);
+                u8* raw_seed = reinterpret_cast<u8*>(&::seed);
+                raw_seed[i & 0b11]++;
+                // Run the RNG once to push the numbers along
+                Rng::rand8();
+                if (pressed & PAD_START) {
+                    pal_fade_to(4, 0, 4);
+                    play_song(Song::StopMusic);
+                    game_mode = GameMode::GenerateDungeon;
+                    return;
+                } else if (pressed & PAD_SELECT) {
+                    state = State::EnterSeed;
+                }
+            }
+        } else if (state == State::EnterSeed) {
+            // TODO seed input menu.
+            state = State::Waiting;
         }
-        // TODO: add a set seed option?
     }
 }

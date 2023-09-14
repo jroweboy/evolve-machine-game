@@ -48,14 +48,26 @@ set(ROM ${CMAKE_PROJECT_NAME}.nes)
 add_executable(${ROM}
     src/ca65.s
     src/graphics.s
+
     src/common.hpp
     src/dungeon_generator.cpp
     src/dungeon_generator.hpp
+    src/game.cpp
+    src/game.hpp
+    src/main.cpp
     src/map_loader.cpp
     src/map_loader.hpp
-    src/main.cpp
+    src/music.hpp
+    src/nes_extra.cpp
+    src/nes_extra.hpp
+    src/object.hpp
     src/rand.cpp
     src/rand.hpp
+    src/soa-struct.inc
+    src/soa.h
+    src/sprite_render.hpp
+    src/sprite_render.cpp
+    src/sprite_render.hpp
     src/title_screen.cpp
     src/title_screen.hpp
 )
@@ -74,5 +86,6 @@ target_link_libraries(${ROM} PRIVATE
     GeneratedCA65Binaries
     # Second-party, included in llvm-mos
     neslib
-    nesdoug
+    # skip using NESDOUG since we don't want to include the extra 128 bytes of ram for its VRAM buffer
+    # nesdoug
 )

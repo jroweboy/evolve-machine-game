@@ -19,7 +19,6 @@
 #else
 #include <bank.h>
 #include <neslib.h>
-#include <nesdoug.h>
 #include "rand.hpp"
 
 #define rand Rng::rand8

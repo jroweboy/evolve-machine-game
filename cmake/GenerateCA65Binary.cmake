@@ -20,6 +20,7 @@ function(generate_ca65_binary)
   set(outfiles ${DEST}/prg8.bin ${DEST}/prgc.bin)
 
   find_package(Python3 REQUIRED)
+
   # find the exe for nestile. we just downloaded it and committed it to the repo because why not.
   find_program(FAMISTUDIO famistudio REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/famistudio)
 
@@ -27,7 +28,10 @@ function(generate_ca65_binary)
   set(music_outpath ${GEN_BINARY_DEST}/audio)
   set(music_outfiles ${music_outpath}/evolve_machine.s ${music_outpath}/evolve_machine.dmc)
 
-  set(FAMISTUDIO_CMD ${FAMISTUDIO} ${music_in} famistudio-asm-export ${music_outpath}/evolve_machine.s -famistudio-asm-format:ca65)
+  set(FAMISTUDIO_CMD ${FAMISTUDIO} ${music_in} famistudio-asm-export
+    ${music_outpath}/evolve_machine.s
+    -famistudio-asm-format:ca65
+  )
   if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
     set(FAMISTUDIO_CMD xvfb-run --auto-servernum mono ${FAMISTUDIO_CMD})
   endif()
@@ -36,21 +40,42 @@ function(generate_ca65_binary)
 
   find_program(GENCA65BIN_CL65 cl65 REQUIRED HINTS ${GEN_BINARY_SRC})
 
+  set(BUILD_CL65_CMD ${GENCA65BIN_CL65} -g 
+    -o ${out}/empty.nes -m ${out}/map.txt 
+    --bin-include-dir ${GEN_BINARY_DEST}/audio 
+    --asm-include-dir ${GEN_BINARY_DEST}/audio 
+    --ld-args --dbgfile,${out}/ca65.dbg 
+    --no-target-lib -C ${GEN_BINARY_SRC}/llvm.cfg 
+    ${GEN_BINARY_SRC}/music.s ${GEN_BINARY_SRC}/donut.s
+  )
+
+  # hacky to get source level debugging to work, i'm trying to split out the prg manually
+  
+  find_file(split_nes NAMES split_nes_output split_nes_output.py)
+  if (NOT split_nes)
+    message(FATAL_ERROR "Cannot split ca65 rom: Unable to find script split_nes_output.py")
+  endif()
+  set(SPLIT_PRG_CMD ${Python3_EXECUTABLE} ${split_nes} ${out})
+
+  message(${FAMISTUDIO_CMD})
   add_custom_command(
-    OUTPUT ${outfiles}
+    OUTPUT ${outfiles} ${music_outfiles}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${out}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${DEST}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${music_outpath}
     # run famistudio to spit out the audio files from the fms
+    COMMAND echo Running Famistudio export
     COMMAND ${FAMISTUDIO_CMD}
-    # build the files into a raw dump. the linker file is setup to spit out the banks into different files
-    COMMAND ${GENCA65BIN_CL65} -g -m ${out}/map.txt --bin-include-dir ${GEN_BINARY_DEST}/audio --asm-include-dir ${GEN_BINARY_DEST}/audio --ld-args --dbgfile,${out}/out.dbg --no-target-lib -C ${GEN_BINARY_SRC}/llvm.cfg ${GEN_BINARY_SRC}/music.s ${GEN_BINARY_SRC}/donut.s 
-    # Then run each file through bin2h
-    # COMMAND ${PYTHON_EXECUTABLE} ${bin2h} ${CMAKE_CURRENT_BINARY_DIR}/ca65 -o ${ca65_artifacts}
+    # build the files into a raw dump.
+    COMMAND echo Building CA65 sources into binaries
+    COMMAND ${BUILD_CL65_CMD}
+    COMMAND echo Splitting out the compiled sources from the ROM into banks
+    COMMAND ${SPLIT_PRG_CMD}
     COMMAND ${CMAKE_COMMAND} -E copy ${out}/prg8.bin ${out}/prgc.bin ${DEST}
     DEPENDS ${compressor_script}
-    DEPENDS ${GEN_BINARY_SRC}/famistudio_ca65_newlite.s
+    DEPENDS ${split_nes}
+    DEPENDS ${GEN_BINARY_SRC}/famistudio_ca65.s
     DEPENDS ${GEN_BINARY_SRC}/llvm.cfg
     DEPENDS ${GEN_BINARY_SRC}/music.s
     DEPENDS ${GEN_BINARY_SRC}/donut.s
@@ -63,6 +88,9 @@ function(generate_ca65_binary)
   target_include_directories(GeneratedCA65Binaries PUBLIC ${GEN_BINARY_DEST})
   
   foreach(FILE IN ITEMS ${outfiles})
+    set_source_files_properties(${GEN_BINARY_TARGET} PROPERTIES OBJECT_DEPENDS ${FILE})
+  endforeach()
+  foreach(FILE IN ITEMS ${music_outfiles})
     set_source_files_properties(${GEN_BINARY_TARGET} PROPERTIES OBJECT_DEPENDS ${FILE})
   endforeach()
 endfunction()

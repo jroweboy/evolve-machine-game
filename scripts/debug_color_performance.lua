@@ -4,7 +4,6 @@ scope_count = 2
 
 frame_number = 0
 
-
 performance_counters = {}
 performance_average = {}
 for i = 0, scope_count do

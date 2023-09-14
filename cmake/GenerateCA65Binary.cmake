@@ -50,7 +50,7 @@ function(generate_ca65_binary)
     # COMMAND ${PYTHON_EXECUTABLE} ${bin2h} ${CMAKE_CURRENT_BINARY_DIR}/ca65 -o ${ca65_artifacts}
     COMMAND ${CMAKE_COMMAND} -E copy ${out}/prg8.bin ${out}/prgc.bin ${DEST}
     DEPENDS ${compressor_script}
-    DEPENDS ${GEN_BINARY_SRC}/famistudio_ca65.s
+    DEPENDS ${GEN_BINARY_SRC}/famistudio_ca65_newlite.s
     DEPENDS ${GEN_BINARY_SRC}/llvm.cfg
     DEPENDS ${GEN_BINARY_SRC}/music.s
     DEPENDS ${GEN_BINARY_SRC}/donut.s

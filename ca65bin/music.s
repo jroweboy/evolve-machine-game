@@ -64,7 +64,7 @@ continue_playing_song:
     jmp famistudio_update
     ; rts
 
-.include "famistudio_ca65_newlite.s"
+.include "famistudio_ca65.s"
 
 ; include the actual song data in the same bank as the driver now.
 music_data:

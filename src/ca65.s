@@ -51,7 +51,11 @@ audio_init:
     sta _current_music
 
 .section .nmi.200,"axR",@progbits
+    lda #2
+    sta $4123
     jsr __run_audio
+    lda #0
+    sta $4123
 
 .section .text.audio,"ax",@progbits
 .globl __run_audio

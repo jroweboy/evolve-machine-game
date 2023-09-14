@@ -9,12 +9,16 @@
 #include "game.hpp"
 #include "object.hpp"
 #include "map_loader.hpp"
+#include "soa.h"
 #include "title_screen.hpp"
 
 GameMode game_mode;
 GameMode prev_game_mode;
 
 __attribute__((section(".zp"))) u8 global_timer[3];
+
+// Define the global object array
+soa::Array<Object, OBJECT_COUNT> objects;
 
 static void main_init() {    
     prev_game_mode = (GameMode) 0xff;
@@ -44,48 +48,50 @@ static void main_init() {
 
 
 int main() {
-  main_init();
+    main_init();
 
-  while (true) {
-    ppu_wait_nmi();
+    while (true) {
+        POKE(0x4123, 1);
+        ppu_wait_nmi();
+        POKE(0x4123, 0);
 
-    pad_poll(0);
+        pad_poll(0);
 
-    // If we changed game modes, initialze the new one
-    if (game_mode != prev_game_mode) {
-      switch (game_mode) {
+        // If we changed game modes, initialze the new one
+        if (game_mode != prev_game_mode) {
+        switch (game_mode) {
+            case GameMode::TitleScreen:
+            Titlescreen::init();
+            break;
+            case GameMode::GenerateDungeon:
+            generate_dungeon();
+            game_mode = GameMode::MapLoader;
+            // FALLTHROUGH
+            case GameMode::MapLoader:
+            MapLoader::init();
+            game_mode = GameMode::GamePlay;
+            // FALLTHROUGH
+            case GameMode::GamePlay:
+                // Game::init();
+            default:
+            break;
+        }
+        prev_game_mode = game_mode;
+        }
+        
+        // Run this frame of the game mode
+        switch (game_mode) {
         case GameMode::TitleScreen:
-          Titlescreen::init();
-          break;
-        case GameMode::GenerateDungeon:
-          generate_dungeon();
-          game_mode = GameMode::MapLoader;
-          // FALLTHROUGH
+            Titlescreen::update();
+            break;
         case GameMode::MapLoader:
-          MapLoader::init();
-          game_mode = GameMode::GamePlay;
-          // FALLTHROUGH
+            MapLoader::update();
+            break;
         case GameMode::GamePlay:
-            // Game::init();
+            Game::update();
+            break;
         default:
-          break;
-      }
-      prev_game_mode = game_mode;
+            break;
+        }
     }
-    
-    // Run this frame of the game mode
-    switch (game_mode) {
-      case GameMode::TitleScreen:
-        Titlescreen::update();
-        break;
-      case GameMode::MapLoader:
-        MapLoader::update();
-        break;
-      case GameMode::GamePlay:
-        Game::update();
-        break;
-      default:
-        break;
-    }
-  }
 }

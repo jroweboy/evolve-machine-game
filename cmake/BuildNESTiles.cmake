@@ -72,8 +72,6 @@ function(build_nes_tiles)
   set(room_outfiles ${room_infiles})
   list(TRANSFORM room_outfiles REPLACE "${room_basepath}/(.*)\.bmp" "${outpath}/\\1\.bin")
 
-  message("out: ${room_outfiles}")
-
   add_custom_command(
     OUTPUT ${room_outfiles}
 

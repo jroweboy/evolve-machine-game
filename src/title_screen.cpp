@@ -62,7 +62,7 @@ namespace Titlescreen {
         // TODO: make the stars palette cycle
         if (state == State::Waiting) {
             // Burn through some RNG numbers while waiting.
-            for (u8 i=0; i < 50; ++i) {
+            for (u8 i=0; i < 35; ++i) {
                 u8 pressed = pad_poll(0);
                 u8* raw_seed = reinterpret_cast<u8*>(&::seed);
                 raw_seed[i & 0b11]++;

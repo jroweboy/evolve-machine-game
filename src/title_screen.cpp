@@ -2,6 +2,7 @@
 #include <bank.h>
 #include <neslib.h>
 
+#include <peekpoke.h>
 #include "nes_extra.hpp"
 #include "common.hpp"
 #include "music.hpp"
@@ -10,6 +11,7 @@
 
 extern const char title_chr[];
 extern const char title_bin[];
+u8 epsm_check;
 
 constexpr char background_pal[] = {
     0x0f, 0x16, 0x27, 0x2d,
@@ -41,6 +43,40 @@ namespace Titlescreen {
 
         vram_adr(NAMETABLE_A);
         donut_decompress(&title_bin);
+
+        epsm_check = 1;
+        POKE(0x401c, 0x29); // Enable IRQ
+        POKE(0x401d, 0x8f);
+        POKE(0x401c, 0x27); // Reset IRQ
+        POKE(0x401d, 0x30);
+        POKE(0x401c, 0x25); // Timer A Lo
+        POKE(0x401d, 0x00);
+        POKE(0x401c, 0x24); // Timer A Hi
+        POKE(0x401d, 0x01);
+        POKE(0x401c, 0x27); // Load and Enable Timer A IRQ
+        POKE(0x401d, 0x05);
+        
+        ppu_wait_nmi();
+        //----------- this goes into irq
+        if(epsm_check == 1){
+            epsm_check = 2;
+            POKE(0x401c, 0x27); // Reset IRQ
+            POKE(0x401d, 0x30);
+        }
+        //-----------
+
+        POKE(0x401c, 0x27); // Reset IRQ in case it conflicts with a cart mapper and did not get reset earlier.
+        POKE(0x401d, 0x30);
+
+        if(epsm_check == 1){
+            vram_adr(0x2336);
+            vram_fill(0xff, 6);
+            vram_adr(0x2356);
+            vram_fill(0xff, 6);
+            vram_adr(0x2376);
+            vram_fill(0xff, 6);
+            epsm_check = 0;
+        }
 
         pal_bg(background_pal);
         pal_bright(0);

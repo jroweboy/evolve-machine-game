@@ -49,11 +49,11 @@ namespace Titlescreen {
         if (!has_epsm) {
             // EPSM is not available so cover up the EPSM logo in the corner
             vram_adr(0x2336);
-            vram_fill(0xff, 6);
+            vram_fill(0x00, 6);
             vram_adr(0x2356);
-            vram_fill(0xff, 6);
+            vram_fill(0x00, 6);
             vram_adr(0x2376);
-            vram_fill(0xff, 6);
+            vram_fill(0x00, 6);
         }
 
 

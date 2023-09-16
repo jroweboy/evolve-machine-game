@@ -1,5 +1,5 @@
 
-
+#include <6502.h>
 #include <neslib.h>
 #include <peekpoke.h>
 #include <bank.h>
@@ -19,7 +19,7 @@ __attribute__((section(".zp"))) u8 global_timer[3];
 
 // Reserve 3 bytes of RAM as an editable IRQ handler. 
 // The linker is expecting this to be named exactly irq
-__attribute__((section(".noinit.late"))) IRQ irq;
+__attribute__((section(".noinit.late"))) void (*irq_pointer)();
 __attribute__((section(".noinit.late"))) u8 irq_counter;
 __attribute__((section(".noinit.late"))) bool has_epsm;
 
@@ -29,12 +29,26 @@ extern "C" void irq_default();
 
 asm(R"ASM(
 .section .text.irqdetect,"ax",@progbits
+.globl irq
+irq:
+    pha
+        ; Ack the IRQ source on the EPSM
+        lda #$27
+        sta $401c
+        lda #$30
+        sta $401d
+        jmp (irq_pointer)
+
 .globl irq_detection
 irq_detection:
-    inc irq_counter
+        ; inform the main thread that we did something
+        inc irq_counter
+    pla
     rti
 
+.globl irq_default
 irq_default:
+    pla
     rti
 
 )ASM");
@@ -67,16 +81,15 @@ static void main_init() {
     player.metasprite = 0;
     player.animation_frame = 0;
     player.state = State::Hidden;
-
-    // Initialize the IRQ jmp instruction as jmp abs
-    irq._jmp_instruction = 0x4c;
 }
 
 void irq_detect() {
     // Switch the IRQ handler to increment a counter
-    irq.pointer = irq_detection;
+    irq_pointer = irq_detection;
 
     u8 current_counter = irq_counter;
+
+    CLI();
     
     POKE(0x401c, 0x29); // Enable IRQ
     POKE(0x401d, 0x8f);
@@ -95,10 +108,12 @@ void irq_detect() {
     POKE(0x401c, 0x27);
     POKE(0x401d, 0x30);
 
+    SEI();
+
     has_epsm = current_counter != irq_counter;
 
     // Reset IRQ back to the default "just return" handler
-    irq.pointer = irq_default;
+    irq_pointer = irq_default;
 }
 
 int main() {

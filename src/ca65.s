@@ -43,7 +43,9 @@ donut_decompress:
 ; set this to run after the ram clearing but before the find ppu frame wait
 .section .init.210,"axR",@progbits
 audio_init:
+    ; disable the APU framecounter IRQ source and set _next_music to init
     lda #$ff
+    sta $4017
     sta _next_music
     jsr __run_audio
     lda #$fe

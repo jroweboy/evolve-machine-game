@@ -81,6 +81,26 @@ function(build_nes_tiles)
   set(room_outfiles ${room_infiles})
   list(TRANSFORM room_outfiles REPLACE "${room_basepath}/(.*)\.bmp" "${outpath}/\\1\.bin")
 
+  set(NESTILER_ROOMS ${NESTILER}
+    -c ${NESTILER_DIR}/nestiler-colors.json
+    --mode bg --lossy 1
+    --share-pattern-table
+    --out-pattern-table-0
+    ${tmp_catpath}/room_chr.chr
+    ${room_infiles_indexed}
+    ${room_nametable}
+    ${room_attrs}
+  )
+  set(NESTILER_SPECIAL ${NESTILER}
+    -c ${nestiler_dir}/nestiler-colors.json
+    --mode bg --lossy 1
+    --out-pattern-table-0
+    ${tmp_catpath}/titlescreen_chr.bin
+    -i0 ${special_basepath}/titlescreen.bmp
+    -a0 ${tmp_rawpath}/titlescreen.nmt
+    -u0 ${tmp_rawpath}/titlescreen.attr
+  )
+
   add_custom_command(
     OUTPUT ${room_outfiles}
 
@@ -89,11 +109,9 @@ function(build_nes_tiles)
     COMMAND ${CMAKE_COMMAND} -E make_directory ${tmp_catpath}
 
     # nestiler all the rooms
-    COMMAND ${NESTILER} -c ${nestiler_dir}/nestiler-colors.json --mode bg --lossy 1 --share-pattern-table --out-pattern-table-0 ${tmp_catpath}/room_chr.chr ${room_infiles_indexed} ${room_nametable} ${room_attrs}
-    
+    COMMAND ${NESTILER_ROOMS}
     # and then the special ones individually
-    COMMAND ${NESTILER} -c ${nestiler_dir}/nestiler-colors.json  --mode bg --lossy 1 --out-pattern-table-0 ${tmp_catpath}/titlescreen_chr.bin -i0 ${special_basepath}/titlescreen.bmp -a0 ${tmp_rawpath}/titlescreen.nmt -u0 ${tmp_rawpath}/titlescreen.attr
-    
+    COMMAND ${NESTILER_SPECIAL}
     COMMAND ${CMAKE_COMMAND} -E cat ${tmp_rawpath}/bottom.nmt  ${tmp_rawpath}/bottom.attr  > ${tmp_catpath}/bottom.bin
     COMMAND ${CMAKE_COMMAND} -E cat ${tmp_rawpath}/left.nmt    ${tmp_rawpath}/left.attr    > ${tmp_catpath}/left.bin
     COMMAND ${CMAKE_COMMAND} -E cat ${tmp_rawpath}/right.nmt   ${tmp_rawpath}/right.attr   > ${tmp_catpath}/right.bin

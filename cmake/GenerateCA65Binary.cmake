@@ -23,7 +23,7 @@ function(generate_ca65_binary)
   # find the exe for nestile. we just downloaded it and committed it to the repo because why not.
   if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
     find_file(FAMISTUDIO_DLL FamiStudio.dll REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/famistudio)
-    set(FAMISTUDIO "xvfb-run --auto-servernum dotnet ${FAMISTUDIO_DLL}")
+    set(FAMISTUDIO "dotnet ${FAMISTUDIO_DLL}")
   else()
     find_program(FAMISTUDIO famistudio REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/famistudio)
   endif()

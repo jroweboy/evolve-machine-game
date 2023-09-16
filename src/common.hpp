@@ -45,6 +45,17 @@ extern u32 seed;
 /// Caution: don't use for animation
 extern u8 global_timer[3];
 
+struct IRQ {
+    u8 _jmp_instruction;
+    void (*pointer)();
+};
+
+extern IRQ irq;
+
+/// During init, this is set to true if we have epsm. We can use this for custom
+/// IRQ raster effects or something later, i dunno yet.
+extern bool has_epsm;
+
 #ifdef __cplusplus
 }
 #endif

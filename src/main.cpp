@@ -17,6 +17,29 @@ GameMode prev_game_mode;
 
 __attribute__((section(".zp"))) u8 global_timer[3];
 
+// Reserve 3 bytes of RAM as an editable IRQ handler. 
+// The linker is expecting this to be named exactly irq
+__attribute__((section(".noinit.late"))) IRQ irq;
+__attribute__((section(".noinit.late"))) u8 irq_counter;
+__attribute__((section(".noinit.late"))) bool has_epsm;
+
+// IRQ handler that will just increment a counter and return
+extern "C" void irq_detection();
+extern "C" void irq_default();
+
+asm(R"ASM(
+.section .text.irqdetect,"ax",@progbits
+.globl irq_detection
+irq_detection:
+    inc irq_counter
+    rti
+
+irq_default:
+    rti
+
+)ASM");
+
+
 // Define the global object array
 soa::Array<Object, OBJECT_COUNT> objects;
 
@@ -44,11 +67,43 @@ static void main_init() {
     player.metasprite = 0;
     player.animation_frame = 0;
     player.state = State::Hidden;
+
+    // Initialize the IRQ jmp instruction as jmp abs
+    irq._jmp_instruction = 0x4c;
 }
 
+void irq_detect() {
+    // Switch the IRQ handler to increment a counter
+    irq.pointer = irq_detection;
+
+    u8 current_counter = irq_counter;
+    
+    POKE(0x401c, 0x29); // Enable IRQ
+    POKE(0x401d, 0x8f);
+    POKE(0x401c, 0x27); // Reset IRQ
+    POKE(0x401d, 0x30);
+    POKE(0x401c, 0x25); // Timer A Lo
+    POKE(0x401d, 0x00);
+    POKE(0x401c, 0x24); // Timer A Hi
+    POKE(0x401d, 0x01);
+    POKE(0x401c, 0x27); // Load and Enable Timer A IRQ
+    POKE(0x401d, 0x05);
+
+    ppu_wait_nmi();
+
+    // Reset IRQ in case it conflicts with a cart mapper and did not get reset earlier.
+    POKE(0x401c, 0x27);
+    POKE(0x401d, 0x30);
+
+    has_epsm = current_counter != irq_counter;
+
+    // Reset IRQ back to the default "just return" handler
+    irq.pointer = irq_default;
+}
 
 int main() {
     main_init();
+    irq_detect();
 
     while (true) {
         POKE(0x4123, 1);

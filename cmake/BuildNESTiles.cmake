@@ -21,7 +21,7 @@ function(build_nes_tiles)
 
   if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
     find_file(nestiler_exe nestiler REQUIRED HINTS ${nestiler_dir})
-    set(NESTILER dotnet ${nestiler_exe})
+    set(NESTILER "dotnet ${nestiler_exe}")
   else()
     find_program(NESTILER nestiler REQUIRED HINTS ${nestiler_dir})
   endif()

@@ -9,6 +9,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      # - name: Setup .NET Core SDK
+      #   uses: actions/setup-dotnet@v3
+      #   with:
+      #     dotnet-version: "6.0.x"
       # - name: Setup Python
       #   uses: actions/setup-python@v4.6.1
       #   with:
@@ -22,12 +26,12 @@ jobs:
         run: sudo apt install cmake cc65 ninja-build
       - name: Get llvm-mos
         run: mkdir -p build && wget -c https://github.com/llvm-mos/llvm-mos-sdk/releases/download/v3.1.0/llvm-mos-linux.tar.xz -O - | tar -xJ -C build
+      - name: Start xvfb 
+        run: sudo Xvfb :99 -screen 0 1280x1024x24 &
       - name: Configure
         run: cmake -S . -B build -DCMAKE_PREFIX_PATH=./build/llvm-mos -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_MODULE_PATH=./cmake "-DCMAKE_FRAMEWORK_PATH=./tools/Linux/famistudio;./tools/Linux/nestiler;./scripts" -G Ninja
       - name: Build
         run: cmake --build build 
-      - name: Start xvfb 
-        run: sudo Xvfb :99 -screen 0 1280x1024x24 &
       - name: Clean up xvfb
         uses: bcomnes/cleanup-xvfb@v1
       - name: Upload artifacts

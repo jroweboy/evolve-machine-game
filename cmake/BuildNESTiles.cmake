@@ -17,10 +17,18 @@ function(build_nes_tiles)
     message(FATAL_ERROR "CA65 Build DEST folder is required!")
   endif()
 
-  set(nestiler_dir ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/nestiler)
+  set(NESTILER_DIR ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/nestiler)
+
+  if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+    find_file(NESTILER_EXE nestiler REQUIRED HINTS ${NESTILER_DIR})
+    set(NESTILER ${NESTILER_EXE})
+  else()
+    find_program(NESTILER nestiler REQUIRED HINTS ${NESTILER_DIR})
+  endif()
   find_package(Python3 REQUIRED)
   # find the exe for nestile. we just downloaded it and committed it to the repo because why not.
-  find_program(NESTILER nestiler REQUIRED HINTS ${nestiler_dir})
+  # set(CMAKE_FIND_DEBUG_MODE TRUE)
+  # set(CMAKE_FIND_DEBUG_MODE FALSE)
 
   find_file(compressor_script NAMES donut donut.py)
   if (NOT compressor_script)
@@ -73,6 +81,26 @@ function(build_nes_tiles)
   set(room_outfiles ${room_infiles})
   list(TRANSFORM room_outfiles REPLACE "${room_basepath}/(.*)\.bmp" "${outpath}/\\1\.bin")
 
+  set(NESTILER_ROOMS ${NESTILER}
+    -c ${NESTILER_DIR}/nestiler-colors.json
+    --mode bg --lossy 1
+    --share-pattern-table
+    --out-pattern-table-0
+    ${tmp_catpath}/room_chr.chr
+    ${room_infiles_indexed}
+    ${room_nametable}
+    ${room_attrs}
+  )
+  set(NESTILER_SPECIAL ${NESTILER}
+    -c ${NESTILER_DIR}/nestiler-colors.json
+    --mode bg --lossy 1
+    --out-pattern-table-0
+    ${tmp_catpath}/titlescreen_chr.bin
+    -i0 ${special_basepath}/titlescreen.bmp
+    -a0 ${tmp_rawpath}/titlescreen.nmt
+    -u0 ${tmp_rawpath}/titlescreen.attr
+  )
+
   add_custom_command(
     OUTPUT ${room_outfiles}
 
@@ -81,11 +109,9 @@ function(build_nes_tiles)
     COMMAND ${CMAKE_COMMAND} -E make_directory ${tmp_catpath}
 
     # nestiler all the rooms
-    COMMAND ${NESTILER} -c ${nestiler_dir}/nestiler-colors.json --mode bg --lossy 1 --share-pattern-table --out-pattern-table-0 ${tmp_catpath}/room_chr.chr ${room_infiles_indexed} ${room_nametable} ${room_attrs}
-    
+    COMMAND ${NESTILER_ROOMS}
     # and then the special ones individually
-    COMMAND ${NESTILER} -c ${nestiler_dir}/nestiler-colors.json  --mode bg --lossy 1 --out-pattern-table-0 ${tmp_catpath}/titlescreen_chr.bin -i0 ${special_basepath}/titlescreen.bmp -a0 ${tmp_rawpath}/titlescreen.nmt -u0 ${tmp_rawpath}/titlescreen.attr
-    
+    COMMAND ${NESTILER_SPECIAL}
     COMMAND ${CMAKE_COMMAND} -E cat ${tmp_rawpath}/bottom.nmt  ${tmp_rawpath}/bottom.attr  > ${tmp_catpath}/bottom.bin
     COMMAND ${CMAKE_COMMAND} -E cat ${tmp_rawpath}/left.nmt    ${tmp_rawpath}/left.attr    > ${tmp_catpath}/left.bin
     COMMAND ${CMAKE_COMMAND} -E cat ${tmp_rawpath}/right.nmt   ${tmp_rawpath}/right.attr   > ${tmp_catpath}/right.bin

@@ -34,7 +34,7 @@ function(generate_ca65_binary)
 
   set(out ${CMAKE_CURRENT_BINARY_DIR}/ca65build)
 
-  find_program(GENCA65BIN_CL65 cl65 REQUIRED HINTS ${GEN_BINARY_SRC})
+  find_program(GENCA65BIN_CL65 cl65 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/cc65)
 
   add_custom_command(
     OUTPUT ${outfiles}

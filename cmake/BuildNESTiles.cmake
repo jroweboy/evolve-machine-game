@@ -17,9 +17,10 @@ function(build_nes_tiles)
     message(FATAL_ERROR "CA65 Build DEST folder is required!")
   endif()
 
+  set(nestiler_dir ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/nestiler)
   find_package(Python3 REQUIRED)
   # find the exe for nestile. we just downloaded it and committed it to the repo because why not.
-  find_program(NESTILER nestiler REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/nestiler)
+  find_program(NESTILER nestiler REQUIRED HINTS ${nestiler_dir})
 
   find_file(compressor_script NAMES donut donut.py)
   if (NOT compressor_script)
@@ -80,10 +81,10 @@ function(build_nes_tiles)
     COMMAND ${CMAKE_COMMAND} -E make_directory ${tmp_catpath}
 
     # nestiler all the rooms
-    COMMAND ${NESTILER} --mode bg --lossy 1 --share-pattern-table --out-pattern-table-0 ${tmp_catpath}/room_chr.chr ${room_infiles_indexed} ${room_nametable} ${room_attrs}
+    COMMAND ${NESTILER} -c ${nestiler_dir}/nestiler-colors.json --mode bg --lossy 1 --share-pattern-table --out-pattern-table-0 ${tmp_catpath}/room_chr.chr ${room_infiles_indexed} ${room_nametable} ${room_attrs}
     
     # and then the special ones individually
-    COMMAND ${NESTILER} --mode bg --lossy 1 --out-pattern-table-0 ${tmp_catpath}/titlescreen_chr.bin -i0 ${special_basepath}/titlescreen.bmp -a0 ${tmp_rawpath}/titlescreen.nmt -u0 ${tmp_rawpath}/titlescreen.attr
+    COMMAND ${NESTILER} -c ${nestiler_dir}/nestiler-colors.json  --mode bg --lossy 1 --out-pattern-table-0 ${tmp_catpath}/titlescreen_chr.bin -i0 ${special_basepath}/titlescreen.bmp -a0 ${tmp_rawpath}/titlescreen.nmt -u0 ${tmp_rawpath}/titlescreen.attr
     
     COMMAND ${CMAKE_COMMAND} -E cat ${tmp_rawpath}/bottom.nmt  ${tmp_rawpath}/bottom.attr  > ${tmp_catpath}/bottom.bin
     COMMAND ${CMAKE_COMMAND} -E cat ${tmp_rawpath}/left.nmt    ${tmp_rawpath}/left.attr    > ${tmp_catpath}/left.bin

@@ -92,7 +92,7 @@ function(build_nes_tiles)
     ${room_attrs}
   )
   set(NESTILER_SPECIAL ${NESTILER}
-    -c ${nestiler_dir}/nestiler-colors.json
+    -c ${NESTILER_DIR}/nestiler-colors.json
     --mode bg --lossy 1
     --out-pattern-table-0
     ${tmp_catpath}/titlescreen_chr.bin

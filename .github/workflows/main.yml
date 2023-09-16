@@ -19,7 +19,7 @@ jobs:
       #   with:
       #     packages: numpy
       - name: Get dependencies
-        run: sudo apt install cmake cc65 ninja-build
+        run: sudo apt install cmake cc65 ninja-build dotnet-runtime-7.0
       - name: Get llvm-mos
         run: mkdir -p build && wget -c https://github.com/llvm-mos/llvm-mos-sdk/releases/download/v3.1.0/llvm-mos-linux.tar.xz -O - | tar -xJ -C build
       - name: Configure

@@ -1,6 +1,4 @@
 # NesTiler
-[![Build, test, upload](https://github.com/ClusterM/NesTiler/actions/workflows/build-test.yml/badge.svg)](https://github.com/ClusterM/NesTiler/actions/workflows/build-test.yml)
-
 Tool for converting pictures into NES format: pattern tables, nametables, attribute tables and palettes.
 
 ## What does it do
@@ -231,11 +229,7 @@ Examples:
 * nestiler -q
 * nestiler -quiet ...
 
-## Download
-You can always download latest version at [https://github.com/ClusterM/NesTiler/releases](https://github.com/ClusterM/NesTiler/releases).
-
-Also, you can download automatic interim builds: [http://clusterm.github.io/NesTiler/](http://clusterm.github.io/NesTiler/).
-
 ## Donate
-* [Donation Alerts](https://www.donationalerts.com/r/clustermeerkat)
-* [Boosty](https://boosty.to/cluster)
+https://www.donationalerts.com/r/clustermeerkat
+
+https://boosty.to/cluster

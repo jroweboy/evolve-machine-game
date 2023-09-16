@@ -18,10 +18,16 @@ function(build_nes_tiles)
   endif()
 
   set(nestiler_dir ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/nestiler)
+
+  if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+    find_file(nestiler_exe nestiler REQUIRED HINTS ${nestiler_dir})
+    set(NESTILER dotnet ${nestiler_exe})
+  else()
+    find_program(NESTILER nestiler REQUIRED HINTS ${nestiler_dir})
+  endif()
   find_package(Python3 REQUIRED)
   # find the exe for nestile. we just downloaded it and committed it to the repo because why not.
   set(CMAKE_FIND_DEBUG_MODE TRUE)
-  find_program(NESTILER nestiler REQUIRED HINTS ${nestiler_dir})
   set(CMAKE_FIND_DEBUG_MODE FALSE)
 
   find_file(compressor_script NAMES donut donut.py)

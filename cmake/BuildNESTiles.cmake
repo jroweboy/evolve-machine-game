@@ -17,13 +17,13 @@ function(build_nes_tiles)
     message(FATAL_ERROR "CA65 Build DEST folder is required!")
   endif()
 
-  set(nestiler_dir ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/nestiler)
+  set(NESTILER_DIR ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/nestiler)
 
   if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
-    find_file(nestiler_exe nestiler REQUIRED HINTS ${nestiler_dir})
-    set(NESTILER "dotnet ${nestiler_exe}")
+    find_file(NESTILER_EXE nestiler REQUIRED HINTS ${NESTILER_DIR})
+    set(NESTILER dotnet ${NESTILER_EXE})
   else()
-    find_program(NESTILER nestiler REQUIRED HINTS ${nestiler_dir})
+    find_program(NESTILER nestiler REQUIRED HINTS ${NESTILER_DIR})
   endif()
   find_package(Python3 REQUIRED)
   # find the exe for nestile. we just downloaded it and committed it to the repo because why not.

@@ -27,8 +27,8 @@ function(build_nes_tiles)
   endif()
   find_package(Python3 REQUIRED)
   # find the exe for nestile. we just downloaded it and committed it to the repo because why not.
-  set(CMAKE_FIND_DEBUG_MODE TRUE)
-  set(CMAKE_FIND_DEBUG_MODE FALSE)
+  # set(CMAKE_FIND_DEBUG_MODE TRUE)
+  # set(CMAKE_FIND_DEBUG_MODE FALSE)
 
   find_file(compressor_script NAMES donut donut.py)
   if (NOT compressor_script)

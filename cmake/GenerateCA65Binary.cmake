@@ -21,16 +21,18 @@ function(generate_ca65_binary)
 
   find_package(Python3 REQUIRED)
   # find the exe for nestile. we just downloaded it and committed it to the repo because why not.
-  find_program(FAMISTUDIO famistudio REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/famistudio)
+  if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+    find_file(FAMISTUDIO_DLL FamiStudio.dll REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/famistudio)
+    set(FAMISTUDIO xvfb-run --auto-servernum dotnet ${FAMISTUDIO_DLL})
+  else()
+    find_program(FAMISTUDIO famistudio REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/famistudio)
+  endif()
 
   set(music_in ${CMAKE_SOURCE_DIR}/audio/evolve_machine.fms)
   set(music_outpath ${GEN_BINARY_DEST}/audio)
   set(music_outfiles ${music_outpath}/evolve_machine.s ${music_outpath}/evolve_machine.dmc)
 
   set(FAMISTUDIO_CMD ${FAMISTUDIO} ${music_in} famistudio-asm-export ${music_outpath}/evolve_machine.s -famistudio-asm-format:ca65)
-  if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
-    set(FAMISTUDIO_CMD xvfb-run --auto-servernum mono ${FAMISTUDIO_CMD})
-  endif()
 
   set(out ${CMAKE_CURRENT_BINARY_DIR}/ca65build)
 

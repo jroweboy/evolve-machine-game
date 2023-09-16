@@ -8,7 +8,8 @@
 extern "C" {
 #endif
 
-enum class Song : u8 { 
+enum class Song : u8 {
+    EPSMDetected = 0,
     Intro = 1,
     TitleAmbience = 2,
     Boss = 3,
@@ -17,6 +18,7 @@ enum class Song : u8 {
     InitEngine = 0xff,
 };
 
+// TODO: handle sfx better
 enum Sfx {
     EPSMDetected = 1 << 0,
 };

@@ -7,6 +7,7 @@
 #include "common.hpp"
 #include "dungeon_generator.hpp"
 #include "game.hpp"
+#include "music.hpp"
 #include "object.hpp"
 #include "map_loader.hpp"
 #include "soa.h"
@@ -38,6 +39,7 @@ static void main_init() {
     for (auto obj : objects) {
         obj.state = State::Dead;
     }
+    play_song(Song::EPSMDetected);
 
     // Initialize the player object
     auto player = objects[0];

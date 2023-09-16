@@ -494,6 +494,10 @@ FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 3 + FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT + FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
     FAMISTUDIO_NUM_CHANNELS         = 5 + FAMISTUDIO_EXP_EPSM_CHANNELS
     FAMISTUDIO_NUM_DUTY_CYCLES      = 3
+.out .sprintf("FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT %d", FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT)
+.out .sprintf("FAMISTUDIO_EXP_EPSM_RHYTHM_CNT %d", FAMISTUDIO_EXP_EPSM_RHYTHM_CNT)
+.out .sprintf("FAMISTUDIO_EXP_EPSM_FM_CHN_CNT %d", FAMISTUDIO_EXP_EPSM_FM_CHN_CNT)
+.out .sprintf("FAMISTUDIO_EXP_EPSM_CHANNELS %d", FAMISTUDIO_EXP_EPSM_CHANNELS)
 .endif
 .if FAMISTUDIO_EXP_FDS
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2
@@ -866,6 +870,7 @@ famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = n
 .if FAMISTUDIO_EXP_EPSM
 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:    .res FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
+famistudio_chn_epsm_rhythm_volume: .res FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
 famistudio_chn_epsm_rhythm_stereo: .res FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
 famistudio_chn_epsm_trigger:       .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_fm_stereo:     .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
@@ -3717,35 +3722,16 @@ famistudio_update:
         bpl @epsm_fm_channel_loop
 .endif
 .if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
-    ldy #5
+@loop_cnt = famistudio_r2
+    lda #5
+    sta @loop_cnt
     @epsm_rhythm_channel_loop:
-.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE = 0
-        cpy #0
-        beq @skip_epsm_rhythm_update
-.endif
-.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE = 0
-        cpy #1
-        beq @skip_epsm_rhythm_update
-.endif
-.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE = 0
-        cpy #2
-        beq @skip_epsm_rhythm_update
-.endif
-.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE = 0
-        cpy #3
-        beq @skip_epsm_rhythm_update
-.endif
-.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE = 0
-        cpy #4
-        beq @skip_epsm_rhythm_update
-.endif
-.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE = 0
-        cpy #5
-        beq @skip_epsm_rhythm_update
-.endif
-        jsr famistudio_update_epsm_rhythm_channel_sound
+        ldx @loop_cnt
+        ldy famistudio_rhythm_lut,x
+        bmi @skip_epsm_rhythm_update ; if the value we load is $ff then 
+            jsr famistudio_update_epsm_rhythm_channel_sound
     @skip_epsm_rhythm_update:
-        dey
+        dec @loop_cnt
         bpl @epsm_rhythm_channel_loop
 .endif
 .endif
@@ -4259,34 +4245,57 @@ famistudio_set_s5b_instrument:
 famistudio_set_epsm_instrument:
 
     @ptr        = famistudio_ptr0
+    @env_ptr    = famistudio_ptr1
     @ex_patch   = famistudio_ptr1
     @reg_offset = famistudio_r0
     @chan_idx   = famistudio_r1
 
+    cpy #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
+    bcc @process_regular_instrument
+        ; We are processing a rhythm instrument, so skip all the fluff.
+        ; We only need to load the volume of the instrument and store it in the attack.
+        ; load the instrument
+
+        famistudio_get_exp_inst_ptr
+        
+        ; Load the offset for the rhythm track and keep it in x
+        ldx @chan_idx
+        lda famistudio_rhythm_lut, x
+        tax
+
+        ; Read the first envelope pointer for the volume, we'll use this to get the volume later
+        lda (@ptr),y
+        sta @env_ptr
+        iny
+        lda (@ptr),y
+        sta @env_ptr+1
+        ; Skip over the arp and pitch/vibrato env
+        tya
+        clc
+        adc #11 ; skip over the next 5 pointers to get to the stereo data (second byte of the instrument)
+        tay
+        ; and now load the stereo from the extra envelope
+        lda (@ptr),y
+        and #$c0
+        sta famistudio_chn_epsm_rhythm_stereo,x
+
+        ; the first value is the release point, so load the second offset which is the volume
+        ldy #1
+        lda (@env_ptr),y
+        sta famistudio_chn_epsm_rhythm_volume,x
+
+        ldx @chan_idx
+        rts
+@process_regular_instrument:
     famistudio_set_exp_instrument
 
     ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
     ; increase y and go past noise and mixer envelope indexes
-    iny
-    iny
-    iny
-    iny
-    lda (@ptr),y
-    sta @ex_patch
-    iny
-    lda (@ptr),y
-    sta @ex_patch+1
-    iny
+
     ; channels 0-2 (square) do not need any further handling since they do not support patches
     lda @chan_idx
     cmp #FAMISTUDIO_EPSM_CHAN_FM_START
     bcs @not_square_channel
-        dey
-        dey
-        dey
-        dey
-        dey
-        dey
         lda famistudio_channel_env,x
         tax
 
@@ -4309,34 +4318,35 @@ famistudio_set_epsm_instrument:
         iny
         bcc @loop
 
-        @noisedone:
+    @noisedone:
 
         ldx @chan_idx
         rts
     @not_square_channel:
 
-    ; Now we are dealing with either a FM or Rhythm instrument. a = channel index
-    ; if we are an FM instrument then there is a offset we need to apply to the register select
-    cmp #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
-    bmi @fm_channel
-        lda @chan_idx
-        sbc #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
-        tax
-        iny
-        lda (@ptr),y
-        and #$c0
-        sta famistudio_chn_epsm_rhythm_stereo,x
-
-        ldx @chan_idx    
-        rts
-    @fm_channel:
-    
+    ; Now we are dealing with either a FM instrument. a = channel index
+    ; Since this is an FM instrument there is a offset we need to apply to the register select
+    ; TODO: what is the even preventing?
     lda famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL,x
     bne @continue
         ldx @chan_idx
         rts
-    
 @continue:
+
+    ; Skip over the two SSG specific envelopes by jumping up 4 bytes
+    iny
+    iny
+    iny
+    iny
+
+    ; And then read the pointer to the extended instrument patch data
+    lda (@ptr),y
+    sta @ex_patch
+    iny
+    lda (@ptr),y
+    sta @ex_patch+1
+    iny
+
     lda @chan_idx
     ; FM channel 1-6, we need to look up the register select offset from the table
     sec
@@ -4345,26 +4355,26 @@ famistudio_set_epsm_instrument:
     lda famistudio_channel_epsm_chan_table,x
     sta @reg_offset
     
-        lda #FAMISTUDIO_EPSM_REG_KEY
-        sta FAMISTUDIO_EPSM_REG_SEL0
-        lda famistudio_epsm_channel_key_table, x
-        and #$0f ; remove trigger
-        sta FAMISTUDIO_EPSM_REG_WRITE0
-    
+    lda #FAMISTUDIO_EPSM_REG_KEY
+    sta FAMISTUDIO_EPSM_REG_SEL0
+    lda famistudio_epsm_channel_key_table, x
+    and #$0f ; remove trigger
+    sta FAMISTUDIO_EPSM_REG_WRITE0
+
     ; Now we need to store the algorithm and 1st operator volume for later use
-        lda (@ptr),y
-        and #$07
-        sta famistudio_chn_epsm_alg,x ;store algorithm
-        iny
-        lda (@ptr),y
-        sta famistudio_chn_epsm_fm_stereo ,x
-        iny
-        iny
-        lda (@ptr),y
-        sta famistudio_chn_epsm_vol_op1,x
-        dey
-        dey
-        dey
+    lda (@ptr),y
+    and #$07
+    sta famistudio_chn_epsm_alg,x ;store algorithm
+    iny
+    lda (@ptr),y
+    sta famistudio_chn_epsm_fm_stereo ,x
+    iny
+    iny
+    lda (@ptr),y
+    sta famistudio_chn_epsm_vol_op1,x
+    dey
+    dey
+    dey
     ; Now if we are channels 1-3 then we use @reg_set_0, otherwise for 4-6 its reg set 1
     lda @chan_idx
     cmp #FAMISTUDIO_EPSM_CH6_IDX
@@ -6707,6 +6717,52 @@ famistudio_volume_table:
 
 .endif
 
+
+.if FAMISTUDIO_EXP_EPSM
+; Mapping for the channel id of the rhythm channel, to the RAM offset for it
+; If the user disables various channels, then we want to save on the ram for them
+; by just not reserving it, so this maps from channel ID to the new RAM offset for the channel
+; The end result should be a table that looks like this if you have channel 2, 3, and 5 enabled
+; .byte $ff, $00, $01, $ff, $02, $ff
+EPSM_CHANNEL1_RHYTHM_OFFSET = -1 + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE
+EPSM_CHANNEL2_RHYTHM_OFFSET = EPSM_CHANNEL1_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE
+EPSM_CHANNEL3_RHYTHM_OFFSET = EPSM_CHANNEL2_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE
+EPSM_CHANNEL4_RHYTHM_OFFSET = EPSM_CHANNEL2_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE
+EPSM_CHANNEL5_RHYTHM_OFFSET = EPSM_CHANNEL2_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE
+EPSM_CHANNEL6_RHYTHM_OFFSET = EPSM_CHANNEL2_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE
+
+famistudio_rhythm_lut:
+.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE
+    .byte .lobyte(EPSM_CHANNEL1_RHYTHM_OFFSET)
+.else
+    .byte $ff
+.endif
+.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE
+    .byte .lobyte(EPSM_CHANNEL2_RHYTHM_OFFSET)
+.else
+    .byte $ff
+.endif
+.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE
+    .byte .lobyte(EPSM_CHANNEL3_RHYTHM_OFFSET)
+.else
+    .byte $ff
+.endif
+.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE
+    .byte .lobyte(EPSM_CHANNEL4_RHYTHM_OFFSET)
+.else
+    .byte $ff
+.endif
+.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE
+    .byte .lobyte(EPSM_CHANNEL5_RHYTHM_OFFSET)
+.else
+    .byte $ff
+.endif
+.if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE
+    .byte .lobyte(EPSM_CHANNEL6_RHYTHM_OFFSET)
+.else
+    .byte $ff
+.endif
+.endif
 
 ; ======================================================================================================================
 ; Alternative entry points for calling from c code

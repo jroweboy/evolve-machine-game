@@ -55,7 +55,7 @@ namespace Titlescreen {
         // isn't good enough to get a real RNG seed.
         Rng::seed(nullptr);
 
-        play_song(Song::Intro);
+        // play_song(Song::Intro);
     }
 
     void update() {

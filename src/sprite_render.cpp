@@ -54,7 +54,7 @@ static void draw_object(u8 id) {
         oam.x = screen_x + frame->x;
         oam.y = screen_y + frame->y;
         oam.attr = frame->attr;
-        oam.tile = frame->tile;
+        oam.tile = frame->tile + object.tile_offset;
     }
 }
 

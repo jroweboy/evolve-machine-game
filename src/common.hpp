@@ -43,7 +43,7 @@ extern u32 seed;
 
 /// Global timer that always ticks up even during game pause!
 /// Caution: don't use for animation
-extern u8 global_timer[3];
+extern _BitInt(24) global_timer;
 
 
 /// Pointer to the IRQ function

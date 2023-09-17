@@ -15,7 +15,7 @@
 GameMode game_mode;
 GameMode prev_game_mode;
 
-__attribute__((section(".zp"))) u8 global_timer[3];
+__attribute__((section(".zp"))) _BitInt(24) global_timer;
 
 // Reserve 3 bytes of RAM as an editable IRQ handler. 
 // The linker is expecting this to be named exactly irq

@@ -29,10 +29,19 @@ struct Hitbox {
 #include "soa-struct.inc"
 
 struct Object {
+    /// Offset for the metasprite to render this.
     u8 metasprite;
 
+    /// Current status for the object. Meaning is dependent on what the object is
+    /// Negative values indicate that this should not be rendered (if its a sprite)
     State state;
 
+    /// When loading the sprite, we draw them in whatever order we find them,
+    /// so the metasprite data needs to be offset by the value of the actual
+    /// tile as it appears in CHR-RAM
+    u8 tile_offset;
+
+    /// Current frame of animation for this metasprite
     u8 animation_frame;
 
     u8 direction;
@@ -49,7 +58,7 @@ struct Object {
 
 #define SOA_STRUCT Object
 #define SOA_MEMBERS \
-    MEMBER(metasprite) MEMBER(state) MEMBER(animation_frame) MEMBER(direction) MEMBER(speed) \
+    MEMBER(metasprite) MEMBER(state) MEMBER(tile_offset) MEMBER(animation_frame) MEMBER(direction) MEMBER(speed) \
     MEMBER(hp) MEMBER(atk) MEMBER(x) MEMBER(y) MEMBER(hitbox)
 #include "soa-struct.inc"
 

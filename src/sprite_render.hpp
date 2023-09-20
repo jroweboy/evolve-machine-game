@@ -2,5 +2,9 @@
 #pragma once
 
 namespace Sprite {
-    void draw_objects();
+
+void move_sprites_offscreen();
+
+void draw_objects();
+
 }

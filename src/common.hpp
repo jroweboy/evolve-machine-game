@@ -19,11 +19,17 @@ typedef int32_t   s32;
 // This raw decompress function is defined at 0xc000
 extern void donut_decompress(const void* data);
 
-enum class GameMode : u8 {
+enum class MainMode : u8 {
     TitleScreen = 0,
     GenerateDungeon = 1,
-    MapLoader = 2,
-    GamePlay = 3,
+    // MapLoader = 2,
+    GamePlay = 2,
+    Pause = 0x80,
+};
+
+enum class GameMode : u8 {
+    InGame = 0,
+    MapLoader = 1,
     Pause = 0x80,
 };
 
@@ -35,8 +41,8 @@ struct Camera {
 
 extern Camera view;
 
-/// GameMode determines which main task the game will run. 
-extern GameMode game_mode;
+/// MainMode determines which main task the game will run. 
+extern MainMode main_mode;
 
 /// RNG seed for this run. Set when the game starts
 extern u32 seed;

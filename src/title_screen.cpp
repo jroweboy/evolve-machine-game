@@ -83,7 +83,7 @@ namespace Titlescreen {
                 if (pressed & PAD_START) {
                     pal_fade_to(4, 0, 4);
                     play_song(Song::StopMusic);
-                    game_mode = GameMode::GenerateDungeon;
+                    main_mode = MainMode::GenerateDungeon;
                     return;
                 } else if (pressed & PAD_SELECT) {
                     state = State::EnterSeed;

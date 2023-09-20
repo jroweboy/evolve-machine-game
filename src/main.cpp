@@ -8,12 +8,11 @@
 #include "dungeon_generator.hpp"
 #include "game.hpp"
 #include "object.hpp"
-#include "map_loader.hpp"
 #include "soa.h"
 #include "title_screen.hpp"
 
-GameMode game_mode;
-GameMode prev_game_mode;
+MainMode main_mode;
+MainMode prev_main_mode;
 
 __attribute__((section(".zp"))) _BitInt(24) global_timer;
 
@@ -22,6 +21,9 @@ __attribute__((section(".zp"))) _BitInt(24) global_timer;
 __attribute__((section(".noinit.late"))) void (*irq_pointer)();
 __attribute__((section(".noinit.late"))) u8 irq_counter;
 __attribute__((section(".noinit.late"))) bool has_epsm;
+
+// Define the global object array
+__attribute__((section(".noinit.late"))) soa::Array<Object, OBJECT_COUNT> objects;
 
 // IRQ handler that will just increment a counter and return
 extern "C" void irq_detection();
@@ -54,11 +56,8 @@ irq_default:
 )ASM");
 
 
-// Define the global object array
-soa::Array<Object, OBJECT_COUNT> objects;
-
 static void main_init() {    
-    prev_game_mode = (GameMode) 0xff;
+    prev_main_mode = (MainMode) 0xff;
     
     // Disable the PPU so we can freely modify its state
     ppu_off();
@@ -75,6 +74,8 @@ static void main_init() {
     for (auto obj : objects) {
         obj.state = State::Dead;
     }
+
+    set_prg_bank(2);
 
     // Initialize the player object
     auto player = objects[0];
@@ -126,36 +127,29 @@ int main() {
         pad_poll(0);
 
         // If we changed game modes, initialze the new one
-        if (game_mode != prev_game_mode) {
-        switch (game_mode) {
-            case GameMode::TitleScreen:
-            Titlescreen::init();
-            break;
-            case GameMode::GenerateDungeon:
-            generate_dungeon();
-            game_mode = GameMode::MapLoader;
-            // FALLTHROUGH
-            case GameMode::MapLoader:
-            MapLoader::init();
-            game_mode = GameMode::GamePlay;
-            // FALLTHROUGH
-            case GameMode::GamePlay:
-                // Game::init();
+        if (main_mode != prev_main_mode) {
+            switch (main_mode) {
+            case MainMode::TitleScreen:
+                Titlescreen::init();
+                break;
+            case MainMode::GenerateDungeon:
+                generate_dungeon();
+                main_mode = MainMode::GamePlay;
+                // FALLTHROUGH
+            case MainMode::GamePlay:
+                Game::init();
             default:
-            break;
-        }
-        prev_game_mode = game_mode;
+                break;
+            }
+            prev_main_mode = main_mode;
         }
         
         // Run this frame of the game mode
-        switch (game_mode) {
-        case GameMode::TitleScreen:
+        switch (main_mode) {
+        case MainMode::TitleScreen:
             Titlescreen::update();
             break;
-        case GameMode::MapLoader:
-            MapLoader::update();
-            break;
-        case GameMode::GamePlay:
+        case MainMode::GamePlay:
             Game::update();
             break;
         default:

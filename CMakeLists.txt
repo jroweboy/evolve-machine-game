@@ -48,6 +48,7 @@ set(ROM ${CMAKE_PROJECT_NAME}.nes)
 add_executable(${ROM}
     src/ca65.s
     src/graphics.s
+    src/sprite_render.s
 
     src/common.hpp
     src/dungeon_generator.cpp
@@ -77,6 +78,8 @@ target_include_directories(${ROM} PRIVATE gen)
 
 include(GenerateCA65Binary)
 generate_ca65_binary(TARGET ${CMAKE_SOURCE_DIR}/src/ca65.s SRC ${CMAKE_SOURCE_DIR}/ca65bin DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
+include(BuildMetasprites)
+build_metasprites(TARGET ${CMAKE_SOURCE_DIR}/src/sprite_render.s SRC ${CMAKE_SOURCE_DIR}/chr/metasprites DEST ${CMAKE_CURRENT_BINARY_DIR}/gen/sprites)
 include(BuildNESTiles)
 build_nes_tiles(TARGET ${CMAKE_SOURCE_DIR}/src/graphics.s SRC ${CMAKE_SOURCE_DIR}/chr DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 target_include_directories(${ROM} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen)
@@ -84,6 +87,7 @@ target_include_directories(${ROM} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen)
 target_link_libraries(${ROM} PRIVATE
     GraphicsAssets
     GeneratedCA65Binaries
+    Metasprites
     # Second-party, included in llvm-mos
     neslib
     # skip using NESDOUG since we don't want to include the extra 128 bytes of ram for its VRAM buffer

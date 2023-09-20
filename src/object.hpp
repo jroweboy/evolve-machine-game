@@ -8,8 +8,15 @@ constexpr u8 OBJECT_COUNT = 24;
 
 enum class ObjectType : u8 {
     Player,
-    Walker,
+    // Walker,
     Count,
+};
+
+enum class Direction : u8 {
+    Right = 0,
+    Up = 1,
+    Down = 2,
+    Left = 3,
 };
 
 enum State : u8 {
@@ -43,8 +50,9 @@ struct Object {
 
     /// Current frame of animation for this metasprite
     u8 animation_frame;
+    s8 frame_counter;
 
-    u8 direction;
+    Direction direction;
     u8 speed;
 
     s8 hp;
@@ -58,8 +66,8 @@ struct Object {
 
 #define SOA_STRUCT Object
 #define SOA_MEMBERS \
-    MEMBER(metasprite) MEMBER(state) MEMBER(tile_offset) MEMBER(animation_frame) MEMBER(direction) MEMBER(speed) \
-    MEMBER(hp) MEMBER(atk) MEMBER(x) MEMBER(y) MEMBER(hitbox)
+    MEMBER(metasprite) MEMBER(state) MEMBER(tile_offset) MEMBER(animation_frame) MEMBER(frame_counter) \
+    MEMBER(direction) MEMBER(speed) MEMBER(hp) MEMBER(atk) MEMBER(x) MEMBER(y) MEMBER(hitbox)
 #include "soa-struct.inc"
 
 extern soa::Array<Object, OBJECT_COUNT> objects;

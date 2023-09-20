@@ -1,6 +1,4 @@
 
-include(CompressCHR)
-
 function(build_nes_tiles)
   set(options)
   set(oneValueArgs TARGET SRC DEST)
@@ -131,7 +129,5 @@ function(build_nes_tiles)
   set_target_properties(GraphicsAssets PROPERTIES LINKER_LANGUAGE CXX)
   target_include_directories(GraphicsAssets PUBLIC ${TILES_DEST})
   
-  foreach(FILE IN ITEMS ${room_outfiles})
-    set_source_files_properties(${TILES_TARGET} PROPERTIES OBJECT_DEPENDS ${FILE})
-  endforeach()
+  set_property(SOURCE ${TILES_TARGET} PROPERTY OBJECT_DEPENDS ${room_outfiles})
 endfunction()

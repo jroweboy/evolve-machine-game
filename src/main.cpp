@@ -133,7 +133,7 @@ int main() {
                 Titlescreen::init();
                 break;
             case MainMode::GenerateDungeon:
-                generate_dungeon();
+                Dungeon::generate_dungeon();
                 main_mode = MainMode::GamePlay;
                 // FALLTHROUGH
             case MainMode::GamePlay:

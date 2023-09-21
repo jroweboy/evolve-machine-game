@@ -36,6 +36,15 @@ struct ObjectSpawn {
     s16 y;
 };
 
+enum class SectionBase : u8 {
+    Bottom,
+    Left,
+    Right,
+    Single,
+    Start,
+    Top,
+};
+
 // A room is made up of 1 or 2 sections representing a single screen worth of data called a section
 struct Room {
     // Hold the map position for the lead and side room
@@ -54,6 +63,10 @@ struct Section {
 
     // Store which nametable to draw this section into.
     u8 nametable;
+
+    // The nametable stores which side to draw the screen in, but it doesn't say what screen to draw.
+    // This is an enum of what type of screen to draw.
+    SectionBase room_base;
 
     // An exit refers to the section ID for the new section that we are moving to
     // Store the list of exits for this room in this order

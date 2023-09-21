@@ -17,6 +17,7 @@ title_bin:
     .incbin "graphics/titlescreen.bin"
 .byte $ff, $ff
 
+;; Room data:
 
 .section .prg_rom_1,"aR",@progbits
 .globl bottom_bin

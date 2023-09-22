@@ -4,19 +4,17 @@
 
 #include "nes_extra.hpp"
 #include "common.hpp"
+#include "graphics.hpp"
 #include "music.hpp"
 #include "rand.hpp"
 #include "title_screen.hpp"
 
-extern const char title_chr[];
-extern const char title_bin[];
-
-constexpr char background_pal[] = {
-    0x0f, 0x16, 0x27, 0x2d,
-    0x0f, 0x1c, 0x31, 0x30,
-    0x0f, 0x10, 0x20, 0x30,
-    0x0f, 0x10, 0x20, 0x30,
-};
+// constexpr char background_pal[] = {
+//     0x0f, 0x16, 0x27, 0x2d,
+//     0x0f, 0x1c, 0x31, 0x30,
+//     0x0f, 0x10, 0x20, 0x30,
+//     0x0f, 0x10, 0x20, 0x30,
+// };
 
 namespace Titlescreen {
 
@@ -42,7 +40,7 @@ namespace Titlescreen {
         vram_adr(NAMETABLE_A);
         donut_decompress(&title_bin);
 
-        pal_bg(background_pal);
+        pal_bg(title_palette);
         pal_bright(0);
 
 
@@ -57,17 +55,17 @@ namespace Titlescreen {
         }
 
 
+        play_song(Song::Intro);
+
         ppu_on_all();
 
-        pal_fade_to(0, 4, 4);
+        pal_fade_to(0, 4, 8);
 
         state = State::Waiting;
         
         // Set the initial RNG seed to the frame counter here. This
         // isn't good enough to get a real RNG seed.
         Rng::seed(nullptr);
-
-        play_song(Song::Intro);
     }
 
     void update() {

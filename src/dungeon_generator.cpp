@@ -121,7 +121,7 @@ using Exits = std::array<u8, Dungeon::ROOM_LIMIT>;
 //    0
 // 3 [ ] 1
 //    2
-static u8 GetNeighborId(u8 me, u8 direction) {
+__attribute__((section(".prg_rom_2"))) static u8 GetNeighborId(u8 me, u8 direction) {
     switch (direction) {
         // The y bounds check will happen after the function by checking if its < DUNGEON_WIDTH * DUNGEON_HEIGHT
     case 0:
@@ -144,7 +144,7 @@ static u8 GetNeighborId(u8 me, u8 direction) {
 // TODO: Change vram_read/write to just vram_poke/peak for speed
 // Optimized routine to read just the section's exit information and either update it 
 // if its Dungeon::EXIT_PENDING or return false if theres no exit
-static bool update_section_exit(u8 my_id, u8 direction, u8 new_exit) {
+__attribute__((section(".prg_rom_2"))) static bool update_section_exit(u8 my_id, u8 direction, u8 new_exit) {
     // Read out this particular exit from the section
     u16 offset = SectionOffset + my_id * sizeof(Section) + offsetof(Section, exit) + direction;
     vram_adr(offset);
@@ -170,7 +170,7 @@ static bool update_section_exit(u8 my_id, u8 direction, u8 new_exit) {
 
 // A side cell is the attached room to the new map_id, since each
 // cell is 1x2 or 2x1;
-static u8 get_side_cell(const MapId& map, u8 position) {
+__attribute__((section(".prg_rom_2"))) static u8 get_side_cell(const MapId& map, u8 position) {
     s8 i = 3;
     u8 u = rand() & 0b11;
     while (i > 0) {
@@ -187,12 +187,12 @@ static u8 get_side_cell(const MapId& map, u8 position) {
 }
 
 // Load up stuff into the current room
-static void generate_room_spawns() {
+__attribute__((section(".prg_rom_2"))) static void generate_room_spawns() {
     // TODO actually add stuff to the room
     return;
 }
 
-static void add_sections_to_fill(Section& section, MapId& to_fill, u8& fill_write, u8 me) {
+__attribute__((section(".prg_rom_2"))) static void add_sections_to_fill(Section& section, MapId& to_fill, u8& fill_write, u8 me) {
 
     // Get a random list of exits to leave from in this first room
     u8 todo = ((u8)rand()) & 0b1111;
@@ -212,7 +212,7 @@ static void add_sections_to_fill(Section& section, MapId& to_fill, u8& fill_writ
     }
 }
 
-static void update_section_exits(const MapId& map, Section& section, u8 me) {
+__attribute__((section(".prg_rom_2"))) static void update_section_exits(const MapId& map, Section& section, u8 me) {
     for (u8 i = 0; i < 4; ++i) {
         u8 neighbor = GetNeighborId(me, i);
         if (neighbor >= Dungeon::SIZE || map[neighbor] == Dungeon::NO_EXIT) continue;
@@ -234,6 +234,13 @@ static void update_section_exits(const MapId& map, Section& section, u8 me) {
 namespace Dungeon {
 
 // u8 starting_room_id;
+
+u8 load_room_id_by_section(u8 id) {
+    vram_adr(SectionOffset + id * sizeof(Section));
+    u8 room_id;
+    vram_read(&room_id, sizeof(u8));
+    return room_id;
+}
 
 void load_section_to_lead(u8 id) {
     vram_adr(SectionOffset + id * sizeof(Section));
@@ -276,7 +283,7 @@ void write_room_to_chrram(u8 id) {
     vram_write(cast, sizeof(Room));
 }
 
-__attribute__((section(".prg_rom.2"))) void generate_dungeon() {
+__attribute__((section(".prg_rom_2"))) u8 generate_dungeon() {
     // List of visited tiles and their room_ids
     MapId map;
     for (auto& num : map) { num = 0xff; }
@@ -299,6 +306,7 @@ __attribute__((section(".prg_rom.2"))) void generate_dungeon() {
 
     // set the main to a random location with no side room.
     u8 lead_id = ((u8)rand()) & 0b111111;
+    u8 start_id = lead_id;
     u8 side_id = Dungeon::NO_EXIT; // mark the side position as unused
 
     // now we have the initial rooms so write my id to the map
@@ -461,6 +469,8 @@ __attribute__((section(".prg_rom.2"))) void generate_dungeon() {
     std::wcout << L"fill_write: " << fill_write << std::endl;
     dump_map(map, to_fill);
 #endif
+
+    return start_id;
 }
 }
 #ifndef NES

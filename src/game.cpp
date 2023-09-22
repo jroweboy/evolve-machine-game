@@ -60,7 +60,6 @@ void init() {
     ppu_off();
     pal_spr(&sprites_pal);
     prev_game_mode = GameMode::MapLoader;
-    MapLoader::load_map(0);
     game_mode = GameMode::InGame;
     set_prg_bank(2);
     auto player = objects[0];

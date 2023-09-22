@@ -7,6 +7,7 @@
 #include "common.hpp"
 #include "dungeon_generator.hpp"
 #include "game.hpp"
+#include "map_loader.hpp"
 #include "object.hpp"
 #include "soa.h"
 #include "title_screen.hpp"
@@ -132,10 +133,13 @@ int main() {
             case MainMode::TitleScreen:
                 Titlescreen::init();
                 break;
-            case MainMode::GenerateDungeon:
-                Dungeon::generate_dungeon();
+            case MainMode::GenerateDungeon: {
+                set_prg_bank(2);
+                u8 id = Dungeon::generate_dungeon();
                 main_mode = MainMode::GamePlay;
+                MapLoader::load_map(id);
                 // FALLTHROUGH
+            }
             case MainMode::GamePlay:
                 Game::init();
             default:

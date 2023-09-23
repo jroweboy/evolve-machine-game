@@ -2,6 +2,6 @@
 #pragma once
 
 namespace Game {
-    void init();
-    void update();
+    __attribute__((section(".prg_rom_2"))) void init();
+    __attribute__((section(".prg_rom_2"))) void update();
 }

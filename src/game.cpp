@@ -17,7 +17,7 @@ static bool lag_frame;
 static GameMode game_mode;
 static GameMode prev_game_mode;
 
-static void move_player() {
+__attribute__((section(".prg_rom_2"))) static void move_player() {
     auto player = objects[0];
     auto pressed = pad_state(0);
     if (pressed & PAD_UP) {
@@ -55,7 +55,7 @@ constexpr char sprites_pal[] = {
 };
 
 namespace Game {
-void init() {
+__attribute__((section(".prg_rom_2"))) void init() {
     ppu_wait_nmi();
     ppu_off();
     pal_spr(&sprites_pal);
@@ -69,7 +69,7 @@ void init() {
     player.y = 100;
 }
 
-void update() {
+__attribute__((section(".prg_rom_2"))) void update() {
     if (game_mode != prev_game_mode) {
         if (game_mode == GameMode::MapLoader) {
             pal_fade_to(4, 2, 2);

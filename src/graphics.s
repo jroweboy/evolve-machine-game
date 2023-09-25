@@ -18,6 +18,9 @@ room_single_chr:
 .globl room_start_chr
 room_start_chr:
     .incbin "graphics/chr/start.chr.dnt"
+.globl hudfont_chr
+hudfont_chr:
+    .incbin "graphics/chr/hudfont.chr.dnt"
 
 ;;;; Nametables (Compressed)
 

@@ -9,6 +9,8 @@ extern const char room_start_chr[];
 
 extern const char kitty_chr[];
 
+extern const char hudfont_chr[];
+
 // Compressed Nametables (titlescreen contains attributes too)
 extern const char title_bin[];
 extern const char bottom_bin[];
@@ -32,3 +34,5 @@ extern const char leftright_palette[];
 extern const char single_palette[];
 extern const char start_palette[];
 extern const char title_palette[];
+
+#define HUDFont_location 0x2000-(10*16*2)

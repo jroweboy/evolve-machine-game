@@ -32,10 +32,21 @@ def make_palette_params(input: Path, outpal: Path):
     f"-t3", str(outpal / f"{input.stem}_3.pal"),
   ]
 
-def nestiler_params(nestiler: Path, outchr: Path):
+def nestiler_params_bg(nestiler: Path, outchr: Path):
   return [
     "-c", str(nestiler / 'nestiler-colors.json'),
     "--mode", "bg", "--lossy", "1",
+    "--share-pattern-table",
+    "--out-pattern-table-0", str(outchr)]
+
+def nestiler_params_spr(nestiler: Path, outchr: Path, bg_color: int):
+  return [
+    "-c", str(nestiler / 'nestiler-colors.json'),
+    "--mode", "sprites8x16", "--lossy", "1",
+    "--bg-color", f"#{hex(bg_color)[2:]}",
+    "--palette-0",  "#44009C"   # 0x03
+    ","             "#747474"   # 0x00
+    ","             "#FC9838",  # 0x27
     "--share-pattern-table",
     "--out-pattern-table-0", str(outchr)]
 
@@ -86,7 +97,7 @@ def main(nestiler: Path, fin: Path, fout: Path):
     print(second)
     chr_path = rawchr_path / f"{first.stem}{second.stem}.chr"
     params = []
-    params += nestiler_params(nestiler, rawchr_path / f"{first.stem}{second.stem}.chr")
+    params += nestiler_params_bg(nestiler, rawchr_path / f"{first.stem}{second.stem}.chr")
     params += make_input_params(0, first, rawnmt_path, outatr_path, rawpal_path)
     params += make_input_params(1, second, rawnmt_path, outatr_path, rawpal_path)
     params += make_palette_params(chr_path, rawpal_path)
@@ -97,7 +108,7 @@ def main(nestiler: Path, fin: Path, fout: Path):
   for screen in [room_path / "single.bmp", room_path / "start.bmp"]:
     params = []
     chr_path = rawchr_path / f"{screen.stem}.chr"
-    params += nestiler_params(nestiler, chr_path)
+    params += nestiler_params_bg(nestiler, chr_path)
     params += make_input_params(0, screen, rawnmt_path, outatr_path, rawpal_path)
     params += make_palette_params(chr_path, rawpal_path)
     run_nes_tiler(nestiler, *params)
@@ -109,7 +120,7 @@ def main(nestiler: Path, fin: Path, fout: Path):
   for screen in [special_path / "titlescreen.bmp"]:
     params = []
     chr_path = rawchr_path / f"{screen.stem}.chr"
-    params += nestiler_params(nestiler, chr_path)
+    params += nestiler_params_bg(nestiler, chr_path)
     # write the screen nmt and attr to the tmp path so we can concat them
     # since these screens don't have any object mixins, we can save space by compressing
     # the attribute tables as part of the nametable
@@ -123,6 +134,17 @@ def main(nestiler: Path, fin: Path, fout: Path):
       with open(rawnmt_path / f"{screen.stem}_atr.nmt", 'wb') as out:
         out.write(nmt.read())
         out.write(atr.read())
+
+  # run it on the HUD font
+  for font in [special_path / "hudfont.bmp"]:
+    params = []
+    chr_path = rawchr_path / f"{font.stem}.chr"
+    params += nestiler_params_spr(nestiler, chr_path, 0xFF00FF)
+    # write the screen nmt and attr to the tmp path so we can concat them
+    # since these screens don't have any object mixins, we can save space by compressing
+    # the attribute tables as part of the nametable
+    params += [f"-i0", str(font)]
+    run_nes_tiler(nestiler, *params)
 
   # next up, run it on the objects?
 

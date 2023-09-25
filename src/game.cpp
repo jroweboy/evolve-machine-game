@@ -4,6 +4,8 @@
 
 #include "common.hpp"
 #include "game.hpp"
+#include "graphics.hpp"
+#include "map_loader.hpp"
 #include "nes_extra.hpp"
 #include "object.hpp"
 #include "sprite_render.hpp"
@@ -16,8 +18,7 @@ static bool lag_frame;
 static GameMode game_mode;
 static GameMode prev_game_mode;
 
-__attribute__((section(".prg_rom_2")))
-extern "C" u8 check_solid_collision(u8 filter, u8 obj_idx);
+prg_rom_2 extern "C" u8 check_solid_collision(u8 filter, u8 obj_idx);
 
 asm(R"ASM(
 .section .prg_rom_2,"ax",@progbits
@@ -143,7 +144,7 @@ check_solid_collision:
     rts
 )ASM");
 
-__attribute__((section(".prg_rom_2"))) static void move_player() {
+prg_rom_2 static void move_player() {
     auto player = objects[0];
     auto pressed = pad_state(0);
     if (pressed & PAD_UP) {
@@ -187,7 +188,7 @@ constexpr char sprites_pal[] = {
 };
 
 namespace Game {
-__attribute__((section(".prg_rom_2"))) void init() {
+prg_rom_2 void init() {
     ppu_wait_nmi();
     ppu_off();
     pal_spr(&sprites_pal);
@@ -201,12 +202,26 @@ __attribute__((section(".prg_rom_2"))) void init() {
     player.y = 100;
 }
 
-__attribute__((section(".prg_rom_2"))) void update() {
+prg_rom_2 void update() {
     if (game_mode != prev_game_mode) {
         if (game_mode == GameMode::MapLoader) {
             pal_fade_to(4, 2, 2);
             ppu_off();
         } else if (game_mode == GameMode::InGame) {
+            ppu_off();
+
+            u8 old_bank = get_prg_bank();
+
+            // Load HUD font
+            // switch to the 16kb bank that holds the graphics
+            set_prg_bank(1);
+            set_chr_bank(0);
+
+            vram_adr(HUDFont_location);
+            donut_decompress(&hudfont_chr);
+
+            set_prg_bank(old_bank);
+            
             ppu_on_all();
             pal_fade_to(0, 4, 2);
         } else if (game_mode == GameMode::Pause) {

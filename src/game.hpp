@@ -1,7 +1,8 @@
 
 #pragma once
 
+#include "common.hpp"
 namespace Game {
-    __attribute__((section(".prg_rom_2"))) void init();
-    __attribute__((section(".prg_rom_2"))) void update();
+    prg_rom_2 void init();
+    prg_rom_2 void update();
 }

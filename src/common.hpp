@@ -73,6 +73,8 @@ extern u8 bg_chr_count;
 extern u16 sp_chr_offset;
 extern u8 sp_chr_count;
 
+#define prg_rom_2 __attribute__((section(".prg_rom_2")))
+
 #ifdef __cplusplus
 }
 #endif

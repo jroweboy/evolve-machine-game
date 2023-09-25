@@ -4,6 +4,7 @@
 #include <soa.h>
 
 #include "sprite_render.hpp"
+#include "common.hpp"
 #include "object.hpp"
 
 struct OAMData {
@@ -31,7 +32,7 @@ static u8 sprite_slot;
 extern u8 OAM_BUF[256];
 // volatile OAMData* OAM = &*reinterpret_cast<volatile OAMData*>(&OAM_BUF);
 
-__attribute__((section(".prg_rom_2"))) static void draw_object(u8 id) {
+prg_rom_2 static void draw_object(u8 id) {
     const auto& object = objects[id];
 
     // If the high bit of the object state is 1 then its not going to be drawn so skip it
@@ -62,7 +63,7 @@ __attribute__((section(".prg_rom_2"))) static void draw_object(u8 id) {
 }
 
 template <size_t Mod>
-__attribute__((section(".prg_rom_2"))) static u8 mod_add(u8 l, u8 r) {
+prg_rom_2 static u8 mod_add(u8 l, u8 r) {
     u8 o = l + r;
     if (o >= Mod) {
         o -= Mod;
@@ -70,14 +71,13 @@ __attribute__((section(".prg_rom_2"))) static u8 mod_add(u8 l, u8 r) {
     return o;
 }
 
-__attribute__((section(".prg_rom_2")))
-static void draw_hud() {
+prg_rom_2 static void draw_hud() {
     // TODO
 }
 
 namespace Sprite {
 
-    __attribute__((section(".prg_rom_2"))) void move_sprites_offscreen() {
+    prg_rom_2 void move_sprites_offscreen() {
         #pragma clang loop unroll(enable)
         for (s8 i = 0; i < 64; ++i) {
             auto& oam = reinterpret_cast<OAMData*>(&OAM_BUF)[i];

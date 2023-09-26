@@ -5,7 +5,7 @@
 
 #include "common.hpp"
 #include "dungeon_generator.hpp"
-#include "header/graphics_constants.hpp"
+// #include "header/graphics_constants.hpp"
 #include "header/sprites_constants.hpp"
 #include "graphics.hpp"
 #include "map_loader.hpp"
@@ -82,15 +82,18 @@ namespace MapLoader {
         // TODO save the previous room state when leaving?
         read_map_room(section_id);
 
-        set_chr_bank(0);
+        bg_chr_count = 0;
+        bg_chr_offset = 0x0000;
+        set_chr_bank(bg_chr_offset);
         vram_adr(0x00);
         const char* chr = section_lut[static_cast<u8>(lead.room_base)].chr;
         donut_decompress(chr);
+        // bg_chr_offset += // todo we need to add the offsets to the section_lut
 
         // always add the kitty tile to the CHR
         sp_chr_count = 0;
-        sp_chr_offset = 0;
-        vram_adr(0x1000);
+        sp_chr_offset = 0x1000;
+        vram_adr(sp_chr_offset);
         donut_decompress(&kitty_chr);
         sp_chr_count += kitty_chr_count;
         sp_chr_offset += kitty_chr_offset;

@@ -29,7 +29,7 @@ function(build_metasprites)
 
   set(cmd ${Python3_EXECUTABLE} ${metasprite_script} ${META_SRC} ${META_DEST})
   add_custom_command(
-    OUTPUT ${outfiles}
+    OUTPUT ${outfiles} ${META_DEST}/header/sprites_constants.hpp
 
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${META_DEST}/sprites

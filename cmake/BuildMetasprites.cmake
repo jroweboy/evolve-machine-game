@@ -24,8 +24,6 @@ function(build_metasprites)
   
   file(GLOB infiles "${META_SRC}/metasprites/*")
   file(GLOB outfiles "${META_SRC}/metasprites/*")
-  message(${infiles})
-  message(${outfiles})
   list(TRANSFORM outfiles REPLACE "${META_SRC}/metasprites/(.*).chr" "${META_DEST}/sprites/\\1.chr.dnt")
   list(TRANSFORM outfiles REPLACE "${META_SRC}/metasprites/(.*).msb" "${META_DEST}/sprites/\\1_metasprite.msb")
 
@@ -36,6 +34,7 @@ function(build_metasprites)
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${META_DEST}/sprites
     COMMAND ${CMAKE_COMMAND} -E make_directory ${META_DEST}/raw/sprites
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${META_DEST}/header/
 
     COMMAND ${cmd}
 
@@ -43,7 +42,7 @@ function(build_metasprites)
     DEPENDS ${metasprite_script}
   )
   
-  add_library(Metasprites ${outfiles})
+  add_library(Metasprites ${outfiles} ${META_DEST}/header/sprites_constants.hpp)
   set_target_properties(Metasprites PROPERTIES LINKER_LANGUAGE CXX)
   target_include_directories(Metasprites PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen)
 

@@ -51,7 +51,7 @@ function(build_nes_tiles)
   set(out_nmtpath ${TILES_DEST}/graphics/nmt)
   set(out_atrpath ${TILES_DEST}/graphics/atr)
   set(out_palpath ${TILES_DEST}/graphics/pal)
-  set(out_asmpath ${TILES_DEST}/asm)
+  set(out_asmpath ${TILES_DEST}/header)
 
   set(all_in_files
     # all room bmps
@@ -97,11 +97,20 @@ function(build_nes_tiles)
     # objects: TODO
 
     # asm constants
-    ${out_asmpath}/graphics_constants.s
+    ${out_asmpath}/graphics_constants.hpp
   )
   
   add_custom_command(
     OUTPUT ${all_out_files}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${out_chrpath}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${out_nmtpath}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${out_atrpath}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${out_palpath}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${out_asmpath}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${rawchr_path}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${rawtmp_path}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${rawnmt_path}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${rawpal_path}
     COMMAND ${Python3_EXECUTABLE} ${process_script} ${NESTILER_DIR} ${TILES_SRC} ${TILES_DEST}
     DEPENDS ${all_in_files} ${process_script} ${compressor_script}
   )

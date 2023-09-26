@@ -15,13 +15,10 @@ function(compress_chr)
     message(FATAL_ERROR "Compressed CHR Gen DEST folder is required!")
   endif()
   
-  message("in: ${COMPRESS_CHR_SRC} out: ${COMPRESS_CHR_DEST}")
   file(GLOB infiles "${COMPRESS_CHR_SRC}/*")
   file(GLOB outfiles "${COMPRESS_CHR_SRC}/*")
   list(TRANSFORM outfiles REPLACE "${COMPRESS_CHR_SRC}/(.*)" "${COMPRESS_CHR_DEST}/\\1")
   find_package(Python3 REQUIRED)
-
-  message("in: ${infiles} out: ${outfiles}")
 
   find_file(compressor_script NAMES donut donut.py)
   if (NOT compressor_script)

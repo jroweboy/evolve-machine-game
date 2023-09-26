@@ -5,6 +5,8 @@
 
 #include "common.hpp"
 #include "dungeon_generator.hpp"
+#include "header/graphics_constants.hpp"
+#include "header/sprites_constants.hpp"
 #include "graphics.hpp"
 #include "map_loader.hpp"
 #include "map.hpp"
@@ -18,7 +20,7 @@ struct SectionLookup {
     u8 mirroring;
 };
 
-// TODO: this table should be struct of array when that issue is fixed
+// TODO: this table should be generated in python instead since it can really only happen in ASM
 __attribute__((section(".prg_rom_1.section_lut"))) constexpr SectionLookup section_lut[6] = {
     {bottom_bin, room_updown_chr, bottom_attr, updown_palette, MIRROR_HORIZONTAL},
     {left_bin, room_leftright_chr, left_attr, leftright_palette, MIRROR_VERTICAL},
@@ -86,8 +88,12 @@ namespace MapLoader {
         donut_decompress(chr);
 
         // always add the kitty tile to the CHR
+        sp_chr_count = 0;
+        sp_chr_offset = 0;
         vram_adr(0x1000);
         donut_decompress(&kitty_chr);
+        sp_chr_count += kitty_chr_count;
+        sp_chr_offset += kitty_chr_offset;
 
         load_section(lead);
 

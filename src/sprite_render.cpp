@@ -72,7 +72,30 @@ prg_rom_2 static u8 mod_add(u8 l, u8 r) {
 }
 
 prg_rom_2 static void draw_hud() {
-    // TODO
+    const auto& player = objects[0];
+    // TODO: don't hardcode these offsets
+    constexpr u8 numeral_tile_offset = 0x2b;
+    auto& catface_left = *reinterpret_cast<OAMData*>(&OAM_BUF[sprite_slot]);
+    auto& catface_right = *reinterpret_cast<OAMData*>(&OAM_BUF[sprite_slot+4]);
+    auto& hud_hp = *reinterpret_cast<OAMData*>(&OAM_BUF[sprite_slot+8]);
+
+    catface_left.tile = numeral_tile_offset + 20;
+    catface_right.tile = numeral_tile_offset + 22;
+    hud_hp.tile = player.hp + numeral_tile_offset;
+
+    catface_left.attr = 0;
+    catface_right.attr = 0;
+    hud_hp.attr = 0;
+
+    catface_left.x = 20;
+    catface_right.x = 28;
+    hud_hp.x = 40;
+
+    catface_left.y = 24;
+    catface_right.y = 24;
+    hud_hp.y = 24;
+
+    sprite_slot += 12;
 }
 
 namespace Sprite {
@@ -93,11 +116,9 @@ namespace Sprite {
         draw_object(0);
 
         // OAM shuffle the rest of the sprites
-        // 17 and 23 are co prime with 24
-        shuffle_offset = mod_add<OBJECT_COUNT>(shuffle_offset, 7);
+        shuffle_offset = mod_add<OBJECT_COUNT>(shuffle_offset, 11);
         u8 original_offset = shuffle_offset;
-        u8 i = mod_add<OBJECT_COUNT>(shuffle_offset, 11);
-        for (; i != original_offset; i = mod_add<OBJECT_COUNT>(i, 11)) {
+        for (u8 i = mod_add<OBJECT_COUNT>(shuffle_offset, 7); i != original_offset; i = mod_add<OBJECT_COUNT>(i, 7)) {
             // we drew the player already and we guarantee they are in slot 0
             if (i == 0) {
                 draw_hud();

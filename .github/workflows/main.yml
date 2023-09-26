@@ -9,11 +9,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
           cache: 'pip' # caching pip dependencies
-      - run: pip install -r requirements.txt
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
       # - name: Setup .NET Core SDK
       #   uses: actions/setup-dotnet@v3
       #   with:
@@ -30,7 +32,7 @@ jobs:
       - name: Get dependencies
         run: sudo apt install cmake cc65 ninja-build
       - name: Get llvm-mos
-        run: mkdir -p build && wget -c https://github.com/llvm-mos/llvm-mos-sdk/releases/download/v3.1.0/llvm-mos-linux.tar.xz -O - | tar -xJ -C build
+        run: mkdir -p build && wget -c https://github.com/llvm-mos/llvm-mos-sdk/releases/download/v6.0.0/llvm-mos-linux.tar.xz -O - | tar -xJ -C build
       - name: Start xvfb 
         run: sudo Xvfb :99 -screen 0 1280x1024x24 &
       - name: Configure

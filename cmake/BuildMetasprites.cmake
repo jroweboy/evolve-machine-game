@@ -22,17 +22,20 @@ function(build_metasprites)
     message(FATAL_ERROR "Cannot build metasprites: Unable to find processing script process_metasprite.py")
   endif()
   
-  file(GLOB infiles "${META_SRC}/*")
-  file(GLOB outfiles "${META_SRC}/*")
-  list(TRANSFORM outfiles REPLACE "${META_SRC}/(.*).chr" "${META_DEST}/\\1_chr.bin")
-  list(TRANSFORM outfiles REPLACE "${META_SRC}/(.*).msb" "${META_DEST}/\\1_metasprite.bin")
+  file(GLOB infiles "${META_SRC}/metasprites/*")
+  file(GLOB outfiles "${META_SRC}/metasprites/*")
+  message(${infiles})
+  message(${outfiles})
+  list(TRANSFORM outfiles REPLACE "${META_SRC}/metasprites/(.*).chr" "${META_DEST}/sprites/\\1.chr.dnt")
+  list(TRANSFORM outfiles REPLACE "${META_SRC}/metasprites/(.*).msb" "${META_DEST}/sprites/\\1_metasprite.msb")
 
   set(cmd ${Python3_EXECUTABLE} ${metasprite_script} ${META_SRC} ${META_DEST})
   add_custom_command(
     OUTPUT ${outfiles}
 
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${META_DEST}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${META_DEST}/sprites
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${META_DEST}/raw/sprites
 
     COMMAND ${cmd}
 

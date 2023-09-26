@@ -1,7 +1,7 @@
 
-#include <bank.h>
+#include <mapper.h>
 #include <neslib.h>
-#include "soa.h"
+#include <soa.h>
 
 #include "sprite_render.hpp"
 #include "object.hpp"
@@ -70,11 +70,16 @@ __attribute__((section(".prg_rom_2"))) static u8 mod_add(u8 l, u8 r) {
     return o;
 }
 
+__attribute__((section(".prg_rom_2")))
+static void draw_hud() {
+    // TODO
+}
+
 namespace Sprite {
 
     __attribute__((section(".prg_rom_2"))) void move_sprites_offscreen() {
         #pragma clang loop unroll(enable)
-        for (s8 i = 63; i >= 0; --i) {
+        for (s8 i = 0; i < 64; ++i) {
             auto& oam = reinterpret_cast<OAMData*>(&OAM_BUF)[i];
             oam.y = 0xff;
         }
@@ -89,12 +94,13 @@ namespace Sprite {
 
         // OAM shuffle the rest of the sprites
         // 17 and 23 are co prime with 24
-        shuffle_offset = mod_add<OBJECT_COUNT>(shuffle_offset, 17);
+        shuffle_offset = mod_add<OBJECT_COUNT>(shuffle_offset, 7);
         u8 original_offset = shuffle_offset;
-        u8 i = mod_add<OBJECT_COUNT>(shuffle_offset, 23);
-        for (; i != original_offset; i = mod_add<OBJECT_COUNT>(i, 23)) {
+        u8 i = mod_add<OBJECT_COUNT>(shuffle_offset, 11);
+        for (; i != original_offset; i = mod_add<OBJECT_COUNT>(i, 11)) {
             // we drew the player already and we guarantee they are in slot 0
             if (i == 0) {
+                draw_hud();
                 continue;
             }
             draw_object(i);

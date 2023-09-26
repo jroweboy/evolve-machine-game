@@ -19,7 +19,7 @@
 #include <iostream>
 #include <cassert>
 #else
-#include <bank.h>
+#include <mapper.h>
 #include <neslib.h>
 #include "rand.hpp"
 

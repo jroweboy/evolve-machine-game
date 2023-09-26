@@ -2,7 +2,7 @@
 .section .prg_rom_1,"aR",@progbits
 .globl kitty_chr
 kitty_chr:
-.incbin "sprites/kitty_chr.bin"
+.incbin "sprites/kitty.chr.dnt"
 .byte $ff, $ff
 
 .section .prg_rom_2,"aR",@progbits
@@ -22,6 +22,7 @@ kitty_walk_right:
 .incbin "sprites/kitty_metasprite_3.bin"
 4:
 
+.section .prg_rom_2,"aR",@progbits
 .globl kitty_walk_up
 kitty_walk_up:
 .byte 1f-.-1 + 0
@@ -38,6 +39,7 @@ kitty_walk_up:
 .incbin "sprites/kitty_metasprite_7.bin"
 4:
 
+.section .prg_rom_2,"aR",@progbits
 .globl kitty_walk_down
 kitty_walk_down:
 .byte 1f-.-1 + 0
@@ -54,6 +56,7 @@ kitty_walk_down:
 .incbin "sprites/kitty_metasprite_11.bin"
 4:
 
+.section .prg_rom_2,"aR",@progbits
 .globl kitty_walk_left
 kitty_walk_left:
 .byte 1f-.-1 + 0

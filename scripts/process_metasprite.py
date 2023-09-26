@@ -10,7 +10,7 @@ from donut import get_cblocks_from_bytes
 def main(fin: Path, fout: Path):
   fout.mkdir(parents=True, exist_ok=True)
 
-  for file in fin.rglob('*.msb'):
+  for file in (fin / "metasprites").rglob('*.msb'):
     
     # metasprites = ""
     # filename = file.stem.replace(".", "_").replace(" ", "_")
@@ -46,10 +46,10 @@ def main(fin: Path, fout: Path):
           o += spr
         out.append(o)
         
-        with open((fout / f"{file.stem}_metasprite_{metasprite}.bin"), 'wb') as single:
+        with open((fout / "sprites" / f"{file.stem}_metasprite_{metasprite}.bin"), 'wb') as single:
           single.write(o)
 
-      with open((fout / f"{file.stem}_metasprite.bin"), 'wb') as o:
+      with open((fout / "sprites" / f"{file.stem}_metasprite.msb"), 'wb') as o:
         offset = len(out)
         for byt in out:
           offset += len(byt)
@@ -61,7 +61,7 @@ def main(fin: Path, fout: Path):
         for byt in out:
           o.write(byt)
 
-    with open(fin / f"{file.stem}.chr", 'rb') as f:
+    with open(fin / "metasprites" / f"{file.stem}.chr", 'rb') as f:
       rawchr = f.read()
       compressed_pages = []
       for block in get_cblocks_from_bytes(rawchr, allow_partial=True):
@@ -72,8 +72,10 @@ def main(fin: Path, fout: Path):
       w = len(compressed)
       ratio = 1 - (w / r)
       print("<total> :{:>6.1%} ({} => {} bytes, {})".format(ratio, r, w, file.stem), file=sys.stderr)
-      with open((fout / f"{file.stem}_chr.bin"), 'wb') as o:
+      with open((fout / "sprites" / f"{file.stem}.chr.dnt"), 'wb') as o:
         o.write(compressed)
+      with open((fout / "raw" / "sprites" / f"{file.stem}.chr"), 'wb') as o:
+        o.write(rawchr)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Processes Metasprites and outputs to header files')

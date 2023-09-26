@@ -61,11 +61,10 @@ add_executable(${ROM}
     src/music.hpp
     src/nes_extra.cpp
     src/nes_extra.hpp
+    src/object.cpp
     src/object.hpp
     src/rand.cpp
     src/rand.hpp
-    src/soa-struct.inc
-    src/soa.h
     src/sprite_render.hpp
     src/sprite_render.cpp
     src/sprite_render.hpp
@@ -79,7 +78,7 @@ target_include_directories(${ROM} PRIVATE gen)
 include(GenerateCA65Binary)
 generate_ca65_binary(TARGET ${CMAKE_SOURCE_DIR}/src/ca65.s SRC ${CMAKE_SOURCE_DIR}/ca65bin DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 include(BuildMetasprites)
-build_metasprites(TARGET ${CMAKE_SOURCE_DIR}/src/sprite_render.s SRC ${CMAKE_SOURCE_DIR}/chr/metasprites DEST ${CMAKE_CURRENT_BINARY_DIR}/gen/sprites)
+build_metasprites(TARGET ${CMAKE_SOURCE_DIR}/src/sprite_render.s SRC ${CMAKE_SOURCE_DIR}/chr DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 include(BuildNESTiles)
 build_nes_tiles(TARGET ${CMAKE_SOURCE_DIR}/src/graphics.s SRC ${CMAKE_SOURCE_DIR}/chr DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 target_include_directories(${ROM} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen)

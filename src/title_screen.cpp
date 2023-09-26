@@ -1,5 +1,5 @@
 
-#include <bank.h>
+#include <mapper.h>
 #include <neslib.h>
 
 #include "nes_extra.hpp"

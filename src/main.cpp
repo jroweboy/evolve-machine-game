@@ -2,7 +2,7 @@
 #include <6502.h>
 #include <neslib.h>
 #include <peekpoke.h>
-#include <bank.h>
+#include <mapper.h>
 
 #include "common.hpp"
 #include "dungeon_generator.hpp"
@@ -23,8 +23,9 @@ __attribute__((section(".noinit.late"))) void (*irq_pointer)();
 __attribute__((section(".noinit.late"))) u8 irq_counter;
 __attribute__((section(".noinit.late"))) bool has_epsm;
 
-// Define the global object array
+// Define the global object arrays
 __attribute__((section(".noinit.late"))) soa::Array<Object, OBJECT_COUNT> objects;
+__attribute__((section(".noinit.late"))) soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 
 // IRQ handler that will just increment a counter and return
 extern "C" void irq_detection();

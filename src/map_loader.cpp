@@ -1,5 +1,5 @@
 
-#include <bank.h>
+#include <mapper.h>
 #include <neslib.h>
 #include <peekpoke.h>
 
@@ -9,7 +9,6 @@
 #include "map_loader.hpp"
 #include "map.hpp"
 #include "rand.hpp"
-#include "soa.h"
 
 struct SectionLookup {
     const char* nametable;
@@ -19,7 +18,8 @@ struct SectionLookup {
     u8 mirroring;
 };
 
-__attribute__((section(".noinit.late"))) const soa::Array<SectionLookup, 6> section_lut = {
+// TODO: this table should be struct of array when that issue is fixed
+__attribute__((section(".prg_rom_1.section_lut"))) constexpr SectionLookup section_lut[6] = {
     {bottom_bin, room_updown_chr, bottom_attr, updown_palette, MIRROR_HORIZONTAL},
     {left_bin, room_leftright_chr, left_attr, leftright_palette, MIRROR_VERTICAL},
     {right_bin, room_leftright_chr, right_attr, leftright_palette, MIRROR_VERTICAL},
@@ -27,9 +27,6 @@ __attribute__((section(".noinit.late"))) const soa::Array<SectionLookup, 6> sect
     {start_bin, room_start_chr, start_attr, start_palette, MIRROR_VERTICAL},
     {top_bin, room_updown_chr, top_attr, updown_palette, MIRROR_HORIZONTAL},
 };
-#define SOA_STRUCT SectionLookup
-#define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(palette) MEMBER(mirroring)
-#include "soa-struct.inc"
 
 Room room;
 Section lead;
@@ -53,13 +50,13 @@ static void load_section(const Section& section) {
 
     u16 nmt_addr = ((u16)section.nametable) << 8;
     vram_adr(nmt_addr);
-    const char* nametable = section_lut[static_cast<u8>(section.room_base)].nametable.get();
+    const char* nametable = section_lut[static_cast<u8>(section.room_base)].nametable;
     donut_decompress(nametable);
 
     // load the attributes for this nametable into a buffer that we can update with the
     // objects as they are loaded
     std::array<u8, 64> attr_buffer;
-    const char* attr = section_lut[static_cast<u8>(section.room_base)].attribute.get();
+    const char* attr = section_lut[static_cast<u8>(section.room_base)].attribute;
     for (u8 i = 0; i < 64; ++i) {
         attr_buffer[i] = attr[i];
     }
@@ -85,7 +82,7 @@ namespace MapLoader {
 
         set_chr_bank(0);
         vram_adr(0x00);
-        const char* chr = section_lut[static_cast<u8>(lead.room_base)].chr.get();
+        const char* chr = section_lut[static_cast<u8>(lead.room_base)].chr;
         donut_decompress(chr);
 
         // always add the kitty tile to the CHR
@@ -99,11 +96,11 @@ namespace MapLoader {
         }
 
         // if we are using a vertical configuration, update the mirroring config
-        u8 mirroring = section_lut[static_cast<u8>(lead.room_base)].mirroring.get();
+        u8 mirroring = section_lut[static_cast<u8>(lead.room_base)].mirroring;
         set_mirroring(mirroring);
 
 
-        const char* palette = section_lut[static_cast<u8>(lead.room_base)].palette.get();
+        const char* palette = section_lut[static_cast<u8>(lead.room_base)].palette;
         pal_bg(palette);
 
         pal_bright(0);

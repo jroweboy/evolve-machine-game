@@ -2,9 +2,10 @@
 #pragma once
 
 #include "common.hpp"
-#include "soa.h"
+#include <soa.h>
 
-constexpr u8 OBJECT_COUNT = 24;
+constexpr u8 OBJECT_COUNT = 12;
+constexpr u8 SOLID_OBJECT_COUNT = 20;
 
 enum class ObjectType : u8 {
     Player,
@@ -33,9 +34,33 @@ struct Hitbox {
 
 #define SOA_STRUCT Hitbox
 #define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
-#include "soa-struct.inc"
+#include <soa-struct.inc>
+
+enum CollisionType {
+    Solid = 1 << 0,
+    Damage = 1 << 1,
+    Exit = 1 << 2,
+    All = 0xff,
+    // TODO: i dunno what else should go here
+};
+
+struct SolidObject {
+    CollisionType state;
+    s16 x;
+    s16 y;
+    u8 width;
+    u8 height;
+};
+#define SOA_STRUCT SolidObject
+#define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
+#include <soa-struct.inc>
 
 struct Object {
+    s16 x;
+    s16 y;
+    
+    Hitbox hitbox;
+
     /// Offset for the metasprite to render this.
     u8 metasprite;
 
@@ -57,17 +82,25 @@ struct Object {
 
     s8 hp;
     u8 atk;
-    
-    s16 x;
-    s16 y;
-    
-    Hitbox hitbox;
 };
 
 #define SOA_STRUCT Object
 #define SOA_MEMBERS \
     MEMBER(metasprite) MEMBER(state) MEMBER(tile_offset) MEMBER(animation_frame) MEMBER(frame_counter) \
     MEMBER(direction) MEMBER(speed) MEMBER(hp) MEMBER(atk) MEMBER(x) MEMBER(y) MEMBER(hitbox)
-#include "soa-struct.inc"
+#include <soa-struct.inc>
 
 extern soa::Array<Object, OBJECT_COUNT> objects;
+extern soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
+
+struct ObjectInitData {
+    Hitbox hitbox;
+    s8 hp;
+    u8 atk;
+};
+#define SOA_STRUCT ObjectInitData
+#define SOA_MEMBERS \
+    MEMBER(hitbox) MEMBER(hp) MEMBER(atk)
+#include <soa-struct.inc>
+
+extern soa::Array<ObjectInitData, (u8)ObjectType::Count> object_init_data;

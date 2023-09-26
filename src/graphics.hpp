@@ -34,5 +34,3 @@ extern const char leftright_palette[];
 extern const char single_palette[];
 extern const char start_palette[];
 extern const char title_palette[];
-
-#define HUDFont_location 0x2000-(10*16*2)

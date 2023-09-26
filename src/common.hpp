@@ -75,6 +75,11 @@ extern u8 sp_chr_count;
 
 #define prg_rom_2 __attribute__((section(".prg_rom_2")))
 
+constexpr u8 MUSIC_BANK = 0;
+constexpr u8 GRAPHICS_BANK = 1;
+constexpr u8 CODE_BANK = 2;
+constexpr u8 FIXED_BANK = 3;
+
 #ifdef __cplusplus
 }
 #endif

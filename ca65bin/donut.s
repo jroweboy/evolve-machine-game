@@ -24,9 +24,12 @@
 .exportzp donut_stream_ptr
 .exportzp donut_block_count
 
-temp = $f0  ; 15 bytes are used
+; jroweboy: We alias these with __rc5 - __rc20
+; since we only call donut from the main thread its fine
+temp = $05  ; 15 bytes are used
 
-donut_block_buffer = $0120  ; 64 bytes
+; jroweboy - donut starts at this addr + 64 because ???? but it works out just fine anyway
+donut_block_buffer = $0100  ; 64 bytes
 
 .segment "ZEROPAGE"
 donut_stream_ptr:       .res 2

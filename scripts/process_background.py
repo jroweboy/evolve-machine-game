@@ -139,10 +139,7 @@ def main(nestiler: Path, fin: Path, fout: Path):
   for font in [special_path / "hudfont.bmp"]:
     params = []
     chr_path = rawchr_path / f"{font.stem}.chr"
-    params += nestiler_params_spr(nestiler, chr_path, 0xFF00FF)
-    # write the screen nmt and attr to the tmp path so we can concat them
-    # since these screens don't have any object mixins, we can save space by compressing
-    # the attribute tables as part of the nametable
+    params += nestiler_params_spr(nestiler, chr_path, 0xFF000000)
     params += [f"-i0", str(font)]
     run_nes_tiler(nestiler, *params)
 
@@ -159,7 +156,7 @@ def main(nestiler: Path, fin: Path, fout: Path):
       chr_count[chr.stem] = r // 16
       ratio = 1 - (w / r)
       print("<total> :{:>6.1%} ({} => {} bytes, {})".format(ratio, r, w, chr.stem), file=sys.stderr)
-      byts += b"\xff" # add a terminator bit here
+      byts += b"\xff\xff" # add a terminator bit here
       with open(outchr_path / f"{chr.stem}.chr.dnt", 'wb') as o:
         o.write(byts)
 
@@ -167,7 +164,7 @@ def main(nestiler: Path, fin: Path, fout: Path):
   for nmt in rawnmt_path.glob("*.nmt"):
     with open(nmt, 'rb') as f:
       byts = compress(f.read(), allow_partial=True)
-      byts += b"\xff" # add a terminator bit here
+      byts += b"\xff\xff" # add a terminator bit here
       with open(outnmt_path / f"{nmt.stem}.nmt.dnt", 'wb') as o:
         o.write(byts)
 

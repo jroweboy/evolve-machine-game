@@ -4,8 +4,8 @@
 
 #include "common.hpp"
 #include "game.hpp"
-#include "graphics.hpp"
-#include "map_loader.hpp"
+// #include "graphics.hpp"
+// #include "map_loader.hpp"
 #include "nes_extra.hpp"
 #include "object.hpp"
 #include "sprite_render.hpp"
@@ -208,20 +208,6 @@ prg_rom_2 void update() {
             pal_fade_to(4, 2, 2);
             ppu_off();
         } else if (game_mode == GameMode::InGame) {
-            ppu_off();
-
-            u8 old_bank = get_prg_bank();
-
-            // Load HUD font
-            // switch to the 16kb bank that holds the graphics
-            set_prg_bank(1);
-            set_chr_bank(0);
-
-            vram_adr(HUDFont_location);
-            donut_decompress(&hudfont_chr);
-
-            set_prg_bank(old_bank);
-            
             ppu_on_all();
             pal_fade_to(0, 4, 2);
         } else if (game_mode == GameMode::Pause) {

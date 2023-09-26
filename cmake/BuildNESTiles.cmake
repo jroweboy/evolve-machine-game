@@ -61,6 +61,7 @@ function(build_nes_tiles)
     ${room_basepath}/start.bmp
 
     # all special bmps
+    ${special_basepath}/hudfont.bmp
     ${special_basepath}/titlescreen.bmp
 
     # all objects
@@ -76,6 +77,10 @@ function(build_nes_tiles)
     ${out_chrpath}/updown.chr.dnt
     ${out_chrpath}/start.chr.dnt
     ${out_chrpath}/single.chr.dnt
+
+
+    ${out_chrpath}/hudfont.chr.dnt
+    ${out_chrpath}/titlescreen.chr.dnt
 
     # compressed nametables
     ${out_nmtpath}/down.nmt.dnt

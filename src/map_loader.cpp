@@ -77,7 +77,7 @@ namespace MapLoader {
         // ppu_off();
 
         // switch to the 16kb bank that holds the level
-        set_prg_bank(1);
+        set_prg_bank(GRAPHICS_BANK);
 
         // TODO save the previous room state when leaving?
         read_map_room(section_id);
@@ -97,6 +97,10 @@ namespace MapLoader {
         donut_decompress(&kitty_chr);
         sp_chr_count += kitty_chr_count;
         sp_chr_offset += kitty_chr_offset;
+        // Load HUD font
+        // switch to the 16kb bank that holds the graphics
+        vram_adr(sp_chr_offset);
+        donut_decompress(&hudfont_chr);
 
         load_section(lead);
 
@@ -108,7 +112,6 @@ namespace MapLoader {
         u8 mirroring = section_lut[static_cast<u8>(lead.room_base)].mirroring;
         set_mirroring(mirroring);
 
-
         const char* palette = section_lut[static_cast<u8>(lead.room_base)].palette;
         pal_bg(palette);
 
@@ -116,8 +119,8 @@ namespace MapLoader {
 
         // TODO figure out the proper scroll position
         scroll(0, 0);
-
-        // restore prg bank to the code bank
-        set_prg_bank(2);
+        
+        // restore the code bank
+        set_prg_bank(CODE_BANK);
     }
 }

@@ -32,12 +32,9 @@ after_donut_block:
 .section .text.donut,"ax",@progbits
 .globl donut_decompress
 donut_decompress:
-    lda __rc2
-    sta $ed
-    lda __rc3
-    sta $ee
+    ; __rc2 and __rc3 is the pointer (and its setup in ca65 to use these values)
     lda #0
-    sta $ef
+    sta __rc4
     jmp donut_decompress_block
 
 ; set this to run after the ram clearing but before the find ppu frame wait

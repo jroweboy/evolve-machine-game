@@ -28,7 +28,7 @@ add_compile_options(
 add_link_options(
     -g -gdwarf-4
     # -Wall -Wextra -Werror # Same goes for the linker
-    -mreserve-zp=19
+    -mreserve-zp=10
 
     # make functions non-recursive by default
     -fnonreentrant

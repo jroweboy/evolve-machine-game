@@ -118,7 +118,8 @@ namespace Sprite {
         // OAM shuffle the rest of the sprites
         shuffle_offset = mod_add<OBJECT_COUNT>(shuffle_offset, 11);
         u8 original_offset = shuffle_offset;
-        for (u8 i = mod_add<OBJECT_COUNT>(shuffle_offset, 7); i != original_offset; i = mod_add<OBJECT_COUNT>(i, 7)) {
+        u8 count = OBJECT_COUNT;
+        for (u8 i = original_offset; count > 0; --count, i = mod_add<OBJECT_COUNT>(i, 7)) {
             // we drew the player already and we guarantee they are in slot 0
             if (i == 0) {
                 draw_hud();

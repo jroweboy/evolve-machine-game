@@ -50,12 +50,12 @@ prg_rom_2 static void draw_object(u8 id) {
     auto offset = frame[object.animation_frame];
     while (frame[offset] != 0x7f) {
         auto& oam = *reinterpret_cast<OAMData*>(&OAM_BUF[sprite_slot]);
-        s16 x = frame[offset--] + screen_x;
+        s16 x = ((s8)frame[offset--]) + screen_x;
         if (x < 0 || x > 255) {
             offset -= 3;
             continue;
         }
-        s16 y = frame[offset--] + screen_y;
+        s16 y = ((s8)frame[offset--]) + screen_y;
         if (y < 0 || y > 239) {
             offset -= 2;
             continue;

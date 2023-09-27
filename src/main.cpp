@@ -16,22 +16,23 @@ MainMode main_mode;
 MainMode prev_main_mode;
 
 __attribute__((section(".zp"))) _BitInt(24) global_timer;
+__attribute__((section(".zp"))) Camera view;
 
 // Reserve 3 bytes of RAM as an editable IRQ handler. 
 // The linker is expecting this to be named exactly irq
-__attribute__((section(".noinit.late"))) void (*irq_pointer)();
-__attribute__((section(".noinit.late"))) u8 irq_counter;
-__attribute__((section(".noinit.late"))) bool has_epsm;
+noinit void (*irq_pointer)();
+noinit u8 irq_counter;
+noinit bool has_epsm;
 
 // Global data for tracking CHR allocations
-__attribute__((section(".noinit.late"))) u16 bg_chr_offset;
-__attribute__((section(".noinit.late"))) u8 bg_chr_count;
-__attribute__((section(".noinit.late"))) u16 sp_chr_offset;
-__attribute__((section(".noinit.late"))) u8 sp_chr_count;
+noinit u16 bg_chr_offset;
+noinit u8 bg_chr_count;
+noinit u16 sp_chr_offset;
+noinit u8 sp_chr_count;
 
 // Define the global object arrays
-__attribute__((section(".noinit.late"))) soa::Array<Object, OBJECT_COUNT> objects;
-__attribute__((section(".noinit.late"))) soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
+noinit soa::Array<Object, OBJECT_COUNT> objects;
+noinit soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 
 // IRQ handler that will just increment a counter and return
 extern "C" void irq_detection();

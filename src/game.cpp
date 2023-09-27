@@ -4,6 +4,7 @@
 
 #include "common.hpp"
 #include "game.hpp"
+#include "map.hpp"
 // #include "graphics.hpp"
 // #include "map_loader.hpp"
 #include "nes_extra.hpp"
@@ -177,7 +178,38 @@ prg_rom_2 static void move_player() {
     if (collision > 0) {
         player.x = original_x;
     }
+}
 
+prg_rom_2 static void scroll_screen() {
+    if (room.scroll == ScrollType::Single) {
+        return;
+    }
+    // This room has scroll in it
+    auto player = objects[0];
+    if (room.scroll == ScrollType::Vertical) {
+        s16 screen_pos_y = player.y - room.y - view.y;
+        if (screen_pos_y < 0 || screen_pos_y > 239) {
+            return;
+        }
+        if (screen_pos_y > 0x88 && view.y != 240) {
+            view.y++;
+        }
+        if (screen_pos_y < 0x68 && view.y != 0) {
+            view.y--;
+        }
+    } else {
+        s16 screen_pos_x = player.x - room.x - view.x;
+        if (screen_pos_x < 0 || screen_pos_x > 255) {
+            return;
+        }
+        if (screen_pos_x > 0x90 && view.x != 255) {
+            view.x++;
+        }
+        if (screen_pos_x < 0x70 && view.x != 0) {
+            view.x--;
+        }
+    }
+    scroll(view.x, view.y);
 }
 
 constexpr char sprites_pal[] = {
@@ -198,8 +230,8 @@ prg_rom_2 void init() {
     auto player = objects[0];
     player.metasprite = 0;
     player.state = (State)0;
-    player.x = 100;
-    player.y = 100;
+    player.x = room.x + 100;
+    player.y = room.y + 100;
 }
 
 prg_rom_2 void update() {
@@ -218,6 +250,7 @@ prg_rom_2 void update() {
     u8 frame = FRAME_CNT1;
 
     move_player();
+    scroll_screen();
 
     // Skip drawing sprites this frame if we lagged on the previous frame.
     // This should help us get caught up if we process too much in one frame

@@ -35,8 +35,8 @@ enum class GameMode : u8 {
 
 /// Defines the current scroll position
 struct Camera {
-    s16 x;
-    s16 y;
+    u8 x;
+    u8 y;
 };
 
 extern Camera view;
@@ -74,6 +74,7 @@ extern u16 sp_chr_offset;
 extern u8 sp_chr_count;
 
 #define prg_rom_2 __attribute__((section(".prg_rom_2")))
+#define noinit __attribute__((section(".noinit.late")))
 
 constexpr u8 MUSIC_BANK = 0;
 constexpr u8 GRAPHICS_BANK = 1;

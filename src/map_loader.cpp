@@ -21,18 +21,19 @@ struct SectionLookup {
 };
 
 // TODO: this table should be generated in python instead since it can really only happen in ASM
-__attribute__((section(".prg_rom_1.section_lut"))) constexpr SectionLookup section_lut[6] = {
+__attribute__((section(".prg_rom_1.section_lut"))) constexpr SectionLookup section_lut[7] = {
     {bottom_bin, room_updown_chr, bottom_attr, updown_palette, MIRROR_HORIZONTAL},
     {left_bin, room_leftright_chr, left_attr, leftright_palette, MIRROR_VERTICAL},
     {right_bin, room_leftright_chr, right_attr, leftright_palette, MIRROR_VERTICAL},
     {single_bin, room_single_chr, single_attr, single_palette, MIRROR_VERTICAL},
-    {start_bin, room_start_chr, start_attr, start_palette, MIRROR_VERTICAL},
+    {startdown_bin, room_start_chr, startdown_attr, start_palette, MIRROR_HORIZONTAL},
+    {startup_bin, room_start_chr, startup_attr, start_palette, MIRROR_HORIZONTAL},
     {top_bin, room_updown_chr, top_attr, updown_palette, MIRROR_HORIZONTAL},
 };
 
-Room room;
-Section lead;
-Section side;
+noinit Room room;
+noinit Section lead;
+noinit Section side;
 
 // u8 section_id;
 
@@ -118,7 +119,9 @@ namespace MapLoader {
         pal_bright(0);
 
         // TODO figure out the proper scroll position
-        scroll(0, 0);
+        view.x = 0;
+        view.y = 0;
+        scroll(view.x, view.y);
         
         // restore the code bank
         set_prg_bank(CODE_BANK);

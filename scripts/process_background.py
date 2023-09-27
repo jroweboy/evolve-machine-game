@@ -12,6 +12,9 @@ def run_nes_tiler(nestiler: Path, *args):
   cmd = [str(nestiler / "nestiler"), *args]
   done = subprocess.run(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, text=True)
   # print(f"nestiler CMD ({' '.join(cmd)}) output:\n{done.stdout}")
+  if done.stderr != None:
+    print(done.stderr)
+  print(done.stdout)
   return done.stdout
 
 def make_input_params(i: int, input: Path, outnmt: Path, outatr: Path, outpal: Path):
@@ -89,12 +92,15 @@ def main(nestiler: Path, fin: Path, fout: Path):
   with Image.open(room_path / "updown.bmp") as im:
     im.crop((0,0,256,240)).save(rawtmp_path / "up.bmp")
     im.crop((0,240,256,240+240)).save(rawtmp_path / "down.bmp")
+  with Image.open(room_path / "start.bmp") as im:
+    im.crop((0,0,256,240)).save(rawtmp_path / "startup.bmp")
+    im.crop((0,240,256,240+240)).save(rawtmp_path / "startdown.bmp")
   
   # Now run nestiler on all of the split room bmps (leftright, updown)
-  for pair in [[rawtmp_path / "up.bmp", rawtmp_path / "down.bmp"],[rawtmp_path / "left.bmp", rawtmp_path / "right.bmp"]]:
+  for pair in [[rawtmp_path / "up.bmp", rawtmp_path / "down.bmp"],
+               [rawtmp_path / "left.bmp", rawtmp_path / "right.bmp"],
+               [rawtmp_path / "startup.bmp", rawtmp_path / "startdown.bmp"]]:
     first, second = pair
-    print(first)
-    print(second)
     chr_path = rawchr_path / f"{first.stem}{second.stem}.chr"
     params = []
     params += nestiler_params_bg(nestiler, rawchr_path / f"{first.stem}{second.stem}.chr")
@@ -105,7 +111,7 @@ def main(nestiler: Path, fin: Path, fout: Path):
     concat_palette(f"{first.stem}{second.stem}", rawpal_path, outpal_path)
 
   # and then run it on all the single room screens
-  for screen in [room_path / "single.bmp", room_path / "start.bmp"]:
+  for screen in [room_path / "single.bmp"]:
     params = []
     chr_path = rawchr_path / f"{screen.stem}.chr"
     params += nestiler_params_bg(nestiler, chr_path)

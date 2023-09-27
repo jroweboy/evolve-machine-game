@@ -37,12 +37,19 @@ struct ObjectSpawn {
 };
 
 enum class SectionBase : u8 {
-    Bottom,
-    Left,
-    Right,
-    Single,
-    Start,
-    Top,
+    Bottom = 0,
+    Left = 1,
+    Right = 2,
+    Single = 3,
+    StartDown = 4,
+    StartUp = 5,
+    Top = 6,
+};
+
+enum class ScrollType : u8 {
+    Single = 0,
+    Horizontal = 1,
+    Vertical = 2,
 };
 
 // A room is made up of 1 or 2 sections representing a single screen worth of data called a section
@@ -51,6 +58,10 @@ struct Room {
     // If there is no side room (meaning we are a 1x1 room) then it will be an invalid id
     u8 lead_id;
     u8 side_id;
+    ScrollType scroll;
+    // X, Y position of the top left corner of the whole room.
+    s16 x;
+    s16 y;
 
     // The object type that drops when this room is cleared
     // Update this if the prize has been grabbed
@@ -82,6 +93,7 @@ struct Section {
 };
 
 // The global RAM allocation for the room that the player is entering.
+
 extern Room room;
 extern Section lead;
 extern Section side;

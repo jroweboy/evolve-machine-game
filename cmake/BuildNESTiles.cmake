@@ -75,7 +75,7 @@ function(build_nes_tiles)
     # room compressed chr
     ${out_chrpath}/leftright.chr.dnt
     ${out_chrpath}/updown.chr.dnt
-    ${out_chrpath}/start.chr.dnt
+    ${out_chrpath}/startupstartdown.chr.dnt
     ${out_chrpath}/single.chr.dnt
 
 
@@ -87,7 +87,8 @@ function(build_nes_tiles)
     ${out_nmtpath}/left.nmt.dnt
     ${out_nmtpath}/right.nmt.dnt
     ${out_nmtpath}/single.nmt.dnt
-    ${out_nmtpath}/start.nmt.dnt
+    ${out_nmtpath}/startup.nmt.dnt
+    ${out_nmtpath}/startdown.nmt.dnt
     ${out_nmtpath}/up.nmt.dnt
     ${out_nmtpath}/titlescreen_atr.nmt.dnt
 
@@ -96,7 +97,8 @@ function(build_nes_tiles)
     ${out_atrpath}/left.atr
     ${out_atrpath}/right.atr
     ${out_atrpath}/single.atr
-    ${out_atrpath}/start.atr
+    ${out_atrpath}/startup.atr
+    ${out_atrpath}/startdown.atr
     ${out_atrpath}/up.atr
 
     # objects: TODO

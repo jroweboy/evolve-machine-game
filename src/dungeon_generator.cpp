@@ -12,6 +12,7 @@
 #include <array>
 
 #include "dungeon_generator.hpp"
+#include "common.hpp"
 #include "map.hpp"
 
 #ifndef NES
@@ -283,6 +284,12 @@ void write_room_to_chrram(u8 id) {
     vram_write(cast, sizeof(Room));
 }
 
+prg_rom_2 static void set_room_xy(u8 map_id) {
+    // Side is the top room, so the X,Y coords are based on that one.
+    room.x = ((s16)map_id % 8) << 8;
+    room.y = ((s16)map_id / 8) << 8;
+}
+
 prg_rom_2 u8 generate_dungeon() {
     // List of visited tiles and their room_ids
     MapId map;
@@ -304,20 +311,28 @@ prg_rom_2 u8 generate_dungeon() {
     // Step 0: Manually build out the root room.
     u8 id = 0;
 
-    // set the main to a random location with no side room.
-    u8 lead_id = ((u8)rand()) & 0b111111;
+    // set the main to a random location with a vertical side room
+    u8 lead_id;
+    // room a room that is not along the top of the screen.
+    while ((lead_id = ((u8)rand()) & 0b111111) < Dungeon::WIDTH);
     u8 start_id = lead_id;
-    u8 side_id = Dungeon::NO_EXIT; // mark the side position as unused
+    u8 side_id = GetNeighborId(lead_id, Direction::Up);
 
     // now we have the initial rooms so write my id to the map
     map[lead_id] = id;
+    map[side_id] = id;
     // starting_room_id = lead_id;
     room.lead_id = lead_id;
     room.side_id = side_id;
+    room.scroll = ScrollType::Vertical;
     lead.room_id = id;
-    lead.nametable = 0x20;
-    lead.room_base = SectionBase::Start;
+    lead.nametable = 0x24;
+    lead.room_base = SectionBase::StartDown;
     side.room_id = id;
+    side.nametable = 0x20;
+    side.room_base = SectionBase::StartUp;
+    // room x/y is based on the top left spot on the map
+    set_room_xy(side_id);
 
     // clear out the exits for the room sections. we'll update the exits with
     // the ids to the next rooom when we process that room.
@@ -360,6 +375,8 @@ prg_rom_2 u8 generate_dungeon() {
         room.lead_id = lead_id;
         lead.room_id = id;
         for (auto& num : lead.exit) { num = 0xff; }
+        // Default the scroll type to single and update it later if we add a side room.
+        room.scroll = ScrollType::Single;
 
         ////////////////////
         // Step 2: Update the neighboring room's exits.
@@ -400,18 +417,26 @@ prg_rom_2 u8 generate_dungeon() {
                 case Direction::Up:
                     lead.room_base = SectionBase::Top;
                     side.room_base = SectionBase::Bottom;
+                    room.scroll = ScrollType::Vertical;
+                    set_room_xy(lead_id);
                     break;
                 case Direction::Down:
                     lead.room_base = SectionBase::Bottom;
                     side.room_base = SectionBase::Top;
+                    room.scroll = ScrollType::Vertical;
+                    set_room_xy(side_id);
                     break;
                 case Direction::Right:
                     lead.room_base = SectionBase::Right;
                     side.room_base = SectionBase::Left;
+                    room.scroll = ScrollType::Horizontal;
+                    set_room_xy(side_id);
                     break;
                 case Direction::Left:
                     lead.room_base = SectionBase::Left;
                     side.room_base = SectionBase::Right;
+                    room.scroll = ScrollType::Horizontal;
+                    set_room_xy(lead_id);
                     break;
                 default:
                     break;

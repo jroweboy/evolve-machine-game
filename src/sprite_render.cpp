@@ -3,6 +3,7 @@
 #include <neslib.h>
 #include <soa.h>
 
+#include "map.hpp"
 #include "sprite_render.hpp"
 #include "common.hpp"
 #include "object.hpp"
@@ -40,9 +41,8 @@ prg_rom_2 static void draw_object(u8 id) {
         return;
     }
 
-    // TODO: convert x/y positions to screen coords
-    u8 screen_x = object.x - view.x;
-    u8 screen_y = object.y - view.y;
+    s16 screen_x = object.x - room.x - view.x;
+    s16 screen_y = object.y - room.y - view.y;
 
     auto frame = metasprite_table[object.metasprite];
     // auto addr = reinterpret_cast<const u16*>(spr)[object.direction];
@@ -50,12 +50,20 @@ prg_rom_2 static void draw_object(u8 id) {
     auto offset = frame[object.animation_frame];
     while (frame[offset] != 0x7f) {
         auto& oam = *reinterpret_cast<OAMData*>(&OAM_BUF[sprite_slot]);
-        s8 x = frame[offset--];
-        s8 y = frame[offset--];
+        s16 x = frame[offset--] + screen_x;
+        if (x < 0 || x > 255) {
+            offset -= 3;
+            continue;
+        }
+        s16 y = frame[offset--] + screen_y;
+        if (y < 0 || y > 239) {
+            offset -= 2;
+            continue;
+        }
+        oam.x = x;
+        oam.y = y;
         u8 tile = frame[offset--];
         u8 attr = frame[offset--];
-        oam.x = x + object.x;
-        oam.y = y + object.y;
         oam.attr = attr;
         oam.tile = tile + object.tile_offset;
         sprite_slot += 4;

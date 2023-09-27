@@ -17,7 +17,7 @@ room_single_chr:
     .incbin "graphics/chr/single.chr.dnt"
 .globl room_start_chr
 room_start_chr:
-    .incbin "graphics/chr/start.chr.dnt"
+    .incbin "graphics/chr/startupstartdown.chr.dnt"
 .globl hudfont_chr
 hudfont_chr:
     .incbin "graphics/chr/hudfont.chr.dnt"
@@ -50,9 +50,14 @@ single_bin:
     .incbin "graphics/nmt/single.nmt.dnt"
 
 .section .prg_rom_1,"aR",@progbits
-.globl start_bin
-start_bin:
-    .incbin "graphics/nmt/start.nmt.dnt"
+.globl startup_bin
+startup_bin:
+    .incbin "graphics/nmt/startup.nmt.dnt"
+
+.section .prg_rom_1,"aR",@progbits
+.globl startdown_bin
+startdown_bin:
+    .incbin "graphics/nmt/startdown.nmt.dnt"
 
 .section .prg_rom_1,"aR",@progbits
 .globl top_bin
@@ -78,9 +83,13 @@ right_attr:
 single_attr:
     .incbin "graphics/atr/single.atr"
 .section .prg_rom_1,"aR",@progbits
-.globl start_attr
-start_attr:
-    .incbin "graphics/atr/start.atr"
+.globl startup_attr
+startup_attr:
+    .incbin "graphics/atr/startup.atr"
+.section .prg_rom_1,"aR",@progbits
+.globl startdown_attr
+startdown_attr:
+    .incbin "graphics/atr/startdown.atr"
 .section .prg_rom_1,"aR",@progbits
 .globl top_attr
 top_attr:
@@ -103,7 +112,7 @@ single_palette:
 .section .prg_rom_1,"aR",@progbits
 .globl start_palette
 start_palette:
-    .incbin "graphics/pal/start.pal"
+    .incbin "graphics/pal/startupstartdown.pal"
 .section .prg_rom_1,"aR",@progbits
 .globl updown_palette
 updown_palette:

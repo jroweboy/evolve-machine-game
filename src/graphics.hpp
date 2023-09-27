@@ -17,7 +17,8 @@ extern const char bottom_bin[];
 extern const char left_bin[];
 extern const char right_bin[];
 extern const char single_bin[];
-extern const char start_bin[];
+extern const char startup_bin[];
+extern const char startdown_bin[];
 extern const char top_bin[];
 
 // Attribute tables (Uncompressed because they need to be mixed in with object attrs)
@@ -25,7 +26,8 @@ extern const char bottom_attr[];
 extern const char left_attr[];
 extern const char right_attr[];
 extern const char single_attr[];
-extern const char start_attr[];
+extern const char startup_attr[];
+extern const char startdown_attr[];
 extern const char top_attr[];
 
 // Palette data

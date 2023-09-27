@@ -81,6 +81,16 @@ constexpr u8 GRAPHICS_BANK = 1;
 constexpr u8 CODE_BANK = 2;
 constexpr u8 FIXED_BANK = 3;
 
+ #define MMAX(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+
+#define MMIN(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _b : _a; })
+
 #ifdef __cplusplus
 }
 #endif

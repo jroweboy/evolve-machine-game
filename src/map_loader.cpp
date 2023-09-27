@@ -134,8 +134,8 @@ namespace MapLoader {
 
         // TODO figure out the proper scroll position
         const auto& player = objects[0];
-        view.x = MAX(player.x - room.x - 0x88, 0);
-        view.y = MAX(player.y - room.y - 0x78, 0);
+        view.x = MMAX(player.x - room.x - 0x88, 0);
+        view.y = MMAX(player.y - room.y - 0x78, 0);
         scroll(view.x, view.y);
         
         // restore the code bank

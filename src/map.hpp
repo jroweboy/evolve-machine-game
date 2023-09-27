@@ -4,6 +4,7 @@
 #include <array>
 
 #include "common.hpp"
+#include "object.hpp"
 
 
 // This doesn't seem necessary. Consider removing it?
@@ -30,7 +31,7 @@ enum ExitType {
 };
 
 struct ObjectSpawn {
-    u8 object_id;
+    ObjectType id;
     
     s16 x;
     s16 y;

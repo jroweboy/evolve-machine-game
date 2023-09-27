@@ -10,6 +10,7 @@
 #include "graphics.hpp"
 #include "map_loader.hpp"
 #include "map.hpp"
+#include "object.hpp"
 #include "rand.hpp"
 
 struct SectionLookup {
@@ -64,11 +65,24 @@ static void load_section(const Section& section) {
         attr_buffer[i] = attr[i];
     }
 
-    // Load all objects for this side of the map
-
     // and then write out all the attributes
     vram_adr(nmt_addr + 0x3c0);
     vram_write(attr_buffer.data(), 64);
+    
+    set_prg_bank(CODE_BANK);
+    // Load all objects for this side of the map
+    for (const auto& obj : section.objects) {
+        if (obj.id == ObjectType::Player && objects[0].state == State::Dead) {
+            // TODO: build a map of object init data
+            objects[0].state = (State)0;
+            objects[0].metasprite = 0;
+            objects[0].x = obj.x;
+            objects[0].y = obj.y;
+            objects[0].hp = 3;
+            continue;
+        }
+    }
+    set_prg_bank(GRAPHICS_BANK);
 }
 
 namespace MapLoader {
@@ -119,8 +133,9 @@ namespace MapLoader {
         pal_bright(0);
 
         // TODO figure out the proper scroll position
-        view.x = 0;
-        view.y = 0;
+        const auto& player = objects[0];
+        view.x = MAX(player.x - room.x - 0x88, 0);
+        view.y = MAX(player.y - room.y - 0x78, 0);
         scroll(view.x, view.y);
         
         // restore the code bank

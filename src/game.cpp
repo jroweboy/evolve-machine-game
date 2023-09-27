@@ -227,11 +227,6 @@ prg_rom_2 void init() {
     prev_game_mode = GameMode::MapLoader;
     game_mode = GameMode::InGame;
     set_prg_bank(2);
-    auto player = objects[0];
-    player.metasprite = 0;
-    player.state = (State)0;
-    player.x = room.x + 100;
-    player.y = room.y + 100;
 }
 
 prg_rom_2 void update() {

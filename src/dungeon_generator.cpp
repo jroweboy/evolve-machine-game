@@ -14,6 +14,7 @@
 #include "dungeon_generator.hpp"
 #include "common.hpp"
 #include "map.hpp"
+#include "object.hpp"
 
 #ifndef NES
 #include <sstream>
@@ -286,8 +287,8 @@ void write_room_to_chrram(u8 id) {
 
 prg_rom_2 static void set_room_xy(u8 map_id) {
     // Side is the top room, so the X,Y coords are based on that one.
-    room.x = ((s16)map_id % 8) << 8;
-    room.y = ((s16)map_id / 8) << 8;
+    room.x = ((u16)map_id & 0b111) << 8;
+    room.y = ((u16)map_id / 8) << 8;
 }
 
 prg_rom_2 u8 generate_dungeon() {
@@ -346,7 +347,9 @@ prg_rom_2 u8 generate_dungeon() {
 
     // We need to hard code the item spawns in the room.
     // spawn random things into the room itself
-    // generate_room_spawns();
+    
+    // start the player at the bottom center of the screen
+    lead.objects[0] = {ObjectType::Player, room.x + 100, room.y + 240 + 100};
 
     // and then save our first room to CHR RAM.
     write_room_to_chrram(id);

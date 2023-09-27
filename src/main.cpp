@@ -85,12 +85,6 @@ static void main_init() {
     }
 
     set_prg_bank(2);
-
-    // Initialize the player object
-    auto player = objects[0];
-    player.metasprite = 0;
-    player.animation_frame = 0;
-    player.state = State::Hidden;
 }
 
 void irq_detect() {

@@ -87,9 +87,9 @@ prg_rom_2 static void draw_hud() {
     auto& catface_right = *reinterpret_cast<OAMData*>(&OAM_BUF[sprite_slot+4]);
     auto& hud_hp = *reinterpret_cast<OAMData*>(&OAM_BUF[sprite_slot+8]);
 
-    catface_left.tile = numeral_tile_offset + 20;
-    catface_right.tile = numeral_tile_offset + 22;
-    hud_hp.tile = player.hp + numeral_tile_offset;
+    catface_left.tile = numeral_tile_offset + (10 * 2);
+    catface_right.tile = numeral_tile_offset + (11 * 2);
+    hud_hp.tile = (player.hp << 1) + numeral_tile_offset;
 
     catface_left.attr = 0;
     catface_right.attr = 0;

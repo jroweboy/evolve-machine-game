@@ -39,7 +39,14 @@ def main(fin: Path, fout: Path):
           # since these are 8x16 sprites, we need to offset the tile id properly
           tile_id = spr[1] * 2 + 1
           attr = spr[2]
-          spr_x = spr[3] - grid_x
+          offset = 0
+          # HACK move the kitty sprite over a bit
+          if file.stem == "kitty":
+            if metasprite in range(0,4):
+              offset = 8
+            if metasprite in range(12,16):
+              offset = 8
+          spr_x = spr[3] - grid_x - offset
           # NOTICE: we change the order slightly to allow skipping a sprite if its offscreen
           # print(f" {attr}, {tile_id}, {spr_y}, {spr_x}")
           sprites.append(pack("<BBbb", attr, tile_id, spr_y, spr_x))

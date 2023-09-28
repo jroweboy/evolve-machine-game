@@ -36,8 +36,6 @@ noinit Room room;
 noinit Section lead;
 noinit Section side;
 
-// u8 section_id;
-
 static void read_map_room(u8 section_id) {
     // switch the bank to the bank with the save data
     set_chr_bank(3);
@@ -70,18 +68,48 @@ static void load_section(const Section& section) {
     vram_write(attr_buffer.data(), 64);
     
     set_prg_bank(CODE_BANK);
+
     // Load all objects for this side of the map
+    u8 i = 0;
     for (const auto& obj : section.objects) {
-        if (obj.id == ObjectType::Player && objects[0].state == State::Dead) {
-            // TODO: build a map of object init data
-            objects[0].state = (State)0;
-            objects[0].metasprite = 0;
-            objects[0].x = obj.x;
-            objects[0].y = obj.y;
-            objects[0].hp = 3;
+        auto slot = objects[i++];
+        if (i > OBJECT_COUNT) {
+            break;
+        }
+        if ((slot.state & 0x80) == 0) {
             continue;
         }
+        const auto init = object_init_data[(u8)obj.id];
+        slot.state = (State)0;
+        slot.metasprite = init.metasprite;
+        slot.x = obj.x;
+        slot.y = obj.y;
+        slot.hp = init.hp;
+        slot.atk = init.atk;
+        slot.hitbox.x = init.hitbox.x;
+        slot.hitbox.y = init.hitbox.y;
+        slot.hitbox.width = init.hitbox.width;
+        slot.hitbox.height = init.hitbox.height;
     }
+    // Load the basic solid objects from this style of map
+    const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
+        : room.scroll == ScrollType::Horizontal ? leftright_walls : single_walls;
+    i = 0;
+    for (const auto& wall : walls) {
+        if (wall.state == (CollisionType)0) {
+            continue;
+        }
+        auto slot = solid_objects[i++];
+        if (i > SOLID_OBJECT_COUNT) {
+            break;
+        }
+        slot.state = wall.state;
+        slot.x = room.x + wall.x;
+        slot.y = room.y + wall.y;
+        slot.width = wall.width;
+        slot.height = wall.height;
+    }
+
     set_prg_bank(GRAPHICS_BANK);
 }
 
@@ -93,6 +121,11 @@ namespace MapLoader {
 
         // switch to the 16kb bank that holds the level
         set_prg_bank(GRAPHICS_BANK);
+
+        // clear out all old solid objects
+        for (auto solid : solid_objects) {
+            solid.state = (CollisionType)0;
+        }
 
         // TODO save the previous room state when leaving?
         read_map_room(section_id);
@@ -134,9 +167,9 @@ namespace MapLoader {
 
         // TODO figure out the proper scroll position
         const auto& player = objects[0];
-        view.x = MMAX(player.x - room.x - 0x88, 0);
-        view.y = MMAX(player.y - room.y - 0x78, 0);
-        scroll(view.x, view.y);
+        view_x = MMAX(player.x - room.x - 0x88, 0);
+        view_y = MMAX(player.y - room.y - 0x78, 0);
+        scroll(view_x, view_y);
         
         // restore the code bank
         set_prg_bank(CODE_BANK);

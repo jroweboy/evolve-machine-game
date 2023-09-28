@@ -47,6 +47,7 @@ add_link_options(
 set(ROM ${CMAKE_PROJECT_NAME}.nes)
 add_executable(${ROM}
     src/ca65.s
+    src/game.s
     src/graphics.s
     src/sprite_render.s
 

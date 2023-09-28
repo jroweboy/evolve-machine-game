@@ -16,7 +16,6 @@ MainMode main_mode;
 MainMode prev_main_mode;
 
 __attribute__((section(".zp"))) _BitInt(24) global_timer;
-__attribute__((section(".zp"))) Camera view;
 
 // Reserve 3 bytes of RAM as an editable IRQ handler. 
 // The linker is expecting this to be named exactly irq

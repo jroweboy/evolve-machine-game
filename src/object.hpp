@@ -1,14 +1,24 @@
 
 #pragma once
 
-#include "common.hpp"
 #include <soa.h>
+
+#include "common.hpp"
 
 constexpr u8 OBJECT_COUNT = 12;
 constexpr u8 SOLID_OBJECT_COUNT = 20;
 
 enum class ObjectType : u8 {
     Player,
+    // Walker,
+    Count,
+};
+
+enum class Metasprite : u8 {
+    KittyRight,
+    KittyUp,
+    KittyDown,
+    KittyLeft,
     // Walker,
     Count,
 };
@@ -39,22 +49,9 @@ struct Hitbox {
 enum CollisionType {
     Solid = 1 << 0,
     Damage = 1 << 1,
-    Exit = 1 << 2,
     All = 0xff,
     // TODO: i dunno what else should go here
 };
-
-struct SolidObject {
-    CollisionType state;
-    s16 x;
-    s16 y;
-    u8 width;
-    u8 height;
-};
-#define SOA_STRUCT SolidObject
-#define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
-#include <soa-struct.inc>
-
 struct Object {
     s16 x;
     s16 y;
@@ -62,7 +59,7 @@ struct Object {
     Hitbox hitbox;
 
     /// Offset for the metasprite to render this.
-    u8 metasprite;
+    Metasprite metasprite;
 
     /// Current status for the object. Meaning is dependent on what the object is
     /// Negative values indicate that this should not be rendered (if its a sprite)
@@ -91,16 +88,39 @@ struct Object {
 #include <soa-struct.inc>
 
 extern soa::Array<Object, OBJECT_COUNT> objects;
-extern soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 
 struct ObjectInitData {
+    Metasprite metasprite;
     Hitbox hitbox;
     s8 hp;
     u8 atk;
 };
 #define SOA_STRUCT ObjectInitData
 #define SOA_MEMBERS \
-    MEMBER(hitbox) MEMBER(hp) MEMBER(atk)
+    MEMBER(metasprite) MEMBER(hitbox) MEMBER(hp) MEMBER(atk)
 #include <soa-struct.inc>
 
-extern soa::Array<ObjectInitData, (u8)ObjectType::Count> object_init_data;
+
+extern ObjectInitData object_init_data[(u8)ObjectType::Count];
+
+
+struct SolidObject {
+    CollisionType state;
+    s16 x;
+    s16 y;
+    u8 width;
+    u8 height;
+};
+#define SOA_STRUCT SolidObject
+#define SOA_MEMBERS MEMBER(state) MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
+#include <soa-struct.inc>
+
+// Array of current room solid objects
+extern soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
+
+// Data for the basic room layouts
+// 4 corners
+constexpr u8 ROOM_WALL_COUNT = 2 * 4;
+extern SolidObject updown_walls[ROOM_WALL_COUNT];
+extern SolidObject leftright_walls[ROOM_WALL_COUNT];
+extern SolidObject single_walls[ROOM_WALL_COUNT];

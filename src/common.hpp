@@ -33,13 +33,8 @@ enum class GameMode : u8 {
     Pause = 0x80,
 };
 
-/// Defines the current scroll position
-struct Camera {
-    u8 x;
-    u8 y;
-};
-
-extern Camera view;
+extern u8 view_x;
+extern u8 view_y;
 
 /// MainMode determines which main task the game will run. 
 extern MainMode main_mode;
@@ -90,6 +85,8 @@ constexpr u8 FIXED_BANK = 3;
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
      _a > _b ? _b : _a; })
+
+extern volatile char PPUMASK_VAR;
 
 #ifdef __cplusplus
 }

@@ -8,6 +8,7 @@
 #include "dungeon_generator.hpp"
 #include "game.hpp"
 #include "map_loader.hpp"
+#include "music.hpp"
 #include "object.hpp"
 #include "soa.h"
 #include "title_screen.hpp"
@@ -117,6 +118,21 @@ void irq_detect() {
     irq_pointer = irq_default;
 }
 
+prg_rom_2 __attribute__((noinline)) static void run_gamemode() {
+    // I split this out so we can turn off inlining to put it in its own bank
+    // Run this frame of the game mode
+    switch (main_mode) {
+    case MainMode::TitleScreen:
+        Titlescreen::update();
+        break;
+    case MainMode::GamePlay:
+        Game::update();
+        break;
+    default:
+        break;
+    }
+}
+
 int main() {
     main_init();
     irq_detect();
@@ -143,22 +159,14 @@ int main() {
             }
             case MainMode::GamePlay:
                 Game::init();
+                play_song(Song::DangerousCitty);
+                break;
             default:
                 break;
             }
             prev_main_mode = main_mode;
         }
-        
-        // Run this frame of the game mode
-        switch (main_mode) {
-        case MainMode::TitleScreen:
-            Titlescreen::update();
-            break;
-        case MainMode::GamePlay:
-            Game::update();
-            break;
-        default:
-            break;
-        }
+        set_prg_bank(CODE_BANK);
+        run_gamemode();
     }
 }

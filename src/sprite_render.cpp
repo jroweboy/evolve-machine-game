@@ -119,7 +119,7 @@ namespace Sprite {
         }
     }
 
-    void draw_objects() {
+    prg_rom_2 void draw_objects() {
         sprite_slot = 0;
     
         // Draw the player first to reserve their slot

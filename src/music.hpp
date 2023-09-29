@@ -9,9 +9,13 @@ extern "C" {
 #endif
 
 enum class Song : u8 { 
+    EPSMDetected = 0,
     Intro = 1,
-    TitleAmbience = 2,
-    Boss = 3,
+    DangerousCitty = 2,
+    DangerousBattle = 3,
+    TitleAmbience = 4,
+    CombatAmbience = 5,
+    Boss = 6,
     Silence = 0xfd,
     StopMusic = 0xfe,
     InitEngine = 0xff,

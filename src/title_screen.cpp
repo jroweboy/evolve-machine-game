@@ -68,7 +68,7 @@ namespace Titlescreen {
         Rng::seed(nullptr);
     }
 
-    void update() {
+    prg_rom_2 void update() {
         // TODO: make the stars palette cycle
         if (state == State::Waiting) {
             // Burn through some RNG numbers while waiting.

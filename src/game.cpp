@@ -5,9 +5,11 @@
 
 #include "common.hpp"
 #include "game.hpp"
+#include "dungeon_generator.hpp"
 #include "map.hpp"
 // #include "graphics.hpp"
 // #include "map_loader.hpp"
+#include "map_loader.hpp"
 #include "nes_extra.hpp"
 #include "object.hpp"
 #include "sprite_render.hpp"
@@ -17,8 +19,12 @@ extern volatile char FRAME_CNT1;
 // marks if the previous frame was a lag frame.
 static bool lag_frame;
 
-static GameMode game_mode;
-static GameMode prev_game_mode;
+noinit static GameMode game_mode;
+noinit static GameMode prev_game_mode;
+
+// When loading the room, save the room bounds here to cache them for offscreen checking.
+noinit static s16 room_bounds_x;
+noinit static s16 room_bounds_y;
 
 prg_rom_2 extern "C" u8 check_solid_collision(u8 filter, u8 obj_idx);
 
@@ -98,6 +104,30 @@ prg_rom_2 static void scroll_screen() {
     scroll(view_x, view_y);
 }
 
+prg_rom_2 static void check_screen_transition() {
+    auto player = objects[0];
+    // since this check happens every frame, we cache the room boundaries
+    if (player.x < room.x || player.x > room_bounds_x || player.y < room.y || player.y > room_bounds_y) {
+        game_mode = GameMode::MapLoader;
+    }
+}
+
+
+prg_rom_2 static void load_new_map() {
+    // find what room we exited to.
+    u8 section_id = 0xff;
+    auto player = objects[0];
+    if (player.x < room.x) {
+        // off the left side of the map
+    }
+    // save previous room 
+    Dungeon::write_room_to_chrram(lead.room_id);
+    Dungeon::write_section_lead(room.lead_id);
+    Dungeon::write_section_side(room.side_id);
+    // load new room
+    MapLoader::load_map(section_id);
+}
+
 constexpr char sprites_pal[] = {
     0x0f, 0x03, 0x00, 0x27,
     0x0f, 0x1c, 0x31, 0x30,
@@ -115,15 +145,38 @@ prg_rom_2 void init() {
     set_prg_bank(2);
 }
 
+prg_rom_2 static void calculate_screen_bounds() {
+    switch (room.scroll) {
+    case ScrollType::Single:
+        room_bounds_x = room.x + 256;
+        room_bounds_y = room.y + 240;
+        break;
+    case ScrollType::Horizontal:
+        room_bounds_x = room.x + 256 * 2;
+        room_bounds_y = room.y + 240;
+        break;
+    case ScrollType::Vertical:
+        room_bounds_x = room.x + 256;
+        room_bounds_y = room.y + 240 * 2;
+        break;
+    }
+}
+
 prg_rom_2 void update() {
     if (game_mode != prev_game_mode) {
-        if (game_mode == GameMode::MapLoader) {
-            pal_fade_to(4, 2, 2);
+        switch (game_mode) {
+        case GameMode::MapLoader:
+            pal_fade_to(4, 0, 2);
             ppu_off();
-        } else if (game_mode == GameMode::InGame) {
+            load_new_map();
+            // MapLoader::load_map();
+            // fallthrough
+        case GameMode::InGame:
+            calculate_screen_bounds();
             ppu_on_all();
             pal_fade_to(0, 4, 2);
-        } else if (game_mode == GameMode::Pause) {
+            break;
+        case GameMode::Pause:
             return;
         }
         prev_game_mode = game_mode;
@@ -133,6 +186,7 @@ prg_rom_2 void update() {
     POKE(0x4123, 3);
     move_player();
     scroll_screen();
+    check_screen_transition();
     POKE(0x4123, 4);
 
     // Skip drawing sprites this frame if we lagged on the previous frame.

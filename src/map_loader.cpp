@@ -164,12 +164,6 @@ namespace MapLoader {
         pal_bg(palette);
 
         pal_bright(0);
-
-        // TODO figure out the proper scroll position
-        const auto& player = objects[0];
-        view_x = MMAX(player.x - room.x - 0x88, 0);
-        view_y = MMAX(player.y - room.y - 0x78, 0);
-        scroll(view_x, view_y);
         
         // restore the code bank
         set_prg_bank(CODE_BANK);

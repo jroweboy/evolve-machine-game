@@ -35,12 +35,12 @@ def make_palette_params(input: Path, outpal: Path):
     f"-t3", str(outpal / f"{input.stem}_3.pal"),
   ]
 
-def nestiler_params_bg(nestiler: Path, outchr: Path):
+def nestiler_params_bg(nestiler: Path, outchr: Path, opts = []):
   return [
     "-c", str(nestiler / 'nestiler-colors.json'),
-    "--mode", "bg", "--lossy", "1",
+    "--mode", "bg", "--lossy", "0",
     "--share-pattern-table",
-    "--out-pattern-table-0", str(outchr)]
+    "--out-pattern-table-0", str(outchr)] + opts
 
 def nestiler_params_spr(nestiler: Path, outchr: Path, bg_color: int):
   return [
@@ -97,13 +97,13 @@ def main(nestiler: Path, fin: Path, fout: Path):
     im.crop((0,240,256,240+240)).save(rawtmp_path / "startdown.bmp")
   
   # Now run nestiler on all of the split room bmps (leftright, updown)
-  for pair in [[rawtmp_path / "up.bmp", rawtmp_path / "down.bmp"],
-               [rawtmp_path / "left.bmp", rawtmp_path / "right.bmp"],
-               [rawtmp_path / "startup.bmp", rawtmp_path / "startdown.bmp"]]:
-    first, second = pair
+  for pair in [[rawtmp_path / "up.bmp", rawtmp_path / "down.bmp", []],
+               [rawtmp_path / "left.bmp", rawtmp_path / "right.bmp", []],
+               [rawtmp_path / "startup.bmp", rawtmp_path / "startdown.bmp", []]]:
+    first, second, opts = pair
     chr_path = rawchr_path / f"{first.stem}{second.stem}.chr"
     params = []
-    params += nestiler_params_bg(nestiler, rawchr_path / f"{first.stem}{second.stem}.chr")
+    params += nestiler_params_bg(nestiler, rawchr_path / f"{first.stem}{second.stem}.chr", opts)
     params += make_input_params(0, first, rawnmt_path, outatr_path, rawpal_path)
     params += make_input_params(1, second, rawnmt_path, outatr_path, rawpal_path)
     params += make_palette_params(chr_path, rawpal_path)

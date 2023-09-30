@@ -86,7 +86,7 @@ constexpr u8 FIXED_BANK = 3;
        __typeof__ (b) _b = (b); \
      _a > _b ? _b : _a; })
 
-extern volatile char PPUMASK_VAR;
+// extern volatile char PPUMASK_VAR;
 
 #ifdef __cplusplus
 }

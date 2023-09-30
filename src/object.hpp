@@ -24,10 +24,11 @@ enum class Metasprite : u8 {
 };
 
 enum class Direction : u8 {
-    Right = 0,
-    Up = 1,
+    Up = 0,
+    Right = 1,
     Down = 2,
     Left = 3,
+    Error = 0xff,
 };
 
 enum State : u8 {

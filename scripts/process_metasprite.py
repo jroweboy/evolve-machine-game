@@ -40,9 +40,9 @@ def main(fin: Path, fout: Path):
           tile_id = spr[1] * 2 + 1
           attr = spr[2]
           offset = 0
-          # HACK move the kitty sprite over a bit
+          # HACK move the left/right kitty sprite over a bit
           if file.stem == "kitty":
-            if metasprite in range(0,4):
+            if metasprite in range(4,8):
               offset = 8
             if metasprite in range(12,16):
               offset = 8

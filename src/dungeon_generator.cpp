@@ -337,8 +337,12 @@ prg_rom_2 u8 generate_dungeon() {
 
     // clear out the exits for the room sections. we'll update the exits with
     // the ids to the next rooom when we process that room.
-    for (auto& num : lead.exit) { num = 0xff; }
-    for (auto& num : side.exit) { num = 0xff; }
+    for (auto& num : lead.exit) { num = NO_EXIT; }
+    for (auto& num : side.exit) { num = NO_EXIT; }
+
+    // Manually connect the starting rooms together to prevent the following code from trying to generate rooms over them
+    lead.exit[Direction::Up] = side_id;
+    side.exit[Direction::Down] = lead_id;
 
     // Keep trying to add rooms to the todo list until we actually add one.
     while (fill_read == fill_write) {
@@ -370,14 +374,14 @@ prg_rom_2 u8 generate_dungeon() {
         // Read the next item on the todo list and add another room.
         lead_id = to_fill[fill_read++];
         // Check that we haven't already filled this on a previous iteration.
-        if (map[lead_id] != 0xff) {
+        if (map[lead_id] != NO_EXIT) {
             // If we did its fine to just skip it
             continue;
         }
         map[lead_id] = id;
         room.lead_id = lead_id;
         lead.room_id = id;
-        for (auto& num : lead.exit) { num = 0xff; }
+        for (auto& num : lead.exit) { num = NO_EXIT; }
         // Default the scroll type to single and update it later if we add a side room.
         room.scroll = ScrollType::Single;
 
@@ -467,7 +471,7 @@ prg_rom_2 u8 generate_dungeon() {
             map[side_id] = id;
             room.side_id = side_id;
             side.room_id = id;
-            for (auto& num : side.exit) { num = 0xff; }
+            for (auto& num : side.exit) { num = NO_EXIT; }
 
             update_section_exits(map, side, side_id);
 

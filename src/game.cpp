@@ -112,37 +112,18 @@ prg_rom_2 static void check_screen_transition() {
     }
 }
 
-
-prg_rom_2 static void load_new_map() {
-    // find what room we exited to.
-    u8 section_id = 0xff;
+prg_rom_2 static Direction get_direction() {
     auto player = objects[0];
     if (player.x < room.x) {
-        // off the left side of the map
+        return Direction::Left;
+    } else if (player.y < room.y) {
+        return Direction::Up;
+    } else if (player.x > room_bounds_x) {
+        return Direction::Right;
+    } else if (player.y > room_bounds_y) {
+        return Direction::Down;
     }
-    // save previous room 
-    Dungeon::write_room_to_chrram(lead.room_id);
-    Dungeon::write_section_lead(room.lead_id);
-    Dungeon::write_section_side(room.side_id);
-    // load new room
-    MapLoader::load_map(section_id);
-}
-
-constexpr char sprites_pal[] = {
-    0x0f, 0x03, 0x00, 0x27,
-    0x0f, 0x1c, 0x31, 0x30,
-    0x0f, 0x10, 0x20, 0x30,
-    0x0f, 0x10, 0x20, 0x30,
-};
-
-namespace Game {
-prg_rom_2 void init() {
-    ppu_wait_nmi();
-    ppu_off();
-    pal_spr(&sprites_pal);
-    prev_game_mode = GameMode::MapLoader;
-    game_mode = GameMode::InGame;
-    set_prg_bank(2);
+    return Direction::Error;
 }
 
 prg_rom_2 static void calculate_screen_bounds() {
@@ -162,6 +143,112 @@ prg_rom_2 static void calculate_screen_bounds() {
     }
 }
 
+__attribute__((section(".prg_rom_2.x_offset_lut"))) static const s16 player_position_x_offset[8] = {
+    // Scroll type Horizontal
+    0, 16, 0, 256 + 224,
+    // Scroll type Vertical
+    0, 16, 0, 224,
+};
+__attribute__((section(".prg_rom_2.y_offset_lut"))) static const s16 player_position_y_offset[8] = {
+    // Scroll type Horizontal
+    224, 0, 16, 0,
+    // Scroll type Vertical
+    240 + 226, 0, 16, 0,
+};
+
+prg_rom_2 static void correct_player_position(Direction direction) {
+    // after a map transition we might need to shift the player a bit to match up with the new map exit
+    auto player = objects[0];
+    view_x = 0;
+    view_y = 0;
+
+    // don't add any off
+    if (direction != Direction::Error && room.scroll != ScrollType::Single) {
+        u8 offset = (((u8)room.scroll << 1) & 0b00000100) | (u8) direction;
+        s16 x_offset = player_position_x_offset[offset];
+        s16 y_offset = player_position_y_offset[offset];
+        if (x_offset) {
+            player.x = room.x + x_offset;
+        } else if (y_offset) {
+            player.y = room.y + y_offset;
+        }
+    }
+    
+    switch (room.scroll) {
+    case ScrollType::Horizontal:
+        view_x = MMAX(player.x - room.x - 0x88, 0);
+        break;
+    case ScrollType::Vertical:
+        view_y = MMAX(player.y - room.y - 0x78, 0);
+        break;
+    default:
+        break;
+    }
+    scroll(view_x, view_y);
+}
+
+prg_rom_2 static void load_new_map() {
+    // find what room we exited to. there's probably a smarter way to do this, but its during
+    // a loading transition so i don't care too much to optimize it.
+    // save previous room 
+    Dungeon::write_room_to_chrram(lead.room_id);
+    Dungeon::write_section_lead(room.lead_id);
+    Dungeon::write_section_side(room.side_id);
+
+    u8 section_id = room.lead_id;
+    auto player = objects[0];
+
+    Direction direction = get_direction();
+    SectionBase vertical_section;
+    bool is_bottom_section = player.y - room.y > 240;
+    if (lead.room_base == SectionBase::StartDown) {
+        vertical_section = is_bottom_section ? SectionBase::StartDown : SectionBase::StartUp;
+    } else {
+        vertical_section = is_bottom_section ? SectionBase::Bottom : SectionBase::Top;
+    }
+    SectionBase horizontal_section = player.x - room.x > 255 ? SectionBase::Right : SectionBase::Left;
+    switch (room.scroll) {
+    case ScrollType::Single:
+        section_id = lead.exit[(u8)direction];
+        break;
+    case ScrollType::Horizontal:
+        section_id = lead.room_base == horizontal_section
+            ? lead.exit[(u8)direction]
+            : side.exit[(u8)direction];
+        break;
+    case ScrollType::Vertical:
+        section_id = lead.room_base == vertical_section
+            ? lead.exit[(u8)direction]
+            : side.exit[(u8)direction];
+        break;
+    }
+    MapLoader::load_map(section_id);
+    // build the new map bounds
+    calculate_screen_bounds();
+    // And now correct the position of the character
+    correct_player_position(direction);
+
+    game_mode = GameMode::InGame;
+}
+
+constexpr char sprites_pal[] = {
+    0x0f, 0x03, 0x00, 0x27,
+    0x0f, 0x1c, 0x31, 0x30,
+    0x0f, 0x10, 0x20, 0x30,
+    0x0f, 0x10, 0x20, 0x30,
+};
+
+namespace Game {
+prg_rom_2 void init() {
+    // ppu_wait_nmi();
+    // ppu_off();
+    pal_spr(&sprites_pal);
+    prev_game_mode = GameMode::MapLoader;
+    game_mode = GameMode::InGame;
+    calculate_screen_bounds();
+    correct_player_position(Direction::Error);
+}
+
 prg_rom_2 void update() {
     if (game_mode != prev_game_mode) {
         switch (game_mode) {
@@ -169,10 +256,8 @@ prg_rom_2 void update() {
             pal_fade_to(4, 0, 2);
             ppu_off();
             load_new_map();
-            // MapLoader::load_map();
             // fallthrough
         case GameMode::InGame:
-            calculate_screen_bounds();
             ppu_on_all();
             pal_fade_to(0, 4, 2);
             break;

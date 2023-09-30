@@ -56,44 +56,6 @@ RawFormats['NES'].bitsOffs[1] = [71, 70, 69, 68, 67, 66, 65, 64,
                                  119, 118, 117, 116, 115, 114, 113, 112,
                                  127, 126, 125, 124, 123, 122, 121, 120]
 
-RawFormats['NES_8x16'] = RawTileFormat()
-RawFormats['NES_8x16'].width = 8
-RawFormats['NES_8x16'].height = 16
-RawFormats['NES_8x16'].stride = 256
-RawFormats['NES_8x16'].bitsOffs = [[], []]
-RawFormats['NES_8x16'].bitsOffs[0] = [7, 6, 5, 4, 3, 2, 1, 0,
-                                      15, 14, 13, 12, 11, 10, 9, 8,
-                                      23, 22, 21, 20, 19, 18, 17, 16,
-                                      31, 30, 29, 28, 27, 26, 25, 24,
-                                      39, 38, 37, 36, 35, 34, 33, 32,
-                                      47, 46, 45, 44, 43, 42, 41, 40,
-                                      55, 54, 53, 52, 51, 50, 49, 48,
-                                      63, 62, 61, 60, 59, 58, 57, 56,
-                                      128+7, 128+6, 128+5, 128+4, 128+3, 128+2, 128+1, 128+0,
-                                      128+15, 128+14, 128+13, 128+12, 128+11, 128+10, 128+9, 128+8,
-                                      128+23, 128+22, 128+21, 128+20, 128+19, 128+18, 128+17, 128+16,
-                                      128+31, 128+30, 128+29, 128+28, 128+27, 128+26, 128+25, 128+24,
-                                      128+39, 128+38, 128+37, 128+36, 128+35, 128+34, 128+33, 128+32,
-                                      128+47, 128+46, 128+45, 128+44, 128+43, 128+42, 128+41, 128+40,
-                                      128+55, 128+54, 128+53, 128+52, 128+51, 128+50, 128+49, 128+48,
-                                      128+63, 128+62, 128+61, 128+60, 128+59, 128+58, 128+57, 128+56]
-RawFormats['NES_8x16'].bitsOffs[1] = [71, 70, 69, 68, 67, 66, 65, 64,
-                                      79, 78, 77, 76, 75, 74, 73, 72,
-                                      87, 86, 85, 84, 83, 82, 81, 80,
-                                      95, 94, 93, 92, 91, 90, 89, 88,
-                                      103, 102, 101, 100, 99, 98, 97, 96,
-                                      111, 110, 109, 108, 107, 106, 105, 104,
-                                      119, 118, 117, 116, 115, 114, 113, 112,
-                                      127, 126, 125, 124, 123, 122, 121, 120,
-                                      128+71, 128+70, 128+69, 128+68, 128+67, 128+66, 128+65, 128+64,
-                                      128+79, 128+78, 128+77, 128+76, 128+75, 128+74, 128+73, 128+72,
-                                      128+87, 128+86, 128+85, 128+84, 128+83, 128+82, 128+81, 128+80,
-                                      128+95, 128+94, 128+93, 128+92, 128+91, 128+90, 128+89, 128+88,
-                                      128+103, 128+102, 128+101, 128+100, 128+99, 128+98, 128+97, 128+96,
-                                      128+111, 128+110, 128+109, 128+108, 128+107, 128+106, 128+105, 128+104,
-                                      128+119, 128+118, 128+117, 128+116, 128+115, 128+114, 128+113, 128+112,
-                                      128+127, 128+126, 128+125, 128+124, 128+123, 128+122, 128+121, 128+120]
-
 RawFormats['GB'] = RawTileFormat()
 RawFormats['GB'].width = 8
 RawFormats['GB'].height = 8
@@ -184,10 +146,7 @@ class RawTilesDialog(QDialog):
         for i in range(self.formatsLayout.count()):
             radioButton = self.formatsLayout.itemAt(i).widget()
             if radioButton.isChecked():
-                if radioButton.text() == 'NES' and self.settings.tileHeight == 16:
-                    return RawFormats['NES_8x16']
-                else:
-                    return RawFormats[radioButton.text()]
+                return RawFormats[radioButton.text()]
 
 
 class ImportRawTilesDialog(RawTilesDialog):
@@ -233,11 +192,25 @@ class ImportRawTilesDialog(RawTilesDialog):
         tileSize = tileFormat.width * tileFormat.height * len(tileFormat.bitsOffs)
         self.maxTiles = 8 * self.fileSize / (tileFormat.width * tileFormat.height * len(tileFormat.bitsOffs))
 
+    def merge8x16(self, tileData, numTiles):
+        if self.settings.tileHeight == 16:
+            # Pad tile if off number of tiles
+            paddedTileData = tileData[:]
+            if numTiles % 2 == 1:
+                paddedTileData.extend([0 for i in range(self.settings.tileWidth * self.settings.tileHeight)])
+                numTiles += 1
+            return paddedTileData, numTiles // 2
+        else:
+            # No merge needed
+            return tileData[:], numTiles
+
     def get_tiles(self):
         filename = self.filename
         numTiles = min(self.numTilesSpinBox.value(), self.maxTiles)
         fileOffset = min(self.fileOffsetSpinBox.value(), os.path.getsize(filename))
-        return readTiles(filename, numTiles, self.getRawFormat(), fileOffset)
+        tileData, numTiles, _, _ = readTiles(filename, numTiles, self.getRawFormat(), fileOffset)
+        tileDataMerged, numTilesMerged = self.merge8x16(tileData, numTiles)
+        return tileDataMerged, numTilesMerged, self.settings.tileWidth, self.settings.tileHeight 
 
 
 class ExportRawTilesDialog(RawTilesDialog):
@@ -263,8 +236,16 @@ class ExportRawTilesDialog(RawTilesDialog):
             self.filename = filename
             self.buttonOk.setEnabled(True)
 
+    def split8x16(self, tileData, numTiles):
+        if self.settings.tileHeight == 16:
+            return tileData[:], numTiles * 2
+        else:
+            # No split needed
+            return tileData[:], numTiles
+
     def write_tiles(self, tileData, numTiles):
-        writeTiles(self.filename, tileData, numTiles, self.getRawFormat())
+        tileDataSplit, numTilesSplit = self.split8x16(tileData, numTiles)
+        writeTiles(self.filename, tileDataSplit, numTilesSplit, self.getRawFormat())
 
 
 def readTiles(filename, numTiles, tileFormat, fileOffset=0):

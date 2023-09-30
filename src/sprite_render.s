@@ -6,8 +6,8 @@ kitty_chr:
 .byte $ff, $ff
 
 .section .prg_rom_2,"aR",@progbits
-.globl kitty_walk_right
-kitty_walk_right:
+.globl kitty_walk_up
+kitty_walk_up:
 .byte 1f-.-1 + 0
 .byte 2f-.-1 + 1
 .byte 3f-.-1 + 2
@@ -23,8 +23,8 @@ kitty_walk_right:
 4:
 
 .section .prg_rom_2,"aR",@progbits
-.globl kitty_walk_up
-kitty_walk_up:
+.globl kitty_walk_right
+kitty_walk_right:
 .byte 1f-.-1 + 0
 .byte 2f-.-1 + 1
 .byte 3f-.-1 + 2

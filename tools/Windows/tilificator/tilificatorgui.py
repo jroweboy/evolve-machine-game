@@ -28,10 +28,10 @@ import operator
 
 from PIL import Image
 
-from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QMainWindow, QWidget, QMenuBar, QAction, QVBoxLayout, QFormLayout, QLabel, QFileDialog, QSplitter, QFrame, QScrollArea, QGroupBox, QProgressBar, QMessageBox, QListWidget, QListWidgetItem, QListView
-from PySide2.QtCore import QCoreApplication, QSize
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtGui import QKeySequence
+from PySide6.QtWidgets import QMainWindow, QWidget, QMenuBar, QAction, QVBoxLayout, QFormLayout, QLabel, QFileDialog, QSplitter, QFrame, QScrollArea, QGroupBox, QProgressBar, QMessageBox, QListWidget, QListWidgetItem, QListView
+from PySide6.QtCore import QCoreApplication, QSize
 
 from tilificator.sprite import *
 from tilificator.tile import *
@@ -575,7 +575,7 @@ class MainWindow(QMainWindow):
             if bufLength != NESST_METASPRITE_BANK_SIZE:
                 QMessageBox.warning(self,
                                     'Unexpected file size',
-                                    f'File {filename} is {len(buf)} bytes instead of expected {expectedLength}')
+                                    f'File {filename} is {bufLength} bytes instead of expected {NESST_METASPRITE_BANK_SIZE}')
             for si in spriteImages:
                 si.palette = self.tileTableWindow.palette
                 self.addSpriteImage(si)

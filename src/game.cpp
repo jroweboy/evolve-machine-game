@@ -162,7 +162,7 @@ prg_rom_2 static void correct_player_position(Direction direction) {
     view_x = 0;
     view_y = 0;
 
-    // don't add any off
+    // don't add any offset if its the intro cutscene.
     if (direction != Direction::Error && room.scroll != ScrollType::Single) {
         u8 offset = (((u8)room.scroll << 1) & 0b00000100) | (u8) direction;
         s16 x_offset = player_position_x_offset[offset];
@@ -201,7 +201,7 @@ prg_rom_2 static void load_new_map() {
     Direction direction = get_direction();
     SectionBase vertical_section;
     bool is_bottom_section = player.y - room.y > 240;
-    if (lead.room_base == SectionBase::StartDown) {
+    if (lead.room_base == SectionBase::StartDown || lead.room_base == SectionBase::StartUp) {
         vertical_section = is_bottom_section ? SectionBase::StartDown : SectionBase::StartUp;
     } else {
         vertical_section = is_bottom_section ? SectionBase::Bottom : SectionBase::Top;

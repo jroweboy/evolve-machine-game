@@ -50,6 +50,7 @@ add_executable(${ROM}
     src/game.s
     src/graphics.s
     src/sprite_render.s
+    src/vector_math.s
 
     src/common.hpp
     src/dungeon_generator.cpp

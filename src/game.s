@@ -31,6 +31,7 @@
 .set obj_hitbox_height, __rc8
 .set obj_y_lo, __rc9
 .set obj_y_hi, __rc10
+.set obj_offset, __rc11
 
 ; code based on this post from tokumaru
 ; https://forums.nesdev.org/viewtopic.php?p=285105#p285105
@@ -142,3 +143,92 @@ check_solid_collision:
 .Exit:
     lda solid_state
     rts
+
+.section ".noinit.late"
+.globl obj_collision_parameter
+obj_collision_parameter:
+    .space 6
+
+.set PARAM_OFFSETOF_X_LO, 0
+.set PARAM_OFFSETOF_X_HI, 1
+.set PARAM_OFFSETOF_Y_LO, 2
+.set PARAM_OFFSETOF_Y_HI, 3
+.set PARAM_OFFSETOF_HITBOX_WIDTH, 4
+.set PARAM_OFFSETOF_HITBOX_HEIGHT, 5
+.set OBJECT_OFFSETOF_COLLISION, 8 * OBJECT_COUNT
+.set object_collide, __rc5
+
+.section ".prg_rom_2.obj_collision"
+.globl check_object_collision
+check_object_collision:
+    sta filter
+    lda objects + OBJECT_OFFSETOF_COLLISION, x
+    and filter
+    sta object_collide
+    ; Skip this object if we don't care about the hitbox for it
+    beq .NoCollision
+
+    ; perform 16 bit subtraction between the two X values
+    lda objects + OBJECT_OFFSETOF_X_LO, x
+    sec
+    sbc obj_collision_parameter + PARAM_OFFSETOF_X_LO
+    sta tmp
+    lda objects + OBJECT_OFFSETOF_X_HI, x
+    sbc obj_collision_parameter + PARAM_OFFSETOF_X_HI
+    ; if the high byte is non-zero that means the two objects are more than
+    ; 255 pixels away from each other so just ignore this check
+    beq .PositiveXInRange2
+    cmp #$ff
+    ; If its not zero or -1, then the abs(distance) > 255 and skip this
+    bne .NoCollision
+.NegativeXInRange2:
+    lda tmp
+    ; if its 0 here, then its actually -256 so skip
+    beq .NoCollision
+    ; abs(dist) and compare with the width of the object
+    eor #$ff
+    ; carry is set because of cmp #$ff
+    adc #0
+    cmp objects + OBJECT_OFFSETOF_WIDTH, x
+    bcs .NoCollision
+    ;; X Overlap, time to check Y Collided!
+    bcc .CheckY2
+.PositiveXInRange2:
+    lda tmp
+    ; if dist > 0 then check against player width
+    cmp obj_collision_parameter + PARAM_OFFSETOF_HITBOX_WIDTH
+    bcs .NoCollision
+.CheckY2:
+
+    ; perform 16 bit subtraction between the two Y values
+    lda objects + OBJECT_OFFSETOF_Y_LO, x
+    sec
+    sbc obj_collision_parameter + PARAM_OFFSETOF_Y_LO
+    sta tmp
+    lda objects + OBJECT_OFFSETOF_Y_HI, x
+    sbc obj_collision_parameter + PARAM_OFFSETOF_Y_HI
+    beq .PositiveYInRange2
+    cmp #$ff
+    bne .NoCollision
+.NegativeYInRange2:
+    lda tmp
+    ; if its 0 here, then its actually -256 so skip
+    beq .NoCollision
+    eor #$ff
+    ; carry is set because of cmp #$ff
+    adc #0
+    cmp objects + OBJECT_OFFSETOF_HEIGHT, x
+    bcs .NoCollision
+    bcc .YesCollision
+.PositiveYInRange2:
+    lda tmp
+    cmp obj_collision_parameter + PARAM_OFFSETOF_HITBOX_HEIGHT
+    bcc .YesCollision
+    ; fallthrough
+.NoCollision:
+    lda #0
+    rts
+.YesCollision:
+    lda object_collide
+    rts
+

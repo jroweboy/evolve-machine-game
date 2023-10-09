@@ -21,9 +21,9 @@ import array
 
 from PIL import Image
 
-from PySide2.QtGui import QPixmap, QImage
-from PySide2.QtWidgets import QLabel
-from PySide2.QtCore import Qt, QSize
+from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtWidgets import QLabel
+from PySide6.QtCore import Qt, QSize
 
 
 class PalettedImageWidget(QLabel):

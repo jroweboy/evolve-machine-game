@@ -22,9 +22,9 @@ import copy
 
 from PIL import Image
 
-from PySide2.QtCore import Signal, Slot
-from PySide2.QtGui import QGuiApplication, QPainter, QColor, QPen
-from PySide2.QtCore import Qt
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtGui import QGuiApplication, QPainter, QColor, QPen
+from PySide6.QtCore import Qt
 
 from tilificator.spritetile import SpriteTile
 from tilificator.common import indexOfMinimum
@@ -209,7 +209,8 @@ class RectanglesWidget(PalettedImageWidget):
 
         if event.button() == Qt.RightButton:
             for r in self.selectedRectangles:
-                self.tilingMethod.dragFullyToRight(r, self.si, self.rectangles)
+                if self.tilingMethod:
+                    self.tilingMethod.dragFullyToRight(r, self.si, self.rectangles)
                 r.fixed = True
             self.redraw()
             # for r in self.selectedRectangles:

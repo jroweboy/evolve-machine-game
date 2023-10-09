@@ -353,7 +353,11 @@ prg_rom_2 u8 generate_dungeon() {
     // spawn random things into the room itself
     
     // start the player at the bottom center of the screen
-    lead.objects[0] = {ObjectType::Player, room.x + 100, room.y + 240 + 100};
+    lead.objects[0] = {ObjectType::Player, Normal, room.x + 100, room.y + 240 + 100};
+    lead.objects[1] = {ObjectType::WeaponCube, (State)0x0, room.x + 25,  room.y + 240 + 100};
+    lead.objects[2] = {ObjectType::WeaponDiamond, (State)0x0, room.x + 50,  room.y + 240 + 100};
+    lead.objects[3] = {ObjectType::WeaponPyramid, (State)0x0, room.x + 125, room.y + 240 + 100};
+    lead.objects[4] = {ObjectType::WeaponSphere, (State)0x0, room.x + 150, room.y + 240 + 100};
 
     // and then save our first room to CHR RAM.
     write_room_to_chrram(id);

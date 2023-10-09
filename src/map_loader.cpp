@@ -13,6 +13,10 @@
 #include "object.hpp"
 #include "rand.hpp"
 
+// the sprite constants for the HUD are hardcoded for now
+constexpr u8 hud_chr_count = 12 * 2;
+constexpr u16 hud_chr_offset = hud_chr_count * 16;
+
 struct SectionLookup {
     const char* nametable;
     const char* chr;
@@ -48,6 +52,21 @@ static void read_map_room(u8 section_id) {
     Dungeon::load_section_to_side(room.side_id);
 }
 
+// TODO: store the offset in RAM for the loaded objects
+constexpr u8 get_tile_offset(const ObjectType& obj) {
+    switch (obj) {
+    case ObjectType::Player:
+        return 0;
+    case ObjectType::WeaponSphere:
+    case ObjectType::WeaponPyramid:
+    case ObjectType::WeaponDiamond:
+    case ObjectType::WeaponCube:
+        return kitty_chr_count + hud_chr_count;
+    case ObjectType::Count:
+        return 0;
+    }
+}
+
 static void load_section(const Section& section) {
 
     u16 nmt_addr = ((u16)section.nametable) << 8;
@@ -70,9 +89,13 @@ static void load_section(const Section& section) {
     set_prg_bank(CODE_BANK);
 
     // Load all objects for this side of the map
-    u8 i = 0;
+    u8 i = 1;
     for (const auto& obj : section.objects) {
-        auto slot = objects[i++];
+        u8 slot_idx = i++;
+        if (obj.id == ObjectType::Player) {
+            slot_idx = 0;
+        }
+        auto slot = objects[slot_idx];
         if (i > OBJECT_COUNT) {
             break;
         }
@@ -80,10 +103,13 @@ static void load_section(const Section& section) {
             continue;
         }
         const auto init = object_init_data[(u8)obj.id];
-        slot.state = (State)0;
+        slot.state = init.state;
+        slot.collision = init.collision;
         slot.metasprite = init.metasprite;
+        slot.tile_offset = get_tile_offset(obj.id);
         slot.x = obj.x;
         slot.y = obj.y;
+        slot.attribute = init.attribute;
         slot.hp = init.hp;
         slot.atk = init.atk;
         slot.hitbox.x = init.hitbox.x;
@@ -145,10 +171,18 @@ namespace MapLoader {
         donut_decompress(&kitty_chr);
         sp_chr_count += kitty_chr_count;
         sp_chr_offset += kitty_chr_offset;
+
         // Load HUD font
-        // switch to the 16kb bank that holds the graphics
         vram_adr(sp_chr_offset);
         donut_decompress(&hudfont_chr);
+        sp_chr_count += hud_chr_count;
+        sp_chr_offset += hud_chr_offset;
+
+        // and load the weapons
+        vram_adr(sp_chr_offset);
+        donut_decompress(&weapons_chr);
+        sp_chr_count += weapons_chr_count;
+        sp_chr_offset += weapons_chr_offset;
 
         load_section(lead);
 

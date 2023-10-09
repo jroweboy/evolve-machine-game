@@ -10,7 +10,10 @@ constexpr u8 SOLID_OBJECT_COUNT = 20;
 
 enum class ObjectType : u8 {
     Player,
-    // Walker,
+    WeaponSphere,
+    WeaponPyramid,
+    WeaponDiamond,
+    WeaponCube,
     Count,
 };
 
@@ -19,7 +22,12 @@ enum class Metasprite : u8 {
     KittyUp,
     KittyDown,
     KittyLeft,
-    // Walker,
+    
+    WeaponSphere,
+    WeaponPyramid,
+    WeaponDiamond,
+    WeaponCube,
+
     Count,
 };
 
@@ -32,6 +40,9 @@ enum class Direction : u8 {
 };
 
 enum State : u8 {
+    Normal = 0x00,
+    EquippedWeapon = 0x01,
+    GroundedWeapon = 0x02,
     Hidden = 0x80,
     Dead = 0xff,
 };
@@ -50,14 +61,20 @@ struct Hitbox {
 enum CollisionType {
     Solid = 1 << 0,
     Damage = 1 << 1,
+    Pickup = 1 << 2,
+    Enemy = 1 << 3,
+    Bullet = 1 << 4,
     All = 0xff,
-    // TODO: i dunno what else should go here
 };
+
 struct Object {
     s16 x;
     s16 y;
     
     Hitbox hitbox;
+    
+    /// CollisionType parameters for this object
+    u8 collision;
 
     /// Offset for the metasprite to render this.
     Metasprite metasprite;
@@ -78,14 +95,21 @@ struct Object {
     Direction direction;
     u8 speed;
 
+    /// Currently used only to set the palette of the object
+    u8 attribute;
+
     s8 hp;
     u8 atk;
+
+    /// Counter for number of iframes this object has.
+    u8 iframe;
 };
 
 #define SOA_STRUCT Object
 #define SOA_MEMBERS \
     MEMBER(metasprite) MEMBER(state) MEMBER(tile_offset) MEMBER(animation_frame) MEMBER(frame_counter) \
-    MEMBER(direction) MEMBER(speed) MEMBER(hp) MEMBER(atk) MEMBER(x) MEMBER(y) MEMBER(hitbox)
+    MEMBER(direction) MEMBER(speed) MEMBER(attribute) MEMBER(hp) MEMBER(atk) MEMBER(x) MEMBER(y) MEMBER(hitbox) \
+    MEMBER(collision) MEMBER(iframe)
 #include <soa-struct.inc>
 
 extern soa::Array<Object, OBJECT_COUNT> objects;
@@ -93,12 +117,16 @@ extern soa::Array<Object, OBJECT_COUNT> objects;
 struct ObjectInitData {
     Metasprite metasprite;
     Hitbox hitbox;
+    State state;
+    u8 collision;
+    u8 attribute;
     s8 hp;
     u8 atk;
 };
 #define SOA_STRUCT ObjectInitData
 #define SOA_MEMBERS \
-    MEMBER(metasprite) MEMBER(hitbox) MEMBER(hp) MEMBER(atk)
+    MEMBER(metasprite) MEMBER(hitbox) MEMBER(hp) MEMBER(atk) MEMBER(collision) MEMBER(attribute) \
+    MEMBER(state)
 #include <soa-struct.inc>
 
 

@@ -29,8 +29,8 @@ import operator
 from PIL import Image
 
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtGui import QKeySequence
-from PySide6.QtWidgets import QMainWindow, QWidget, QMenuBar, QAction, QVBoxLayout, QFormLayout, QLabel, QFileDialog, QSplitter, QFrame, QScrollArea, QGroupBox, QProgressBar, QMessageBox, QListWidget, QListWidgetItem, QListView
+from PySide6.QtGui import QKeySequence, QAction
+from PySide6.QtWidgets import QMainWindow, QWidget, QMenuBar, QVBoxLayout, QFormLayout, QLabel, QFileDialog, QSplitter, QFrame, QScrollArea, QGroupBox, QProgressBar, QMessageBox, QListWidget, QListWidgetItem, QListView
 from PySide6.QtCore import QCoreApplication, QSize
 
 from tilificator.sprite import *
@@ -282,7 +282,8 @@ class MainWindow(QMainWindow):
             for action in menuActions:
                 name, icon, text, shortCut, isChecked, slot = action
                 qAction = QAction(QtGui.QIcon('exit.png'), text, self)
-                qAction.setShortcut(shortCut)
+                if shortCut:
+                    qAction.setShortcut(shortCut)
                 qAction.setStatusTip(text)
                 if isChecked is not None:
                     qAction.setCheckable(True)

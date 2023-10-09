@@ -209,7 +209,8 @@ class RectanglesWidget(PalettedImageWidget):
 
         if event.button() == Qt.RightButton:
             for r in self.selectedRectangles:
-                self.tilingMethod.dragFullyToRight(r, self.si, self.rectangles)
+                if self.tilingMethod:
+                    self.tilingMethod.dragFullyToRight(r, self.si, self.rectangles)
                 r.fixed = True
             self.redraw()
             # for r in self.selectedRectangles:

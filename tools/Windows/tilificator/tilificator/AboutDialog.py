@@ -20,9 +20,9 @@
 
 import sys
 
-from PySide2.QtGui import QDesktopServices, QPixmap
-from PySide2.QtWidgets import QLabel, QPushButton, QDialog, QTextBrowser, QHBoxLayout, QVBoxLayout, QApplication
-from PySide2.QtCore import Qt, QUrl, QTimer
+from PySide6.QtGui import QDesktopServices, QPixmap
+from PySide6.QtWidgets import QLabel, QPushButton, QDialog, QTextBrowser, QHBoxLayout, QVBoxLayout, QApplication
+from PySide6.QtCore import Qt, QUrl, QTimer
 
 
 class AboutDialog(QDialog):

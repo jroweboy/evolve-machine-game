@@ -8,6 +8,7 @@ extern const char room_single_chr[];
 extern const char room_start_chr[];
 
 extern const char kitty_chr[];
+extern const char weapons_chr[];
 
 extern const char hudfont_chr[];
 

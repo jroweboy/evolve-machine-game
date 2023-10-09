@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include <neslib.h>
 #include <mapper.h>
 #include <peekpoke.h>
@@ -17,7 +18,7 @@
 extern volatile char FRAME_CNT1;
 
 // marks if the previous frame was a lag frame.
-static bool lag_frame;
+noinit static bool lag_frame;
 
 noinit static GameMode game_mode;
 noinit static GameMode prev_game_mode;
@@ -27,6 +28,52 @@ noinit static s16 room_bounds_x;
 noinit static s16 room_bounds_y;
 
 prg_rom_2 extern "C" u8 check_solid_collision(u8 filter, u8 obj_idx);
+
+struct ObjectCollisionParameter {
+    s16 x;
+    s16 y;
+    s8 width;
+    s8 height;
+};
+noinit extern ObjectCollisionParameter obj_collision_parameter;
+prg_rom_2 extern "C" u8 check_object_collision(u8 filter, u8 obj_idx);
+
+constexpr static void load_collision_parameter(u8 obj_idx) {
+    const auto obj = objects[obj_idx];
+    obj_collision_parameter.x = obj.x + obj.hitbox.x;
+    obj_collision_parameter.y = obj.y + obj.hitbox.y;
+    obj_collision_parameter.width = obj.hitbox.width;
+    obj_collision_parameter.height = obj.hitbox.height;
+}
+
+prg_rom_2 static void check_player_collision() {
+    load_collision_parameter(0);
+    auto player = objects[0];
+    for (u8 i = 2; i < OBJECT_COUNT; ++i) {
+        auto obj = objects[i];
+        u8 collision = check_object_collision((u8)CollisionType::All, i);
+        if (collision == 0)
+             continue;
+        const auto pad_new = get_pad_new(0);
+        if ((collision & CollisionType::Pickup) != 0) {
+            if (obj.state == State::GroundedWeapon && (pad_new & PAD_A) != 0) {
+                auto weapon = objects[1];
+                Metasprite tmp = weapon.metasprite.get();
+                weapon.metasprite = obj.metasprite.get();
+                weapon.state = State::EquippedWeapon;
+                weapon.attribute = obj.attribute.get();
+                weapon.tile_offset = obj.tile_offset.get();
+                if (tmp > (Metasprite)0) {
+                    DEBUGGER(obj.state);
+                    obj.metasprite = tmp;
+                    obj.state = State::GroundedWeapon;
+                } else {
+                    obj.state = State::Hidden;
+                }
+            }
+        }
+    }
+}
 
 prg_rom_2 static void move_player() {
     auto player = objects[0];
@@ -69,6 +116,38 @@ prg_rom_2 static void move_player() {
             player.frame_counter = 6;
             player.animation_frame = (player.animation_frame + 1) & 0b11;
         }
+    }
+}
+
+constexpr s8 WEAPON_BOB_Y_ORIGIN = -10;
+static constexpr s8 weapon_bob_y_offset[] = {
+    WEAPON_BOB_Y_ORIGIN - 0,
+    WEAPON_BOB_Y_ORIGIN - 0,
+    WEAPON_BOB_Y_ORIGIN - 1,
+    WEAPON_BOB_Y_ORIGIN - 2,
+    WEAPON_BOB_Y_ORIGIN - 3,
+    WEAPON_BOB_Y_ORIGIN - 3,
+    WEAPON_BOB_Y_ORIGIN - 2,
+    WEAPON_BOB_Y_ORIGIN - 1
+};
+
+prg_rom_2 static void run_weapon_bob() {
+    auto weapon = objects[1];
+    
+    if ((weapon.state & State::Hidden) != 0) {
+        // No weapon equipped so dont draw it
+        return;
+    }
+    // DEBUGGER();
+    auto player = objects[0];
+    
+    // reuse the weapon HP as the bob timer
+    weapon.x = player.x.get() - 4;
+    weapon.y = player.y.get() + weapon_bob_y_offset[weapon.hp];
+
+    weapon.frame_counter = (weapon.frame_counter + 1) & 0b00000111;
+    if (weapon.frame_counter == 0) {
+        weapon.hp = (weapon.hp + 1) & 0b00000111;
     }
 }
 
@@ -270,6 +349,8 @@ prg_rom_2 void update() {
 
     POKE(0x4123, 3);
     move_player();
+    check_player_collision();
+    run_weapon_bob();
     scroll_screen();
     check_screen_transition();
     POKE(0x4123, 4);

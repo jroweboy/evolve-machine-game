@@ -22,8 +22,8 @@ import os
 
 import array
 
-from PySide2.QtWidgets import QApplication, QDialog, QFileDialog, QDialogButtonBox, QPushButton, QRadioButton, QSpinBox, QGroupBox, QVBoxLayout, QFormLayout
-from PySide2.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QDialogButtonBox, QPushButton, QRadioButton, QSpinBox, QGroupBox, QVBoxLayout, QFormLayout
+from PySide6.QtCore import Qt
 
 from tilificator.tile import TileSettings
 

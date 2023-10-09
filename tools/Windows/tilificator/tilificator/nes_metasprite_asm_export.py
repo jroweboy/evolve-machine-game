@@ -20,8 +20,8 @@
 import sys
 import array
 
-from PySide2.QtWidgets import QApplication, QDialog, QFileDialog, QDialogButtonBox, QPushButton, QRadioButton, QSpinBox, QGroupBox, QHBoxLayout, QVBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit
-from PySide2.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QDialogButtonBox, QPushButton, QRadioButton, QSpinBox, QGroupBox, QHBoxLayout, QVBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit
+from PySide6.QtCore import Qt
 
 from tilificator.sprite import SpriteImage
 

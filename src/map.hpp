@@ -32,7 +32,7 @@ enum ExitType {
 
 struct ObjectSpawn {
     ObjectType id;
-    
+    State state;
     s16 x;
     s16 y;
 };

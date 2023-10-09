@@ -23,15 +23,26 @@ extern const u8 kitty_walk_up[];
 extern const u8 kitty_walk_down[];
 extern const u8 kitty_walk_left[];
 
-__attribute__((section(".prg_rom_2.metasprite_table"))) static const u8* metasprite_table[] = {
+extern const u8 weapon_sphere[];
+extern const u8 weapon_pyramid[];
+extern const u8 weapon_diamond[];
+extern const u8 weapon_cube[];
+
+__attribute__((section(".prg_rom_2.metasprite_table")))
+static const u8* metasprite_table[(u8)Metasprite::Count] = {
     kitty_walk_right,
     kitty_walk_up,
     kitty_walk_down,
     kitty_walk_left,
+    
+    weapon_sphere,
+    weapon_pyramid,
+    weapon_diamond,
+    weapon_cube,
 };
 
-static u8 shuffle_offset;
-static u8 sprite_slot;
+noinit static u8 shuffle_offset;
+noinit static u8 sprite_slot;
 
 extern u8 OAM_BUF[256];
 // volatile OAMData* OAM = &*reinterpret_cast<volatile OAMData*>(&OAM_BUF);
@@ -67,7 +78,7 @@ prg_rom_2 static void draw_object(u8 id) {
         oam.y = y;
         u8 tile = frame[offset--];
         u8 attr = frame[offset--];
-        oam.attr = attr;
+        oam.attr = attr | object.attribute;
         oam.tile = tile + object.tile_offset;
         sprite_slot += 4;
     }
@@ -121,10 +132,20 @@ namespace Sprite {
 
     prg_rom_2 void draw_objects() {
         sprite_slot = 0;
+        const auto& player = objects[0];
     
         // Draw the player first to reserve their slot
         // Everything else can fight with flickering.
-        draw_object(0);
+        
+        // in order to fake the floating effect, if we are walking down
+        // the draw the player second so the cube appears in front of the tail
+        if (player.metasprite == Metasprite::KittyDown) {
+            draw_object(1);
+            draw_object(0);
+        } else {
+            draw_object(0);
+            draw_object(1);
+        }
 
         // OAM shuffle the rest of the sprites
         shuffle_offset = mod_add<OBJECT_COUNT>(shuffle_offset, 11);
@@ -135,7 +156,10 @@ namespace Sprite {
             if (i == 0) {
                 draw_hud();
                 continue;
+            } else if (i == 1) {
+                continue;
             }
+
             draw_object(i);
         }
     }

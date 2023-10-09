@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <peekpoke.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -87,6 +88,15 @@ constexpr u8 FIXED_BANK = 3;
      _a > _b ? _b : _a; })
 
 // extern volatile char PPUMASK_VAR;
+
+#define _DEBUGGER_0() { POKE(0x4018, 0); }
+#define _DEBUGGER_1(a) { POKE(0x4018, (u8)a); }
+#define _DEBUGGER_X(x,A,FUNC,...)  FUNC
+#define DEBUGGER(...) _DEBUGGER_X(,##__VA_ARGS__,\
+  _DEBUGGER_1(__VA_ARGS__),\
+  _DEBUGGER_0(__VA_ARGS__))
+
+extern "C" void __putchar(char c);
 
 #ifdef __cplusplus
 }

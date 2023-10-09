@@ -22,9 +22,9 @@ import array
 
 from PIL import Image
 
-from PySide2.QtCore import Signal, Slot
-from PySide2.QtWidgets import QApplication, QDialog, QDialogButtonBox, QGroupBox, QScrollArea, QHBoxLayout, QVBoxLayout
-from PySide2.QtCore import Qt
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QGroupBox, QScrollArea, QHBoxLayout, QVBoxLayout
+from PySide6.QtCore import Qt
 
 from tilificator.sprite import SpriteImage
 

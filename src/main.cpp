@@ -37,7 +37,6 @@ noinit soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 // IRQ handler that will just increment a counter and return
 extern "C" void irq_detection();
 extern "C" void irq_default();
-
 asm(R"ASM(
 .section .text.irqdetect,"ax",@progbits
 .globl irq
@@ -64,6 +63,7 @@ irq_default:
 
 )ASM");
 
+extern "C" void __putchar(char c) { POKE(0x401b, c); }
 
 static void main_init() {    
     prev_main_mode = (MainMode) 0xff;

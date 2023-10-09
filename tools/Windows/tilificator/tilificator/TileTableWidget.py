@@ -23,10 +23,10 @@ from math import ceil
 
 from PIL import Image
 
-from PySide2.QtCore import Signal, Slot
-from PySide2.QtGui import QGuiApplication, QPainter, QColor, QPen
-from PySide2.QtWidgets import QFileDialog
-from PySide2.QtCore import Qt
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtGui import QGuiApplication, QPainter, QColor, QPen
+from PySide6.QtWidgets import QFileDialog
+from PySide6.QtCore import Qt
 
 from tilificator.sprite import *
 from tilificator.tile import *

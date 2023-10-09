@@ -19,8 +19,8 @@
 
 import sys
 
-from PySide2.QtWidgets import QApplication, QDialog, QDialogButtonBox, QDoubleSpinBox, QComboBox, QListWidget, QFormLayout, QCheckBox
-from PySide2.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QDoubleSpinBox, QComboBox, QListWidget, QFormLayout, QCheckBox
+from PySide6.QtCore import Qt
 
 from tilificator.tilificator import OptimizationSettings
 

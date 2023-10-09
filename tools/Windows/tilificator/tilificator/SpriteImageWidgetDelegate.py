@@ -20,10 +20,10 @@
 
 from PIL import Image
 
-from PySide2.QtCore import Signal, Slot
-from PySide2.QtWidgets import QLabel, QGroupBox, QHBoxLayout, QStyledItemDelegate
-from PySide2.QtCore import Qt, QSize
-from PySide2.QtGui import QPixmap, QImage
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtWidgets import QLabel, QGroupBox, QHBoxLayout, QStyledItemDelegate
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QPixmap, QImage
 
 from tilificator.sprite import SpriteImage
 from tilificator.rectangles_widget import RectanglesWidget

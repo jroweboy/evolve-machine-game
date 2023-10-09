@@ -19,7 +19,7 @@
 
 import sys
 
-from PySide2.QtWidgets import QApplication, QDialog, QDialogButtonBox, QSpinBox, QFormLayout
+from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QSpinBox, QFormLayout
 
 from tilificator.tile import TileSettings
 

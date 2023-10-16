@@ -3,6 +3,11 @@
 
 #include "common.hpp"
 
+#ifndef NES
+#undef prg_rom_2
+#define prg_rom_2 
+#endif
+
 namespace Dungeon {
 
 constexpr u8 WIDTH = 8;

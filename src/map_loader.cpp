@@ -2,10 +2,11 @@
 #include <mapper.h>
 #include <neslib.h>
 #include <peekpoke.h>
+#include <soa.h>
 
 #include "common.hpp"
 #include "dungeon_generator.hpp"
-// #include "header/graphics_constants.hpp"
+#include "header/graphics_constants.hpp"
 #include "header/sprites_constants.hpp"
 #include "graphics.hpp"
 #include "map_loader.hpp"
@@ -23,22 +24,23 @@ struct SectionLookup {
     const char* attribute;
     const char* palette;
     u8 mirroring;
+    u16 chr_offset;
+    u8 chr_count;
 };
 
-// TODO: this table should be generated in python instead since it can really only happen in ASM
-__attribute__((section(".prg_rom_1.section_lut"))) constexpr SectionLookup section_lut[7] = {
-    {bottom_bin, room_updown_chr, bottom_attr, updown_palette, MIRROR_HORIZONTAL},
-    {left_bin, room_leftright_chr, left_attr, leftright_palette, MIRROR_VERTICAL},
-    {right_bin, room_leftright_chr, right_attr, leftright_palette, MIRROR_VERTICAL},
-    {single_bin, room_single_chr, single_attr, single_palette, MIRROR_VERTICAL},
-    {startdown_bin, room_start_chr, startdown_attr, start_palette, MIRROR_HORIZONTAL},
-    {startup_bin, room_start_chr, startup_attr, start_palette, MIRROR_HORIZONTAL},
-    {top_bin, room_updown_chr, top_attr, updown_palette, MIRROR_HORIZONTAL},
-};
+#define SOA_STRUCT SectionLookup
+#define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(palette) MEMBER(mirroring) MEMBER(chr_offset) MEMBER(chr_count)
+#include <soa-struct.inc>
+extern const soa::Array<SectionLookup, 7> section_lut;
 
 noinit Room room;
 noinit Section lead;
 noinit Section side;
+
+noinit std::array<u8, 4> room_obj_chr_counts;
+
+extern const u16 door_exit_offset[4];
+extern const u8 door_exit_count[4];
 
 static void read_map_room(u8 section_id) {
     // switch the bank to the bank with the save data
@@ -67,12 +69,43 @@ constexpr u8 get_tile_offset(const ObjectType& obj) {
     }
 }
 
-static void load_section(const Section& section) {
+constexpr u8 door_exit_count_lut[4] = {
+    door_up_chr_count,
+    door_right_chr_count,
+    door_down_chr_count,
+    door_left_chr_count
+};
+constexpr u16 door_exit_offset_lut[4] = {
+    door_up_chr_offset,
+    door_right_chr_offset,
+    door_down_chr_offset,
+    door_left_chr_offset
+};
 
+extern const unsigned char* door_exit_chr_lut[4];
+
+static void load_section(const Section& section) {
     u16 nmt_addr = ((u16)section.nametable) << 8;
     vram_adr(nmt_addr);
     const char* nametable = section_lut[static_cast<u8>(section.room_base)].nametable;
     donut_decompress(nametable);
+
+    // now load the exits
+    for (u8 i = 0; i < 4; ++i) {
+        if ((section.exit[i] & 0x80) == 0) {
+            // if we haven't loaded this exit type, copy it into chr
+            if (room_obj_chr_counts[i] == 0) {
+                room_obj_chr_counts[i] = bg_chr_count;
+                // DEBUGGER();
+                vram_adr(bg_chr_offset);
+                donut_decompress(door_exit_chr_lut[i]);
+                bg_chr_offset += door_exit_offset_lut[i];
+                bg_chr_count += door_exit_count_lut[i];
+            }
+            // and now we can write the tile data to the nametable
+            
+        }
+    }
 
     // load the attributes for this nametable into a buffer that we can update with the
     // objects as they are loaded
@@ -81,6 +114,8 @@ static void load_section(const Section& section) {
     for (u8 i = 0; i < 64; ++i) {
         attr_buffer[i] = attr[i];
     }
+
+    // For now, load all the 
 
     // and then write out all the attributes
     vram_adr(nmt_addr + 0x3c0);
@@ -145,6 +180,10 @@ namespace MapLoader {
         // TODO turn off DPCM if its playing
         // ppu_off();
 
+        for (u8 i=0; i < 4; ++i) {
+            room_obj_chr_counts[i] = 0;
+        }
+
         // switch to the 16kb bank that holds the level
         set_prg_bank(GRAPHICS_BANK);
 
@@ -153,16 +192,18 @@ namespace MapLoader {
             solid.state = (CollisionType)0;
         }
 
-        // TODO save the previous room state when leaving?
+        // TODO save the previous room state when leaving
         read_map_room(section_id);
 
         bg_chr_count = 0;
         bg_chr_offset = 0x0000;
-        set_chr_bank(bg_chr_offset);
+        set_chr_bank(0);
         vram_adr(0x00);
-        const char* chr = section_lut[static_cast<u8>(lead.room_base)].chr;
+        u8 room_base = static_cast<u8>(lead.room_base);
+        const char* chr = section_lut[room_base].chr;
         donut_decompress(chr);
-        // bg_chr_offset += // todo we need to add the offsets to the section_lut
+        bg_chr_offset += section_lut[room_base].chr_offset;
+        bg_chr_count += section_lut[room_base].chr_count;
 
         // always add the kitty tile to the CHR
         sp_chr_count = 0;
@@ -191,10 +232,10 @@ namespace MapLoader {
         }
 
         // if we are using a vertical configuration, update the mirroring config
-        u8 mirroring = section_lut[static_cast<u8>(lead.room_base)].mirroring;
+        u8 mirroring = section_lut[room_base].mirroring;
         set_mirroring(mirroring);
 
-        const char* palette = section_lut[static_cast<u8>(lead.room_base)].palette;
+        const char* palette = section_lut[room_base].palette;
         pal_bg(palette);
 
         pal_bright(0);

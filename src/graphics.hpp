@@ -37,3 +37,10 @@ extern const char leftright_palette[];
 extern const char single_palette[];
 extern const char start_palette[];
 extern const char title_palette[];
+
+// Objects
+extern const char door_down_chr[];
+extern const char door_left_chr[];
+extern const char door_up_chr[];
+extern const char door_right_chr[];
+

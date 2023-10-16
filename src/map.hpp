@@ -4,7 +4,7 @@
 #include <array>
 
 #include "common.hpp"
-#include "object.hpp"
+//#include "object.hpp"
 
 
 // This doesn't seem necessary. Consider removing it?
@@ -80,7 +80,8 @@ struct Section {
     // This is an enum of what type of screen to draw.
     SectionBase room_base;
 
-    // An exit refers to the section ID for the new section that we are moving to
+    // An exit refers to the object ID for the type of exit that is drawn.
+    // Bit 7 (0x80) is set when the exit is closed off.
     // Store the list of exits for this room in this order
     //    0   
     // 3 [ ] 1

@@ -14,7 +14,14 @@
 #include "dungeon_generator.hpp"
 #include "common.hpp"
 #include "map.hpp"
-#include "object.hpp"
+//#include "object.hpp"
+
+// Offset in ram for where the sections start
+constexpr u16 SectionOffset = sizeof(Room) * Dungeon::ROOM_LIMIT;
+
+// A stack allocated page of bytes defining the map structure.
+using MapId = std::array<u8, Dungeon::SIZE>;
+using Exits = std::array<u8, Dungeon::ROOM_LIMIT>;
 
 #ifndef NES
 #include <sstream>
@@ -29,6 +36,7 @@
 #endif
 
 #ifndef NES
+
 u16 addr;
 u8 vram[0x2000] = {};
 void init() {
@@ -67,10 +75,10 @@ static std::unordered_map<u8, std::wstring> LUT {
 
 static void dump_map(const MapId& map, const MapId& to_fill) {
     std::wstringstream first;
-    for (int i = 0; i < DUNGEON_HEIGHT; i++) {
+    for (int i = 0; i < Dungeon::HEIGHT; i++) {
         std::wstringstream second;
-        for (int j = 0; j < DUNGEON_WIDTH; j++) {
-            u8 id = i * DUNGEON_HEIGHT + j;
+        for (int j = 0; j < Dungeon::WIDTH; j++) {
+            u8 id = i * Dungeon::HEIGHT + j;
             auto filling = std::find(to_fill.begin(), to_fill.end(), id);
             if (map[id] == Dungeon::NO_EXIT) {
                 first << ((filling != to_fill.end()) ? L"▧" : L"·");
@@ -82,11 +90,12 @@ static void dump_map(const MapId& map, const MapId& to_fill) {
                 bool has_side = false;
                 bool has_unmatched = false;
                 for (u8 k = 0; k < 4; ++k) {
-                    u8 exit_id = vram[start + k];
-                    if (exit_id < Dungeon::SIZE) {
-                        if (map[exit_id] == map[id]) {
-                            has_side = true;
-                        }
+                    u8 exit_direction = vram[start + k];
+                    if (exit_direction == Dungeon::SIDE_ROOM) {
+                        has_side = true;
+                        out |= 1 << k;
+                    }
+                    if ((exit_direction & 0x80) == 0) {
                         out |= 1 << k;
                     }
                     //if (exit_id == Dungeon::EXIT_PENDING) {
@@ -110,13 +119,6 @@ static void dump_map(const MapId& map, const MapId& to_fill) {
 
 }
 #endif
-
-// Offset in ram for where the sections start
-constexpr u16 SectionOffset = sizeof(Room) * Dungeon::ROOM_LIMIT;
-
-// A stack allocated page of bytes defining the map structure.
-using MapId = std::array<u8, Dungeon::SIZE>;
-using Exits = std::array<u8, Dungeon::ROOM_LIMIT>;
 
 // me is the current map index
 // neighbor is one of the following
@@ -146,23 +148,23 @@ prg_rom_2 static u8 GetNeighborId(u8 me, u8 direction) {
 // TODO: Change vram_read/write to just vram_poke/peak for speed
 // Optimized routine to read just the section's exit information and either update it 
 // if its Dungeon::EXIT_PENDING or return false if theres no exit
-prg_rom_2 static bool update_section_exit(u8 my_id, u8 direction, u8 new_exit) {
+prg_rom_2 static u8 update_section_exit(u8 my_id, u8 direction, u8 new_exit) {
     // Read out this particular exit from the section
     u16 offset = SectionOffset + my_id * sizeof(Section) + offsetof(Section, exit) + direction;
     vram_adr(offset);
     u8 exit;
     vram_read(&exit, 1);
-    // Check to see if the eighbor has us marked as exit or not
-    if (exit == Dungeon::NO_EXIT) {
+    // Check to see if the neighbor has us marked as exit or not
+    if (exit == Dungeon::NO_EXIT || exit == Dungeon::SIDE_ROOM) {
         // and if we aren't an exit then don't do anything.
-        return false;
+        return exit;
     }
     
     // Since this section was waiting for us to fill this exit, update both the exit
     // and the entrance.
     vram_adr(offset);
     vram_write(&new_exit, 1);
-    return true;
+    return exit;
 }
 
 // Loads the exit data for a different room in the map
@@ -202,7 +204,7 @@ prg_rom_2 static void add_sections_to_fill(Section& section, MapId& to_fill, u8&
     for (u8 i = 0; i < 4; ++i) {
         // If we didn't roll a random number that has an exit at this spot, skip it
         // if we rolled a side that already has an exit skip it.
-        if ((todo & (1 << i)) == 0 || section.exit[i] < Dungeon::SIZE) continue;
+        if ((todo & (1 << i)) == 0 || section.exit[i] <= Dungeon::SIDE_ROOM) continue;
 
         u8 map_pos = GetNeighborId(me, i);
         // If the index goes out of bounds, then skip it too
@@ -218,17 +220,20 @@ prg_rom_2 static void update_section_exits(const MapId& map, Section& section, u
     for (u8 i = 0; i < 4; ++i) {
         u8 neighbor = GetNeighborId(me, i);
         if (neighbor >= Dungeon::SIZE || map[neighbor] == Dungeon::NO_EXIT) continue;
-
         // if we have a neighbor that was waiting for us to add the exit, then
         // update their exits now. Get the direction *from* me to the neighbor
         // section and write that.
         u8 direction = Dungeon::GetDirection(me, neighbor);
-        bool updated = update_section_exit(neighbor, direction, me);
-        // and then if the neighbor was pending a new room, update our exit
-        // with the opposite direction
-        if (updated) {
-            u8 opps = Dungeon::OppositeDirection(direction);
-            section.exit[opps] = neighbor;
+        u8 opps = Dungeon::OppositeDirection(direction);
+        u8 updated_exit = update_section_exit(neighbor, direction, opps);
+        if (updated_exit == Dungeon::NO_EXIT) {
+            continue;
+        } else if (updated_exit == Dungeon::SIDE_ROOM) {
+            section.exit[opps] = Dungeon::SIDE_ROOM;
+        } else {
+            // and then if the neighbor was pending a new room, update our exit
+            // with the opposite direction
+            section.exit[opps] = direction;
         }
     }
 }
@@ -341,8 +346,8 @@ prg_rom_2 u8 generate_dungeon() {
     for (auto& num : side.exit) { num = NO_EXIT; }
 
     // Manually connect the starting rooms together to prevent the following code from trying to generate rooms over them
-    lead.exit[Direction::Up] = side_id;
-    side.exit[Direction::Down] = lead_id;
+    lead.exit[Direction::Up] = Dungeon::SIDE_ROOM;
+    side.exit[Direction::Down] = Dungeon::SIDE_ROOM;
 
     // Keep trying to add rooms to the todo list until we actually add one.
     while (fill_read == fill_write) {
@@ -353,11 +358,11 @@ prg_rom_2 u8 generate_dungeon() {
     // spawn random things into the room itself
     
     // start the player at the bottom center of the screen
-    lead.objects[0] = {ObjectType::Player, Normal, room.x + 100, room.y + 240 + 100};
-    lead.objects[1] = {ObjectType::WeaponCube, (State)0x0, room.x + 25,  room.y + 240 + 100};
-    lead.objects[2] = {ObjectType::WeaponDiamond, (State)0x0, room.x + 50,  room.y + 240 + 100};
-    lead.objects[3] = {ObjectType::WeaponPyramid, (State)0x0, room.x + 125, room.y + 240 + 100};
-    lead.objects[4] = {ObjectType::WeaponSphere, (State)0x0, room.x + 150, room.y + 240 + 100};
+    lead.objects[0] = {ObjectType::Player, Normal, (s16)(room.x + 100), (s16)(room.y + 240 + 100)};
+    lead.objects[1] = {ObjectType::WeaponCube, Normal, (s16)(room.x + 25), (s16)(room.y + 240 + 100)};
+    lead.objects[2] = {ObjectType::WeaponDiamond, Normal, (s16)(room.x + 50),  (s16)(room.y + 240 + 100)};
+    lead.objects[3] = {ObjectType::WeaponPyramid, Normal, (s16)(room.x + 125), (s16)(room.y + 240 + 100)};
+    lead.objects[4] = {ObjectType::WeaponSphere, Normal, (s16)(room.x + 150), (s16)(room.y + 240 + 100)};
 
     // and then save our first room to CHR RAM.
     write_room_to_chrram(id);
@@ -454,7 +459,7 @@ prg_rom_2 u8 generate_dungeon() {
             }
             
             // Since we know we have a side and we know the direction, update this info here
-            lead.exit[dir] = side_id;
+            lead.exit[dir] = Dungeon::SIDE_ROOM;
         }
         else {
             lead.nametable = 0x20;
@@ -520,6 +525,6 @@ int main()
     //srand(0);
     //system("chcp 65001");
     _setmode(_fileno(stdout), _O_U16TEXT);
-    generate_dungeon();
+    Dungeon::generate_dungeon();
 }
 #endif

@@ -5,7 +5,9 @@
 extern "C" {
 #endif
 
+#ifdef NES
 #include <peekpoke.h>
+#endif
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -34,6 +36,45 @@ enum class GameMode : u8 {
     Pause = 0x80,
 };
 
+enum class ObjectType : u8 {
+    Player,
+    WeaponSphere,
+    WeaponPyramid,
+    WeaponDiamond,
+    WeaponCube,
+    Count,
+};
+
+enum class Metasprite : u8 {
+    KittyRight,
+    KittyUp,
+    KittyDown,
+    KittyLeft,
+
+    WeaponSphere,
+    WeaponPyramid,
+    WeaponDiamond,
+    WeaponCube,
+
+    Count,
+};
+
+enum class Direction : u8 {
+    Up = 0,
+    Right = 1,
+    Down = 2,
+    Left = 3,
+    Error = 0xff,
+};
+
+enum State : u8 {
+    Normal = 0x00,
+    EquippedWeapon = 0x01,
+    GroundedWeapon = 0x02,
+    Hidden = 0x80,
+    Dead = 0xff,
+};
+
 extern u8 view_x;
 extern u8 view_y;
 
@@ -43,10 +84,11 @@ extern MainMode main_mode;
 /// RNG seed for this run. Set when the game starts
 extern u32 seed;
 
+#ifdef NES
 /// Global timer that always ticks up even during game pause!
 /// Caution: don't use for animation
 extern _BitInt(24) global_timer;
-
+#endif
 
 /// Pointer to the IRQ function
 extern void (*irq_pointer)();

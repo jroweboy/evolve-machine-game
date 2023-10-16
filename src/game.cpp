@@ -1,5 +1,4 @@
 
-#include <stdio.h>
 #include <neslib.h>
 #include <mapper.h>
 #include <peekpoke.h>

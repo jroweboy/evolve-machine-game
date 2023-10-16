@@ -8,45 +8,6 @@
 constexpr u8 OBJECT_COUNT = 12;
 constexpr u8 SOLID_OBJECT_COUNT = 20;
 
-enum class ObjectType : u8 {
-    Player,
-    WeaponSphere,
-    WeaponPyramid,
-    WeaponDiamond,
-    WeaponCube,
-    Count,
-};
-
-enum class Metasprite : u8 {
-    KittyRight,
-    KittyUp,
-    KittyDown,
-    KittyLeft,
-    
-    WeaponSphere,
-    WeaponPyramid,
-    WeaponDiamond,
-    WeaponCube,
-
-    Count,
-};
-
-enum class Direction : u8 {
-    Up = 0,
-    Right = 1,
-    Down = 2,
-    Left = 3,
-    Error = 0xff,
-};
-
-enum State : u8 {
-    Normal = 0x00,
-    EquippedWeapon = 0x01,
-    GroundedWeapon = 0x02,
-    Hidden = 0x80,
-    Dead = 0xff,
-};
-
 struct Hitbox {
     s8 x;
     s8 y;

@@ -1,4 +1,36 @@
 
+.include "header/graphics_constants.s"
+;;;; Section LUT
+
+.set MIRROR_LOWER_BANK, 0
+.set MIRROR_UPPER_BANK, 1
+.set MIRROR_VERTICAL, 2
+.set MIRROR_HORIZONTAL, 3
+
+.section .prg_rom_1.section_lut,"aR",@progbits
+.globl section_lut
+section_lut:
+    ; nametable
+    .byte bottom_bin@mos16lo, left_bin@mos16lo, right_bin@mos16lo, single_bin@mos16lo, startdown_bin@mos16lo, startup_bin@mos16lo, top_bin@mos16lo
+    .byte bottom_bin@mos16hi, left_bin@mos16hi, right_bin@mos16hi, single_bin@mos16hi, startdown_bin@mos16hi, startup_bin@mos16hi, top_bin@mos16hi
+    ; chr
+    .byte room_updown_chr@mos16lo, room_leftright_chr@mos16lo, room_leftright_chr@mos16lo, room_single_chr@mos16lo, room_start_chr@mos16lo, room_start_chr@mos16lo, room_updown_chr@mos16lo
+    .byte room_updown_chr@mos16hi, room_leftright_chr@mos16hi, room_leftright_chr@mos16hi, room_single_chr@mos16hi, room_start_chr@mos16hi, room_start_chr@mos16hi, room_updown_chr@mos16hi
+    ; attribute
+    .byte bottom_attr@mos16lo, left_attr@mos16lo, right_attr@mos16lo, single_attr@mos16lo, startdown_attr@mos16lo, startup_attr@mos16lo, top_attr@mos16lo
+    .byte bottom_attr@mos16hi, left_attr@mos16hi, right_attr@mos16hi, single_attr@mos16hi, startdown_attr@mos16hi, startup_attr@mos16hi, top_attr@mos16hi
+    ; palette ? do we need this?
+    .byte updown_palette@mos16lo, leftright_palette@mos16lo, leftright_palette@mos16lo, single_palette@mos16lo, start_palette@mos16lo, start_palette@mos16lo, updown_palette@mos16lo
+    .byte updown_palette@mos16hi, leftright_palette@mos16hi, leftright_palette@mos16hi, single_palette@mos16hi, start_palette@mos16hi, start_palette@mos16hi, updown_palette@mos16hi
+    ; mirroring
+    .byte MIRROR_HORIZONTAL, MIRROR_VERTICAL, MIRROR_VERTICAL, MIRROR_VERTICAL, MIRROR_HORIZONTAL, MIRROR_HORIZONTAL, MIRROR_HORIZONTAL
+    ; chr offset
+    .byte updown_chr_offset@mos16lo, leftright_chr_offset@mos16lo, leftright_chr_offset@mos16lo, single_chr_offset@mos16lo, startupstartdown_chr_offset@mos16lo, startupstartdown_chr_offset@mos16lo, updown_chr_offset@mos16lo
+    .byte updown_chr_offset@mos16hi, leftright_chr_offset@mos16hi, leftright_chr_offset@mos16hi, single_chr_offset@mos16hi, startupstartdown_chr_offset@mos16hi, startupstartdown_chr_offset@mos16hi, updown_chr_offset@mos16hi
+    ; chr count
+    .byte updown_chr_count, leftright_chr_count, leftright_chr_count, single_chr_count, startupstartdown_chr_count, startupstartdown_chr_count, updown_chr_count
+
+
 ;;;; CHR (Compressed)
 
 .section .prg_rom_1,"aR",@progbits
@@ -117,3 +149,22 @@ start_palette:
 .globl updown_palette
 updown_palette:
     .incbin "graphics/pal/leftright.pal"
+
+;;;;;;;; Objects
+
+.section .prg_rom_1,"aR",@progbits
+.globl door_down_chr_dnt
+door_down_chr_dnt:
+    .incbin "graphics/chr/door_down.chr.dnt"
+.globl door_up_chr_dnt
+door_up_chr_dnt:
+    .incbin "graphics/chr/door_up.chr.dnt"
+.globl door_left_chr_dnt
+door_left_chr_dnt:
+    .incbin "graphics/chr/door_left.chr.dnt"
+.globl door_right_chr_dnt
+door_right_chr_dnt:
+    .incbin "graphics/chr/door_right.chr.dnt"
+.globl door_exit_chr_lut
+door_exit_chr_lut:
+    .word door_up_chr_dnt, door_right_chr_dnt, door_down_chr_dnt, door_left_chr_dnt

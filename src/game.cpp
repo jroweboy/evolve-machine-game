@@ -63,7 +63,6 @@ prg_rom_2 static void check_player_collision() {
                 weapon.attribute = obj.attribute.get();
                 weapon.tile_offset = obj.tile_offset.get();
                 if (tmp > (Metasprite)0) {
-                    DEBUGGER(obj.state);
                     obj.metasprite = tmp;
                     obj.state = State::GroundedWeapon;
                 } else {
@@ -137,7 +136,6 @@ prg_rom_2 static void run_weapon_bob() {
         // No weapon equipped so dont draw it
         return;
     }
-    // DEBUGGER();
     auto player = objects[0];
     
     // reuse the weapon HP as the bob timer

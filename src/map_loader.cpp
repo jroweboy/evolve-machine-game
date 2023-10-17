@@ -6,7 +6,6 @@
 
 #include "common.hpp"
 #include "dungeon_generator.hpp"
-#include "header/graphics_constants.hpp"
 #include "header/sprites_constants.hpp"
 #include "graphics.hpp"
 #include "map_loader.hpp"
@@ -69,20 +68,28 @@ constexpr u8 get_tile_offset(const ObjectType& obj) {
     }
 }
 
-constexpr u8 door_exit_count_lut[4] = {
-    door_up_chr_count,
-    door_right_chr_count,
-    door_down_chr_count,
-    door_left_chr_count
+namespace RoomObject {
+enum {
+    DOOR_UP,
+    DOOR_RIGHT,
+    DOOR_DOWN,
+    DOOR_LEFT,
 };
-constexpr u16 door_exit_offset_lut[4] = {
-    door_up_chr_offset,
-    door_right_chr_offset,
-    door_down_chr_offset,
-    door_left_chr_offset
-};
+}
 
-extern const unsigned char* door_exit_chr_lut[4];
+struct RoomObjectLookup {
+    const char* nametable;
+    const char* chr;
+    const char* attribute; // TODO
+    u16 chr_offset;
+    u8 chr_count;
+    u8 width;
+    u8 height;
+};
+#define SOA_STRUCT RoomObjectLookup
+#define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count)
+#include <soa-struct.inc>
+extern const soa::Array<RoomObjectLookup, 4> room_object_lut;
 
 static void load_section(const Section& section) {
     u16 nmt_addr = ((u16)section.nametable) << 8;
@@ -91,16 +98,15 @@ static void load_section(const Section& section) {
     donut_decompress(nametable);
 
     // now load the exits
-    for (u8 i = 0; i < 4; ++i) {
+    for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
         if ((section.exit[i] & 0x80) == 0) {
             // if we haven't loaded this exit type, copy it into chr
             if (room_obj_chr_counts[i] == 0) {
                 room_obj_chr_counts[i] = bg_chr_count;
-                // DEBUGGER();
                 vram_adr(bg_chr_offset);
-                donut_decompress(door_exit_chr_lut[i]);
-                bg_chr_offset += door_exit_offset_lut[i];
-                bg_chr_count += door_exit_count_lut[i];
+                donut_decompress(room_object_lut[i].chr);
+                bg_chr_offset += room_object_lut[i].chr_offset;
+                bg_chr_count += room_object_lut[i].chr_count;
             }
             // and now we can write the tile data to the nametable
             

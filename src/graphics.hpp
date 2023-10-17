@@ -44,3 +44,7 @@ extern const char door_left_chr[];
 extern const char door_up_chr[];
 extern const char door_right_chr[];
 
+extern const char door_down_nmt[];
+extern const char door_left_nmt[];
+extern const char door_up_nmt[];
+extern const char door_right_nmt[];

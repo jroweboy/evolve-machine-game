@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="60" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="21">
+ <imagelayer id="2" name="background">
+  <image source="../rooms/start.bmp" width="256" height="480"/>
+ </imagelayer>
+ <objectgroup id="3" name="collision">
+  <object id="8" name="0" x="0" y="456" width="80" height="24"/>
+  <object id="10" name="1" x="175" y="456" width="81" height="24"/>
+  <object id="11" name="2" x="0" y="218" width="18" height="158"/>
+  <object id="12" name="3" x="237" y="218" width="19" height="166"/>
+  <object id="13" name="4" x="0" y="19" width="18" height="199"/>
+  <object id="14" name="5" x="18" y="0" width="219" height="21"/>
+  <object id="15" name="6" x="237" y="20" width="18" height="198"/>
+ </objectgroup>
+ <objectgroup id="4" name="exit_spawns">
+  <object id="17" name="side_left" x="0" y="376" width="32" height="80"/>
+  <object id="18" name="side_down" x="80" y="440" width="96" height="40"/>
+  <object id="19" name="side_right" x="224" y="384" width="32" height="72"/>
+ </objectgroup>
+</map>

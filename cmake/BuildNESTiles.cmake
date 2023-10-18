@@ -38,6 +38,11 @@ function(build_nes_tiles)
     message(FATAL_ERROR "Cannot generate BG data: Unable to find builder script process_background.py")
   endif()
 
+  find_file(tiled_script NAMES process_tiled_maps process_tiled_maps.py)
+  if (NOT tiled_script)
+    message(FATAL_ERROR "Cannot generate BG data: Unable to find builder script process_tiled_maps.py")
+  endif()
+
   # build the room graphics
   # basepath is the input folder
   set(room_basepath ${TILES_SRC}/rooms)
@@ -113,6 +118,8 @@ function(build_nes_tiles)
 
     # asm constants
     ${out_asmpath}/graphics_constants.hpp
+    ${out_asmpath}/graphics_constants.s
+    ${out_asmpath}/room_collision.s
   )
   
   add_custom_command(
@@ -127,7 +134,8 @@ function(build_nes_tiles)
     COMMAND ${CMAKE_COMMAND} -E make_directory ${rawnmt_path}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${rawpal_path}
     COMMAND ${Python3_EXECUTABLE} ${process_script} ${NESTILER_DIR} ${TILES_SRC} ${TILES_DEST}
-    DEPENDS ${all_in_files} ${process_script} ${compressor_script}
+    COMMAND ${Python3_EXECUTABLE} ${tiled_script} ${TILES_SRC} ${TILES_DEST}
+    DEPENDS ${all_in_files} ${process_script} ${compressor_script} ${tiled_script}
   )
 
   add_library(GraphicsAssets ${all_out_files})

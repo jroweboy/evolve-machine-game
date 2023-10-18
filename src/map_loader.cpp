@@ -83,11 +83,14 @@ struct RoomObjectLookup {
     const char* attribute; // TODO
     u16 chr_offset;
     u8 chr_count;
+    u8 x;
+    u8 y;
     u8 width;
     u8 height;
 };
 #define SOA_STRUCT RoomObjectLookup
-#define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count)
+#define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count) \
+    MEMBER(width) MEMBER(height)
 #include <soa-struct.inc>
 extern const soa::Array<RoomObjectLookup, 4> room_object_lut;
 
@@ -100,16 +103,24 @@ static void load_section(const Section& section) {
     // now load the exits
     for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
         if ((section.exit[i] & 0x80) == 0) {
+            auto obj = room_object_lut[i];
             // if we haven't loaded this exit type, copy it into chr
             if (room_obj_chr_counts[i] == 0) {
                 room_obj_chr_counts[i] = bg_chr_count;
                 vram_adr(bg_chr_offset);
-                donut_decompress(room_object_lut[i].chr);
-                bg_chr_offset += room_object_lut[i].chr_offset;
-                bg_chr_count += room_object_lut[i].chr_count;
+                donut_decompress(obj.chr);
+                bg_chr_offset += obj.chr_offset;
+                bg_chr_count += obj.chr_count;
             }
             // and now we can write the tile data to the nametable
-            
+            u8 offset = 0;
+            for (u8 h=0; h < obj.height; ++h) {
+                vram_adr(NTADR_A(, y));
+                for (u8 w=0; w < obj.width; ++w) {
+                    
+                    ++offset;
+                }
+            }
         }
     }
 

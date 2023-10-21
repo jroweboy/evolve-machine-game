@@ -12,6 +12,7 @@
 #include "map.hpp"
 #include "object.hpp"
 #include "rand.hpp"
+#include "header/room_collision.hpp"
 
 // the sprite constants for the HUD are hardcoded for now
 constexpr u8 hud_chr_count = 12 * 2;
@@ -94,6 +95,31 @@ struct RoomObjectLookup {
 #include <soa-struct.inc>
 extern const soa::Array<RoomObjectLookup, 4> room_object_lut;
 
+struct RoomObjectCollision {
+    s16 x;
+    s16 y;
+    u8 width;
+    u8 height;
+};
+#define SOA_STRUCT RoomObjectCollision
+#define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
+#include <soa-struct.inc>
+extern const soa::Array<RoomObjectCollision, room_object_collision_start_count> room_collision_lut;
+
+struct RoomExitLut {
+    u8 x;
+    u8 y;
+    u8 width;
+    u8 height;
+};
+#define SOA_STRUCT RoomExitLut
+#define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
+#include <soa-struct.inc>
+extern const soa::Array<RoomExitLut, 4> lead_exit_lut;
+extern const soa::Array<RoomExitLut, 4> side_exit_lut;
+
+
+
 static void load_section(const Section& section) {
     u16 nmt_addr = ((u16)section.nametable) << 8;
     vram_adr(nmt_addr);
@@ -103,21 +129,23 @@ static void load_section(const Section& section) {
     // now load the exits
     for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
         if ((section.exit[i] & 0x80) == 0) {
-            auto obj = room_object_lut[i];
+            auto graphics = room_object_lut[i];
             // if we haven't loaded this exit type, copy it into chr
             if (room_obj_chr_counts[i] == 0) {
                 room_obj_chr_counts[i] = bg_chr_count;
                 vram_adr(bg_chr_offset);
-                donut_decompress(obj.chr);
-                bg_chr_offset += obj.chr_offset;
-                bg_chr_count += obj.chr_count;
+                donut_decompress(graphics.chr);
+                bg_chr_offset += graphics.chr_offset;
+                bg_chr_count += graphics.chr_count;
             }
             // and now we can write the tile data to the nametable
+            u8 chr_offset = room_obj_chr_counts[i];
+            switch ()
             u8 offset = 0;
-            for (u8 h=0; h < obj.height; ++h) {
-                vram_adr(NTADR_A(, y));
-                for (u8 w=0; w < obj.width; ++w) {
-                    
+            for (u8 h=0; h < graphics.height; ++h) {
+                vram_adr(nmt_addr + );
+                for (u8 w=0; w < graphics.width; ++w) {
+                    vram_put(graphics.nametable[offset] + chr_offset);
                     ++offset;
                 }
             }
@@ -241,6 +269,9 @@ namespace MapLoader {
         donut_decompress(&weapons_chr);
         sp_chr_count += weapons_chr_count;
         sp_chr_offset += weapons_chr_offset;
+
+        // now load the collision data for this map
+        
 
         load_section(lead);
 

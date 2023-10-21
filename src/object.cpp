@@ -52,66 +52,66 @@ prg_rom_2 ObjectInitData object_init_data[(u8)ObjectType::Count] = {
     },
 };
 
-constexpr u8 WALL_SHORT = 16;
-constexpr u8 WALL_LONG = 100;
+// constexpr u8 WALL_SHORT = 16;
+// constexpr u8 WALL_LONG = 100;
 
-prg_rom_2 SolidObject updown_walls[ROOM_WALL_COUNT] = {
-    // top left corner
-    {
-        .state = CollisionType::Solid,
-        .x = 0, .y = 0, .width = WALL_LONG, .height = WALL_SHORT,
-    },
-    {
-        .state = CollisionType::Solid,
-        .x = 0, .y = 0, .width = WALL_SHORT, .height = WALL_LONG,
-    },
-    // top right corner
-    {
-        .state = CollisionType::Solid,
-        .x = 256 - WALL_LONG, .y = 0, .width = WALL_LONG, .height = WALL_SHORT,
-    },
-    {
-        .state = CollisionType::Solid,
-        .x = 256 - WALL_SHORT, .y = 0, .width = WALL_SHORT, .height = WALL_LONG,
-    },
-    // bot left corner
-    {
-        .state = CollisionType::Solid,
-        .x = 0, .y = 480 - WALL_SHORT, .width = WALL_LONG, .height = WALL_SHORT,
-    },
-    {
-        .state = CollisionType::Solid,
-        .x = 0, .y = 480 - WALL_LONG, .width = WALL_SHORT, .height = WALL_LONG,
-    },
-    // bot right corner
-    {
-        .state = CollisionType::Solid,
-        .x = 256 - WALL_LONG, .y = 480 - WALL_SHORT, .width = WALL_LONG, .height = WALL_SHORT,
-    },
-    {
-        .state = CollisionType::Solid,
-        .x = 256 - WALL_SHORT, .y = 480 - WALL_LONG, .width = WALL_SHORT, .height = WALL_LONG,
-    },
-};
+// prg_rom_2 SolidObject updown_walls[ROOM_WALL_COUNT] = {
+//     // top left corner
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 0, .y = 0, .width = WALL_LONG, .height = WALL_SHORT,
+//     },
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 0, .y = 0, .width = WALL_SHORT, .height = WALL_LONG,
+//     },
+//     // top right corner
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 256 - WALL_LONG, .y = 0, .width = WALL_LONG, .height = WALL_SHORT,
+//     },
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 256 - WALL_SHORT, .y = 0, .width = WALL_SHORT, .height = WALL_LONG,
+//     },
+//     // bot left corner
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 0, .y = 480 - WALL_SHORT, .width = WALL_LONG, .height = WALL_SHORT,
+//     },
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 0, .y = 480 - WALL_LONG, .width = WALL_SHORT, .height = WALL_LONG,
+//     },
+//     // bot right corner
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 256 - WALL_LONG, .y = 480 - WALL_SHORT, .width = WALL_LONG, .height = WALL_SHORT,
+//     },
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 256 - WALL_SHORT, .y = 480 - WALL_LONG, .width = WALL_SHORT, .height = WALL_LONG,
+//     },
+// };
 
-prg_rom_2 SolidObject leftright_walls[ROOM_WALL_COUNT] = {
-    {
-        .state = CollisionType::Solid,
-        .x = 0, .y = 0, .width = 100, .height = 16,
-    },
-    {
-        .state = CollisionType::Solid,
-        .x = 0, .y = 0, .width = 16, .height = 100,
-    }
-};
+// prg_rom_2 SolidObject leftright_walls[ROOM_WALL_COUNT] = {
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 0, .y = 0, .width = 100, .height = 16,
+//     },
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 0, .y = 0, .width = 16, .height = 100,
+//     }
+// };
 
-prg_rom_2 SolidObject single_walls[ROOM_WALL_COUNT] = {
-    {
-        .state = CollisionType::Solid,
-        .x = 0, .y = 0, .width = 100, .height = 16,
-    },
-    {
-        .state = CollisionType::Solid,
-        .x = 0, .y = 0, .width = 16, .height = 100,
-    }
-};
+// prg_rom_2 SolidObject single_walls[ROOM_WALL_COUNT] = {
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 0, .y = 0, .width = 100, .height = 16,
+//     },
+//     {
+//         .state = CollisionType::Solid,
+//         .x = 0, .y = 0, .width = 16, .height = 100,
+//     }
+// };

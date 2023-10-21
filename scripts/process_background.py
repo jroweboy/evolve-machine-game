@@ -11,10 +11,10 @@ from donut import compress
 def run_nes_tiler(nestiler: Path, *args):
   cmd = [str(nestiler / "nestiler"), *args]
   done = subprocess.run(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, text=True)
-  # print(f"nestiler CMD ({' '.join(cmd)}) output:\n{done.stdout}")
   if done.stderr != None:
     print(done.stderr)
-  print(done.stdout)
+  print(f"nestiler CMD ({' '.join(cmd)}) output:\n{done.stdout}")
+  # print(done.stdout)
   return done.stdout
 
 def make_input_params(i: int, input: Path, outnmt: Path, outatr: Path, outpal: Path):

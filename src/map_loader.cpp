@@ -78,46 +78,48 @@ enum {
 };
 }
 
-struct RoomObjectLookup {
+struct SectionObjectRect {
+    u8 x;
+    u8 y;
+    u8 width;
+    u8 height;
+};
+#define SOA_STRUCT SectionObjectRect
+#define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
+#include <soa-struct.inc>
+
+struct SectionObjectLookup {
     const char* nametable;
     const char* chr;
     const char* attribute; // TODO
     u16 chr_offset;
     u8 chr_count;
-    u8 x;
-    u8 y;
-    u8 width;
-    u8 height;
+    SectionObjectRect pos;
 };
-#define SOA_STRUCT RoomObjectLookup
+#define SOA_STRUCT SectionObjectLookup
 #define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count) \
     MEMBER(width) MEMBER(height)
 #include <soa-struct.inc>
-extern const soa::Array<RoomObjectLookup, 4> room_object_lut;
+extern const soa::Array<SectionObjectLookup, 4> section_object_lut;
 
-struct RoomObjectCollision {
+struct RoomObjectRect {
     s16 x;
     s16 y;
     u8 width;
     u8 height;
 };
-#define SOA_STRUCT RoomObjectCollision
+#define SOA_STRUCT RoomObjectRect
 #define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
 #include <soa-struct.inc>
-extern const soa::Array<RoomObjectCollision, room_object_collision_start_count> room_collision_lut;
+extern const soa::Array<RoomObjectRect, room_object_collision_start_count> room_collision_lut;
 
-struct RoomExitLut {
-    u8 x;
-    u8 y;
-    u8 width;
-    u8 height;
+struct SectionExitLut {
+    std::array<SectionObjectRect, 4> exits;
 };
-#define SOA_STRUCT RoomExitLut
-#define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
+#define SOA_STRUCT SectionExitLut
+#define SOA_MEMBERS MEMBER(exits)
 #include <soa-struct.inc>
-extern const soa::Array<RoomExitLut, 4> lead_exit_lut;
-extern const soa::Array<RoomExitLut, 4> side_exit_lut;
-
+extern const soa::Array<SectionExitLut, static_cast<u8>(SectionBase::Count)> room_base_exit_lut;
 
 
 static void load_section(const Section& section) {
@@ -139,11 +141,12 @@ static void load_section(const Section& section) {
                 bg_chr_count += graphics.chr_count;
             }
             // and now we can write the tile data to the nametable
+            auto exitlut = room_base_exit_lut[static_cast<u8>(section.room_base)];
+            auto exit = exitlut->exits[i]; 
             u8 chr_offset = room_obj_chr_counts[i];
-            switch ()
             u8 offset = 0;
             for (u8 h=0; h < graphics.height; ++h) {
-                vram_adr(nmt_addr + );
+                vram_adr(nmt_addr + 0);
                 for (u8 w=0; w < graphics.width; ++w) {
                     vram_put(graphics.nametable[offset] + chr_offset);
                     ++offset;
@@ -219,6 +222,10 @@ static void load_section(const Section& section) {
     set_prg_bank(GRAPHICS_BANK);
 }
 
+constexpr u8 section_base_to_mapstyle_lut[] = {
+
+};
+
 namespace MapLoader {
 
     void load_map(u8 section_id) {
@@ -271,7 +278,7 @@ namespace MapLoader {
         sp_chr_offset += weapons_chr_offset;
 
         // now load the collision data for this map
-        
+
 
         load_section(lead);
 

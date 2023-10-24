@@ -45,6 +45,7 @@ enum class SectionBase : u8 {
     StartDown = 4,
     StartUp = 5,
     Top = 6,
+    Count,
 };
 
 enum class ScrollType : u8 {

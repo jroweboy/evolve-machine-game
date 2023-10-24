@@ -11,8 +11,7 @@ def main(fin: Path, fout: Path):
 
   file_order = []
   solid_collisions = []
-  lead_exits = []
-  side_exits = []
+  
   i = 0
   for file in (fin / "tiled").rglob('*.tmx'):
     file_order.append(f"{file.stem}")

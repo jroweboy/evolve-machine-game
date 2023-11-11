@@ -6,6 +6,45 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from struct import *
 
+def parse_xml_room_object(root: ET.Element):
+  objcollision = root.find('./objectgroup[@name="collision"]')
+  collision = []
+  for obj in objcollision.findall('object'):
+    collision.append([
+      int(obj.attrib["x"]),
+      int(obj.attrib["y"]),
+      int(obj.attrib["width"]),
+      int(obj.attrib["height"]),
+    ])
+  return collision
+
+def parse_xml_section_object(root: ET.Element, section: str):
+  objexits = root.find('./objectgroup[@name="exit_spawns"]')
+  section_exits = []
+  for objname in [f"{section}_up", f"{section}_right", f"{section}_down", f"{section}_left"]:
+    obj = objexits.find(f'object[@name="{objname}"]')
+    if obj is not None:
+      section_exits.append([
+        int(obj.attrib["x"])//8%32,
+        int(obj.attrib["y"])//8%30,
+        int(obj.attrib["width"])//8,
+        int(obj.attrib["height"])//8,
+      ])
+    else:
+      section_exits.append([0,0,0,0])
+  # for objname in ["side_up", "side_right", "side_down", "side_left"]:
+  #   obj = objexits.find(f'object[@name="{objname}"]')
+  #   if obj is not None:
+  #     print(ET.tostring(obj, encoding='unicode'))
+  #     side_exits[i].append([
+  #       int(obj.attrib["x"])//8%32,
+  #       int(obj.attrib["y"])//8%30,
+  #       int(obj.attrib["width"])//8,
+  #       int(obj.attrib["height"])//8,
+  #     ])
+  #   else:
+  #     side_exits[i].append([0,0,0,0])
+
 def main(fin: Path, fout: Path):
   fout.mkdir(parents=True, exist_ok=True)
 
@@ -13,45 +52,15 @@ def main(fin: Path, fout: Path):
   solid_collisions = []
   
   i = 0
+
+  for filename in ["leftright.tmx", "updown.tmx"]:
+    # split out the files that have multiple boundaries
+    root = ET.parse(fin / "tiled" / filename).getroot()
+    
+
   for file in (fin / "tiled").rglob('*.tmx'):
     file_order.append(f"{file.stem}")
     root = ET.parse(file).getroot()
-    objcollision = root.find('./objectgroup[@name="collision"]')
-    solid_collisions.append([])
-    lead_exits.append([])
-    side_exits.append([])
-    for obj in objcollision.findall('object'):
-      solid_collisions[i].append([
-        int(obj.attrib["x"]),
-        int(obj.attrib["y"]),
-        int(obj.attrib["width"]),
-        int(obj.attrib["height"]),
-      ])
-    objexits = root.find('./objectgroup[@name="exit_spawns"]')
-    for objname in ["lead_up", "lead_right", "lead_down", "lead_left"]:
-      obj = objexits.find(f'object[@name="{objname}"]')
-      if obj is not None:
-        lead_exits[i].append([
-          int(obj.attrib["x"])//8%32,
-          int(obj.attrib["y"])//8%30,
-          int(obj.attrib["width"])//8,
-          int(obj.attrib["height"])//8,
-        ])
-      else:
-        lead_exits[i].append([0,0,0,0])
-    for objname in ["side_up", "side_right", "side_down", "side_left"]:
-      obj = objexits.find(f'object[@name="{objname}"]')
-      if obj is not None:
-        print(ET.tostring(obj, encoding='unicode'))
-        side_exits[i].append([
-          int(obj.attrib["x"])//8%32,
-          int(obj.attrib["y"])//8%30,
-          int(obj.attrib["width"])//8,
-          int(obj.attrib["height"])//8,
-        ])
-      else:
-        side_exits[i].append([0,0,0,0])
-    i += 1
   nl = "\n"
   with open(fout / "header" / "room_collision.hpp", 'w') as header:
     hppfile = """

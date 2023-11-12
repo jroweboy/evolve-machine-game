@@ -32,6 +32,7 @@ def parse_xml_section_object(root: ET.Element, section: str):
       ])
     else:
       section_exits.append([0,0,0,0])
+  return section_exits
   # for objname in ["side_up", "side_right", "side_down", "side_left"]:
   #   obj = objexits.find(f'object[@name="{objname}"]')
   #   if obj is not None:
@@ -49,18 +50,26 @@ def main(fin: Path, fout: Path):
   fout.mkdir(parents=True, exist_ok=True)
 
   file_order = []
-  solid_collisions = []
+  room_objects = []
   
   i = 0
 
   for filename in ["leftright.tmx", "updown.tmx"]:
     # split out the files that have multiple boundaries
     root = ET.parse(fin / "tiled" / filename).getroot()
-    
+  
+  room_objects = []
+  lead_exits = []
+  side_exits = []
 
   for file in (fin / "tiled").rglob('*.tmx'):
     file_order.append(f"{file.stem}")
     root = ET.parse(file).getroot()
+    room_objects.append( parse_xml_room_object(root) )
+    lead_exits.append( parse_xml_section_object(root, "lead") )
+    side_exits.append( parse_xml_section_object(root, "side") )
+
+
   nl = "\n"
   with open(fout / "header" / "room_collision.hpp", 'w') as header:
     hppfile = """
@@ -70,9 +79,9 @@ def main(fin: Path, fout: Path):
 """
     for i, f in enumerate(file_order):
       hppfile += f"""
-constexpr unsigned char room_object_collision_{f}_count = {len(solid_collisions[i])};"""
+constexpr unsigned char room_object_collision_{f}_count = {len(room_objects[i])};"""
     header.write(hppfile)
-      
+
 
   with open(fout / "header" / f"room_collision.s", 'w') as asm:
     asm.write(f"""
@@ -82,17 +91,17 @@ constexpr unsigned char room_object_collision_{f}_count = {len(solid_collisions[
 room_collision_lut:
 ;; Room collision data
 ; x lo
-{nl.join([".byte " + ",".join([f"({row[0]}&0xff)" for row in col]) for col in solid_collisions])}
+{nl.join([".byte " + ",".join([f"({row[0]}&0xff)" for row in col]) for col in room_objects])}
 ; x hi
-{nl.join([".byte " + ",".join([f"(({row[0]}>>8)&0xff)" for row in col]) for col in solid_collisions])}
+{nl.join([".byte " + ",".join([f"(({row[0]}>>8)&0xff)" for row in col]) for col in room_objects])}
 ; y lo
-{nl.join([".byte " + ",".join([f"({row[1]}&0xff)" for row in col]) for col in solid_collisions])}
+{nl.join([".byte " + ",".join([f"({row[1]}&0xff)" for row in col]) for col in room_objects])}
 ; y hi
-{nl.join([".byte " + ",".join([f"(({row[1]}>>8)&0xff)" for row in col]) for col in solid_collisions])}
+{nl.join([".byte " + ",".join([f"(({row[1]}>>8)&0xff)" for row in col]) for col in room_objects])}
 ; width
-{nl.join([".byte " + ",".join([f"{row[2]}" for row in col]) for col in solid_collisions])}
+{nl.join([".byte " + ",".join([f"{row[2]}" for row in col]) for col in room_objects])}
 ; height
-{nl.join([".byte " + ",".join([f"{row[3]}" for row in col]) for col in solid_collisions])}
+{nl.join([".byte " + ",".join([f"{row[3]}" for row in col]) for col in room_objects])}
 
 ;; lead exits
 .section .prg_rom_1.lead_exit_lut,"aR",@progbits

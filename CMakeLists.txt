@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
+set(CMAKE_EXECUTABLE_SUFFIX .nes)
+
 # We want at least -Os for everything, even debug. Otherwise the emitted assembly
 # can easily overflow code sections
 
@@ -16,6 +18,7 @@ set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-Os -flto")
 # Configure the project to use llvm-mos targeting the NES with the MMC1 mapper
 set(LLVM_MOS_PLATFORM nes-action53)
 find_package(llvm-mos-sdk REQUIRED)
+find_program(CA65_BIN ca65 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/cc65)
 
 project(evolve_machine CXX ASM)
 
@@ -44,7 +47,41 @@ add_link_options(
 # Gather all project source and header files to compile into the final ROM image
 # set(SRC ${CMAKE_SOURCE_DIR}/src)
 
+find_package(Python3 REQUIRED)
+# find the exe for nestile. we just downloaded it and committed it to the repo because why not.
+if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+  find_file(FAMISTUDIO_DLL FamiStudio.dll REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/famistudio)
+  set(FAMISTUDIO dotnet ${FAMISTUDIO_DLL})
+else()
+  find_program(FAMISTUDIO famistudio REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/famistudio)
+endif()
+
+set(FAMISTUDIO_CMD ${FAMISTUDIO} ${music_in} famistudio-asm-export ${CMAKE_CURRENT_BINARY_DIR}/gen/audio/evolve_machine.s -famistudio-asm-format:ca65)
+
+find_program(CA65_BIN ca65 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/cc65)
+get_filename_component(CA65_PATH ${CA65_BIN} DIRECTORY)
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/gen/audio/evolve_machine.s
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/gen/audio
+    COMMAND ${FAMISTUDIO_CMD}
+    DEPENDS ${CMAKE_SOURCE_DIR}/audio/evolve_machine.fms
+)
+
+function(add_ca65_object out src)
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/gen/obj/${out}
+    COMMAND ${CA65_BIN} --bin-include-dir ${CMAKE_CURRENT_BINARY_DIR}/gen/audio --include-dir ${CMAKE_CURRENT_BINARY_DIR}/gen/audio -o ${CMAKE_CURRENT_BINARY_DIR}/gen/obj/${out} ${CMAKE_SOURCE_DIR}/ca65bin/${src}
+    DEPENDS ${CMAKE_SOURCE_DIR}/ca65bin/${src}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/gen/audio/evolve_machine.s
+    VERBATIM)
+endfunction()
+
+add_ca65_object(donut.o donut.s)
+add_ca65_object(music.o music.s)
+
 set(ROM ${CMAKE_PROJECT_NAME}.nes)
+
 add_executable(${ROM}
     src/ca65.s
     src/game.s
@@ -72,22 +109,26 @@ add_executable(${ROM}
     src/sprite_render.hpp
     src/title_screen.cpp
     src/title_screen.hpp
+
+    ${CMAKE_CURRENT_BINARY_DIR}/gen/obj/donut.o
+    ${CMAKE_CURRENT_BINARY_DIR}/gen/obj/music.o
 )
 target_compile_definitions(${ROM} PRIVATE NES)
 
 target_include_directories(${ROM} PRIVATE gen)
 
-include(GenerateCA65Binary)
-generate_ca65_binary(TARGET ${CMAKE_SOURCE_DIR}/src/ca65.s SRC ${CMAKE_SOURCE_DIR}/ca65bin DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 include(BuildMetasprites)
 build_metasprites(TARGET ${CMAKE_SOURCE_DIR}/src/sprite_render.s SRC ${CMAKE_SOURCE_DIR}/chr DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 include(BuildNESTiles)
 build_nes_tiles(TARGET ${CMAKE_SOURCE_DIR}/src/graphics.s SRC ${CMAKE_SOURCE_DIR}/chr DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 target_include_directories(${ROM} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen)
 
+target_link_options(${ROM} PRIVATE
+    -Wl,-od65-path=${CA65_PATH}
+)
 target_link_libraries(${ROM} PRIVATE
     GraphicsAssets
-    GeneratedCA65Binaries
+    # GeneratedCA65Binaries
     Metasprites
     # Second-party, included in llvm-mos
     neslib

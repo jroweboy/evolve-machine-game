@@ -97,8 +97,7 @@ struct SectionObjectLookup {
     SectionObjectRect pos;
 };
 #define SOA_STRUCT SectionObjectLookup
-#define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count) \
-    MEMBER(width) MEMBER(height)
+#define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count) MEMBER(pos)
 #include <soa-struct.inc>
 extern const soa::Array<SectionObjectLookup, 4> section_object_lut;
 
@@ -131,7 +130,7 @@ static void load_section(const Section& section) {
     // now load the exits
     for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
         if ((section.exit[i] & 0x80) == 0) {
-            auto graphics = room_object_lut[i];
+            auto graphics = section_object_lut[i];
             // if we haven't loaded this exit type, copy it into chr
             if (room_obj_chr_counts[i] == 0) {
                 room_obj_chr_counts[i] = bg_chr_count;
@@ -145,9 +144,9 @@ static void load_section(const Section& section) {
             auto exit = exitlut->exits[i]; 
             u8 chr_offset = room_obj_chr_counts[i];
             u8 offset = 0;
-            for (u8 h=0; h < graphics.height; ++h) {
+            for (u8 h=0; h < graphics.pos.height; ++h) {
                 vram_adr(nmt_addr + 0);
-                for (u8 w=0; w < graphics.width; ++w) {
+                for (u8 w=0; w < graphics.pos.width; ++w) {
                     vram_put(graphics.nametable[offset] + chr_offset);
                     ++offset;
                 }

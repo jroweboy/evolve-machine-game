@@ -4255,12 +4255,12 @@ famistudio_set_epsm_instrument:
         ; We are processing a rhythm instrument, so skip all the fluff.
         ; We only need to load the volume of the instrument and store it in the attack.
         ; load the instrument
-
+        sty @chan_idx
         famistudio_get_exp_inst_ptr
         
         ; Load the offset for the rhythm track and keep it in x
         ldx @chan_idx
-        lda famistudio_rhythm_lut, x
+        lda famistudio_rhythm_lut-FAMISTUDIO_EPSM_CHAN_RHYTHM_START, x
         tax
 
         ; Read the first envelope pointer for the volume, we'll use this to get the volume later
@@ -4272,7 +4272,7 @@ famistudio_set_epsm_instrument:
         ; Skip over the arp and pitch/vibrato env
         tya
         clc
-        adc #11 ; skip over the next 5 pointers to get to the stereo data (second byte of the instrument)
+        adc #12 ; skip over the next 5 pointers to get to the stereo data (second byte of the instrument)
         tay
         ; and now load the stereo from the extra envelope
         lda (@ptr),y
@@ -6727,9 +6727,9 @@ famistudio_volume_table:
 EPSM_CHANNEL1_RHYTHM_OFFSET = -1 + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE
 EPSM_CHANNEL2_RHYTHM_OFFSET = EPSM_CHANNEL1_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE
 EPSM_CHANNEL3_RHYTHM_OFFSET = EPSM_CHANNEL2_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE
-EPSM_CHANNEL4_RHYTHM_OFFSET = EPSM_CHANNEL2_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE
-EPSM_CHANNEL5_RHYTHM_OFFSET = EPSM_CHANNEL2_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE
-EPSM_CHANNEL6_RHYTHM_OFFSET = EPSM_CHANNEL2_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE
+EPSM_CHANNEL4_RHYTHM_OFFSET = EPSM_CHANNEL3_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE
+EPSM_CHANNEL5_RHYTHM_OFFSET = EPSM_CHANNEL4_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE
+EPSM_CHANNEL6_RHYTHM_OFFSET = EPSM_CHANNEL5_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE
 
 famistudio_rhythm_lut:
 .if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE

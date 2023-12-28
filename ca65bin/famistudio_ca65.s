@@ -2419,13 +2419,6 @@ famistudio_channel_epsm_chan_table:
     .byte $00, $01, $02
 famistudio_epsm_rhythm_key_table:
     .byte $01,$02,$04,$08,$10,$20
-famistudio_epsm_rhythm_env_table:
-    .byte FAMISTUDIO_EPSM_CH0_ENVS + RHY_ENV_OFFSET
-    .byte FAMISTUDIO_EPSM_CH0_ENVS + RHY_ENV_OFFSET + 2
-    .byte FAMISTUDIO_EPSM_CH0_ENVS + RHY_ENV_OFFSET + 4
-    .byte FAMISTUDIO_EPSM_CH0_ENVS + RHY_ENV_OFFSET + 6
-    .byte FAMISTUDIO_EPSM_CH0_ENVS + RHY_ENV_OFFSET + 8
-    .byte FAMISTUDIO_EPSM_CH0_ENVS + RHY_ENV_OFFSET + 10
 famistudio_epsm_rhythm_reg_table:
     .byte FAMISTUDIO_EPSM_REG_RHY_BD, FAMISTUDIO_EPSM_REG_RHY_SD, FAMISTUDIO_EPSM_REG_RHY_TC, FAMISTUDIO_EPSM_REG_RHY_HH, FAMISTUDIO_EPSM_REG_RHY_TOM, FAMISTUDIO_EPSM_REG_RHY_RIM
 famistudio_epsm_reg_table_lo:
@@ -2833,16 +2826,16 @@ famistudio_update_epsm_rhythm_channel_sound:
 
     ;lda famistudio_chn_note+FAMISTUDIO_EPSM_CHAN_RHYTHM_START,y
     ; Read/multiply volume
-    ldx famistudio_epsm_rhythm_env_table,y
+    ldx famistudio_chn_epsm_rhythm_volume,y
     .if FAMISTUDIO_USE_VOLUME_TRACK
         lda famistudio_chn_volume_track+FAMISTUDIO_EPSM_CHAN_RHYTHM_START, y
         .if FAMISTUDIO_USE_VOLUME_SLIDES
             ; During a slide, the lower 4 bits are fraction.
             and #$f0
         .endif        
-        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+        ora famistudio_chn_epsm_rhythm_volume,y
     .else
-        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+        lda famistudio_chn_epsm_rhythm_volume,y
     .endif
     tax
 
@@ -4282,8 +4275,10 @@ famistudio_set_epsm_instrument:
         ; the first value is the release point, so load the second offset which is the volume
         ldy #1
         lda (@env_ptr),y
+        and #$0F
         sta famistudio_chn_epsm_rhythm_volume,x
-
+        lda #$00
+        sta famistudio_chn_epsm_rhythm_key,x
         ldx @chan_idx
         rts
 @process_regular_instrument:

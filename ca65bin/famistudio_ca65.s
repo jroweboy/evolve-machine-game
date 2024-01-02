@@ -869,10 +869,10 @@ famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = n
 .endif
 .if FAMISTUDIO_EXP_EPSM
 ; bit 0 = new note triggered, bit 7 = note released.
-famistudio_chn_epsm_rhythm_key:    .res FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
+;famistudio_chn_epsm_rhythm_key:    .res FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
 famistudio_chn_epsm_rhythm_volume: .res FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
 famistudio_chn_epsm_rhythm_stereo: .res FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
-famistudio_chn_epsm_trigger:       .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+famistudio_chn_epsm_trigger:       .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT + FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
 famistudio_chn_epsm_fm_stereo:     .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_alg:           .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_vol_op1:       .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
@@ -2809,7 +2809,7 @@ famistudio_update_epsm_rhythm_channel_sound:
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CHAN_RHYTHM_START,y
     ;bne @note
     bne @nocut
-    sta famistudio_chn_epsm_rhythm_key,y
+    sta famistudio_chn_epsm_trigger+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT,y
     ldx #0 ; This will fetch volume 0.
     beq @noupdate
 @nocut:
@@ -2819,7 +2819,7 @@ famistudio_update_epsm_rhythm_channel_sound:
     ;adc famistudio_env_value+FAMISTUDIO_ENV_NOTE_OFF,x
     ;tax
 
-    lda famistudio_chn_epsm_rhythm_key,y
+    lda famistudio_chn_epsm_trigger+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT,y
     cmp #$10
     beq @noupdate
     ; Write pitch
@@ -2853,7 +2853,7 @@ famistudio_update_epsm_rhythm_channel_sound:
         sta FAMISTUDIO_EPSM_DATA
 
     lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
-    sta famistudio_chn_epsm_rhythm_key,y
+    sta famistudio_chn_epsm_trigger+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT,y
     sta FAMISTUDIO_EPSM_ADDR
     nop ;Some delay needed before writing the rhythm key
     nop
@@ -4277,8 +4277,8 @@ famistudio_set_epsm_instrument:
         lda (@env_ptr),y
         and #$0F
         sta famistudio_chn_epsm_rhythm_volume,x
-        lda #$00
-        sta famistudio_chn_epsm_rhythm_key,x
+;        lda #$00
+;        sta famistudio_chn_epsm_trigger+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT,x
         ldx @chan_idx
         rts
 @process_regular_instrument:

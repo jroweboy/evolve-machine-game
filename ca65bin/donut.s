@@ -31,11 +31,11 @@ temp = $05  ; 15 bytes are used
 ; jroweboy - donut starts at this addr + 64 because ???? but it works out just fine anyway
 donut_block_buffer = $0100  ; 64 bytes
 
-.segment "ZEROPAGE"
+.segment "_pzp":zeropage
 donut_stream_ptr:       .res 2
 donut_block_count:      .res 1
 
-.segment "LOWCODE"
+.segment "_pprg__rom__fixed"
 
 ;;
 ; helper subroutine for passing parameters with registers

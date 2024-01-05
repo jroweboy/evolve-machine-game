@@ -9,17 +9,17 @@ FAMISTUDIO_USE_DELTA_COUNTER = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT = 1
 FAMISTUDIO_DPCM_OFF = evolve_machine_dpcm
 
-.define FAMISTUDIO_CA65_ZP_SEGMENT ZP
-.define FAMISTUDIO_CA65_RAM_SEGMENT RAM
-.define FAMISTUDIO_CA65_CODE_SEGMENT BANKED
+.define FAMISTUDIO_CA65_ZP_SEGMENT _pzp
+.define FAMISTUDIO_CA65_RAM_SEGMENT _pnoinit
+.define FAMISTUDIO_CA65_CODE_SEGMENT _pprg__rom__0__extended
 
-.segment "RAM"
+.segment "_pnoinit"
 
 current_song: .res 1
 next_song:    .res 1
 sfx_queue:    .res 1
 
-.segment "BANKED"
+.segment "_pprg__rom__0__extended"
 
 Silence = $fd
 StopMusic = $fe
@@ -61,6 +61,6 @@ continue_playing_song:
 music_data:
 .include "evolve_machine.s"
 
-.segment "DPCM"
+.segment "_pprg__rom__fixed"
 evolve_machine_dpcm:
 .incbin "evolve_machine.dmc"

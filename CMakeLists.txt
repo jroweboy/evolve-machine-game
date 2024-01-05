@@ -56,10 +56,17 @@ else()
   find_program(FAMISTUDIO famistudio REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/famistudio)
 endif()
 
-set(FAMISTUDIO_CMD ${FAMISTUDIO} ${music_in} famistudio-asm-export ${CMAKE_CURRENT_BINARY_DIR}/gen/audio/evolve_machine.s -famistudio-asm-format:ca65)
+set(FAMISTUDIO_CMD ${FAMISTUDIO} 
+    ${CMAKE_SOURCE_DIR}/audio/evolve_machine.fms 
+    famistudio-asm-export 
+    ${CMAKE_CURRENT_BINARY_DIR}/gen/audio/evolve_machine.s 
+    -famistudio-asm-format:ca65
+)
 
 find_program(CA65_BIN ca65 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/cc65)
-get_filename_component(CA65_PATH ${CA65_BIN} DIRECTORY)
+find_program(OD65_BIN od65 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/cc65)
+find_program(LD65_BIN ld65 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/cc65)
+
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/gen/audio/evolve_machine.s
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -124,8 +131,16 @@ build_nes_tiles(TARGET ${CMAKE_SOURCE_DIR}/src/graphics.s SRC ${CMAKE_SOURCE_DIR
 target_include_directories(${ROM} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen)
 
 target_link_options(${ROM} PRIVATE
-    -Wl,-od65-path=${CA65_PATH}
+    -Wl,-od65-path=${OD65_BIN}
+    -Wl,-ld65-path=${LD65_BIN}
 )
+target_link_options(${ROM} PRIVATE
+    -Tlink.ld
+    -T${CMAKE_SOURCE_DIR}/combined.ld
+)
+
+# -Wl,-ld65-path=${LD65_BIN}
+
 target_link_libraries(${ROM} PRIVATE
     GraphicsAssets
     # GeneratedCA65Binaries

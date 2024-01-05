@@ -21,12 +21,12 @@ _sfx_queue = ca65_reserved + 2
 ; This is a bit hacky, but we put donut compression at $c003
 ; by marking this as the highest priority init block
 ; and just jump over this block during init
-.section .init.000,"axR",@progbits
-    jmp after_donut_block
-.globl donut_decompress_block
-donut_decompress_block:
-    .incbin "ca65/prgc.bin"
-after_donut_block:
+; .section .init.000,"axR",@progbits
+;     jmp after_donut_block
+; .globl donut_decompress_block
+; donut_decompress_block:
+;     .incbin "ca65/prgc.bin"
+; after_donut_block:
 
 
 .section .text.donut,"ax",@progbits

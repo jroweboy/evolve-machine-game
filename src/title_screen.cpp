@@ -55,7 +55,7 @@ namespace Titlescreen {
         }
 
 
-        play_song(Song::Intro);
+        next_song = Song::Intro;
 
         ppu_on_all();
 
@@ -80,7 +80,7 @@ namespace Titlescreen {
                 Rng::rand8();
                 if (pressed & PAD_START) {
                     pal_fade_to(4, 0, 4);
-                    play_song(Song::StopMusic);
+                    next_song = Song::StopMusic;
                     main_mode = MainMode::GenerateDungeon;
                     return;
                 } else if (pressed & PAD_SELECT) {

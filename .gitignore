@@ -1,4 +1,6 @@
 build*/
+cmake-build*/
+.idea/
 .cache*/
 
 .vscode/settings.json

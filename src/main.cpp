@@ -159,7 +159,7 @@ int main() {
             }
             case MainMode::GamePlay:
                 Game::init();
-                play_song(Song::DangerousCitty);
+                next_song = Song::DangerousCitty;
                 break;
             default:
                 break;

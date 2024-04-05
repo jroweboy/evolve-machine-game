@@ -25,8 +25,10 @@ enum Sfx {
     EPSMDetected = 1 << 0,
 };
 
-__attribute__((leaf)) void play_song(Song song);
-__attribute__((leaf)) void play_sfx(Sfx song);
+
+extern Song next_song;
+// __attribute__((leaf)) void play_song(Song song);
+// __attribute__((leaf)) void play_sfx(Sfx song);
 
 
 #ifdef __cplusplus

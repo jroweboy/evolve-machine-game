@@ -99,7 +99,7 @@ struct SectionObjectLookup {
 #define SOA_STRUCT SectionObjectLookup
 #define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count) MEMBER(pos)
 #include <soa-struct.inc>
-extern const soa::Array<SectionObjectLookup, 4> section_object_lut;
+// extern const soa::Array<SectionObjectLookup, 4> section_object_lut;
 
 struct RoomObjectRect {
     s16 x;
@@ -128,31 +128,31 @@ static void load_section(const Section& section) {
     donut_decompress(nametable);
 
     // now load the exits
-    for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
-        if ((section.exit[i] & 0x80) == 0) {
-            auto graphics = section_object_lut[i];
-            // if we haven't loaded this exit type, copy it into chr
-            if (room_obj_chr_counts[i] == 0) {
-                room_obj_chr_counts[i] = bg_chr_count;
-                vram_adr(bg_chr_offset);
-                donut_decompress(graphics.chr);
-                bg_chr_offset += graphics.chr_offset;
-                bg_chr_count += graphics.chr_count;
-            }
-            // and now we can write the tile data to the nametable
-            auto exitlut = room_base_exit_lut[static_cast<u8>(section.room_base)];
-            auto exit = exitlut->exits[i]; 
-            u8 chr_offset = room_obj_chr_counts[i];
-            u8 offset = 0;
-            for (u8 h=0; h < graphics.pos.height; ++h) {
-                vram_adr(nmt_addr + 0);
-                for (u8 w=0; w < graphics.pos.width; ++w) {
-                    vram_put(graphics.nametable[offset] + chr_offset);
-                    ++offset;
-                }
-            }
-        }
-    }
+    // for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
+    //     if ((section.exit[i] & 0x80) == 0) {
+    //         auto graphics = section_object_lut[i];
+    //         // if we haven't loaded this exit type, copy it into chr
+    //         if (room_obj_chr_counts[i] == 0) {
+    //             room_obj_chr_counts[i] = bg_chr_count;
+    //             vram_adr(bg_chr_offset);
+    //             donut_decompress(graphics.chr);
+    //             bg_chr_offset += graphics.chr_offset;
+    //             bg_chr_count += graphics.chr_count;
+    //         }
+    //         // and now we can write the tile data to the nametable
+    //         auto exitlut = room_base_exit_lut[static_cast<u8>(section.room_base)];
+    //         auto exit = exitlut->exits[i]; 
+    //         u8 chr_offset = room_obj_chr_counts[i];
+    //         u8 offset = 0;
+    //         for (u8 h=0; h < graphics.pos.height; ++h) {
+    //             vram_adr(nmt_addr + 0);
+    //             for (u8 w=0; w < graphics.pos.width; ++w) {
+    //                 vram_put(graphics.nametable[offset] + chr_offset);
+    //                 ++offset;
+    //             }
+    //         }
+    //     }
+    // }
 
     // load the attributes for this nametable into a buffer that we can update with the
     // objects as they are loaded
@@ -200,23 +200,23 @@ static void load_section(const Section& section) {
         slot.hitbox.height = init.hitbox.height;
     }
     // Load the basic solid objects from this style of map
-    const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
-        : room.scroll == ScrollType::Horizontal ? leftright_walls : single_walls;
-    i = 0;
-    for (const auto& wall : walls) {
-        if (wall.state == (CollisionType)0) {
-            continue;
-        }
-        auto slot = solid_objects[i++];
-        if (i > SOLID_OBJECT_COUNT) {
-            break;
-        }
-        slot.state = wall.state;
-        slot.x = room.x + wall.x;
-        slot.y = room.y + wall.y;
-        slot.width = wall.width;
-        slot.height = wall.height;
-    }
+    // const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
+    //     : room.scroll == ScrollType::Horizontal ? leftright_walls : single_walls;
+    // i = 0;
+    // for (const auto& wall : walls) {
+    //     if (wall.state == (CollisionType)0) {
+    //         continue;
+    //     }
+    //     auto slot = solid_objects[i++];
+    //     if (i > SOLID_OBJECT_COUNT) {
+    //         break;
+    //     }
+    //     slot.state = wall.state;
+    //     slot.x = room.x + wall.x;
+    //     slot.y = room.y + wall.y;
+    //     slot.width = wall.width;
+    //     slot.height = wall.height;
+    // }
 
     set_prg_bank(GRAPHICS_BANK);
 }

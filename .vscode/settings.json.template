@@ -1,13 +1,11 @@
 {
-    "watch-run.targetList": [
+    "runOnSave.statusMessageTimeout": 3000,
+    "runOnSave.commands": [
         {
-            "target": "/inc/*.inc",
-            "task": "compile"
-        },
-        {
-            "target": "/**/*.s",
-            "task": "compile"
-        },
+            "match": ".*\\.([sS]|inc|h|c|ini|cpp|cfg|hpp)$",
+            "command": "workbench.action.tasks.build",
+            "runIn": "vscode"
+        }
     ],
     "C_Cpp.intelliSenseEngine": "disabled",
     "cmake.useCMakePresets": "auto",

@@ -32,7 +32,7 @@ find_package(Python3 REQUIRED)
 # endif()
 
 # set(FAMISTUDIO_CMD ${FAMISTUDIO} 
-#     ${CMAKE_SOURCE_DIR}/audio/evolve_machine.fms 
+#     ${CMAKE_SOURCE_DIR}/audio/evolve_machine_4_2_1.fms 
 #     famistudio-asm-export 
 #     ${CMAKE_CURRENT_BINARY_DIR}/gen/audio/evolve_machine.s 
 #     -famistudio-asm-format:ca65
@@ -43,7 +43,7 @@ find_package(Python3 REQUIRED)
 #     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 #     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/gen/audio
 #     COMMAND ${FAMISTUDIO_CMD}
-#     DEPENDS ${CMAKE_SOURCE_DIR}/audio/evolve_machine.fms
+#     DEPENDS ${CMAKE_SOURCE_DIR}/audio/evolve_machine_4_2_1.fms
 # )
 
 add_executable(${CMAKE_PROJECT_NAME}

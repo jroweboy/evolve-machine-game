@@ -71,8 +71,8 @@ continue_playing_song:
 
 ; include the actual song data in the same bank as the driver now.
 music_data:
-.include "evolve_machine.s"
+.include "evolve_machine_4_2_1.s"
 
 .segment "_pprg__rom__fixed"
 evolve_machine_dpcm:
-.incbin "evolve_machine.dmc"
+.incbin "evolve_machine_4_2_1.dmc"

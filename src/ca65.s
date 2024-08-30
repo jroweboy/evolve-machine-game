@@ -1,4 +1,5 @@
 
+.include "nes.inc"
 
 A53_REG_SELECT	= $5000
 A53_REG_VALUE	= $8000
@@ -35,7 +36,8 @@ donut_decompress:
     ; __rc2 and __rc3 is the pointer (and its setup in ca65 to use these values)
     lda #0
     sta __rc4
-    jmp donut_decompress_block
+    ; ldx #0
+    jmp donut_block
 
 ; set this to run after the ram clearing but before the find ppu frame wait
 .section .init.210,"axR",@progbits
@@ -73,6 +75,12 @@ inc_global_timer:
         bne .L1
             inc global_timer+2
 .L1:
+
+.section .nmi.055,"axR",@progbits
+.globl oam_update_nmi
+oam_update_nmi:
+        lda #>OAM_BUF
+        sta OAMDMA
 
 ; .section .text.audio,"ax",@progbits
 ; .globl play_song

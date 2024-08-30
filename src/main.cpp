@@ -11,6 +11,7 @@
 #include "music.hpp"
 #include "object.hpp"
 #include "soa.h"
+#include "sprite_render.hpp"
 #include "title_screen.hpp"
 
 MainMode main_mode;
@@ -85,6 +86,9 @@ static void main_init() {
     }
 
     set_prg_bank(2);
+    
+    Sprite::move_sprites_offscreen();
+
 }
 
 void irq_detect() {

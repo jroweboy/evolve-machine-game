@@ -221,7 +221,7 @@ static void load_section(const Section& section) {
     set_prg_bank(GRAPHICS_BANK);
 }
 
-constexpr u8 section_base_to_mapstyle_lut[] = {
+[[maybe_unused]] constexpr u8 section_base_to_mapstyle_lut[] = {
 
 };
 

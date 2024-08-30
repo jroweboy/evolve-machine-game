@@ -47,7 +47,7 @@ constexpr static void load_collision_parameter(u8 obj_idx) {
 
 prg_rom_2 static void check_player_collision() {
     load_collision_parameter(0);
-    auto player = objects[0];
+    [[maybe_unused]] auto player = objects[0];
     for (u8 i = 2; i < OBJECT_COUNT; ++i) {
         auto obj = objects[i];
         u8 collision = check_object_collision((u8)CollisionType::All, i);

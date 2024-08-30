@@ -16,7 +16,7 @@ void pal_fade_to(char from, char to, char duration) {
 }
 
 extern char PAD_STATET[];
-char get_pad_new(char pad) { return PAD_STATET[pad]; }
+char get_pad_new(char pad) { return PAD_STATET[(unsigned int)pad]; }
 
 extern volatile char FRAME_CNT1;
 char get_frame_count(void) { return FRAME_CNT1; }

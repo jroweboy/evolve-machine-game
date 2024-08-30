@@ -14,11 +14,13 @@ set(CMAKE_ASM_FLAGS_DEBUG "-Os")
 set(CMAKE_ASM_FLAGS_MINSIZEREL "-Os -flto")
 set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-Os -flto")
 
-# Configure the project to use llvm-mos targeting the NES with the MMC1 mapper
+
 set(LLVM_MOS_PLATFORM nes-action53)
 find_package(llvm-mos-sdk REQUIRED)
 
 project(evolve_machine CXX ASM)
+
+set(CMAKE_EXECUTABLE_SUFFIX_CXX ".nes")
 
 find_package(Python3 REQUIRED)
 
@@ -79,13 +81,15 @@ add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/do
 
 target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE
     -g -gdwarf-4           # We want debug info generated for all builds
-    # -Wall -Wextra -Werror  # Compiler's got your back
+    -Wall -Wextra -Werror  # Compiler's got your back
+    -Wno-error=unused-command-line-argument
     -std=c++23             # We _can_ have nice things!
 )
 
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -g -gdwarf-4
-    # -Wall -Wextra -Werror # Same goes for the linker
+    -Wall -Wextra -Werror # Same goes for the linker
+    -Wno-error=unused-command-line-argument
     # -mreserve-zp=10
 
     # make functions non-recursive by default

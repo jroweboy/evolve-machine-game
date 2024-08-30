@@ -19,7 +19,7 @@
 ; 2018-04-30: Initial release.
 ;
 
-.export donut_decompress_block ;, donut_block_ayx, donut_block_x
+.export donut_decompress_block, donut_block ;, donut_block_ayx, donut_block_x
 .export donut_block_buffer
 .exportzp donut_stream_ptr
 .exportzp donut_block_count
@@ -48,22 +48,26 @@ donut_block_count:      .res 1
 ; .endproc
 .proc donut_block
 PPU_DATA = $2007
+  lda $02
+  sta donut_stream_ptr
+  lda $03
+  sta donut_stream_ptr+1
   block_loop:
-    ldx #64
+    ldx #0
     jsr donut_decompress_block
-    cpx #128
+    cpx #64
     bne end_block_upload
       ; bail if donut_decompress_block does not
       ; advance X by 64 bytes, indicating a header error.
 
-    ldx #64
+    ldx #256 - 64
     upload_loop:
-      lda donut_block_buffer, x
+      lda a:donut_block_buffer - (256 - 64), x
       sta PPU_DATA
       inx
-    bpl upload_loop
+      bmi upload_loop
     ldx donut_block_count
-  bne block_loop
+    bne block_loop
 end_block_upload:
 rts
 .endproc
@@ -149,7 +153,7 @@ do_raw_block:
   raw_block_loop:
     lda (donut_stream_ptr), y
     iny
-    sta donut_block_buffer, x
+    sta a:donut_block_buffer, x
     inx
     cpy #65  ; size of a raw block
   bcc raw_block_loop
@@ -226,7 +230,7 @@ continue_normal_block:
         iny
       pb8_use_prev:
       dex
-      sta donut_block_buffer, x
+      sta a:donut_block_buffer, x
       asl pb8_ctrl
     bne pb8_loop
     sty temp_y
@@ -238,9 +242,9 @@ continue_normal_block:
       ldy #8
       xor_m_onto_l_loop:
         dex
-        lda donut_block_buffer, x
-        eor donut_block_buffer+8, x
-        sta donut_block_buffer, x
+        lda a:donut_block_buffer, x
+        eor a:donut_block_buffer+8, x
+        sta a:donut_block_buffer, x
         dey
       bne xor_m_onto_l_loop
     not_xor_m_onto_l:
@@ -250,9 +254,9 @@ continue_normal_block:
       ldy #8
       xor_l_onto_m_loop:
         dex
-        lda donut_block_buffer, x
-        eor donut_block_buffer+8, x
-        sta donut_block_buffer+8, x
+        lda a:donut_block_buffer, x
+        eor a:donut_block_buffer+8, x
+        sta a:donut_block_buffer+8, x
         dey
       bne xor_l_onto_m_loop
     not_xor_l_onto_m:
@@ -279,7 +283,7 @@ do_zero_plane:
   ldy #8
   fill_plane_loop:
     dex
-    sta donut_block_buffer, x
+    sta a:donut_block_buffer, x
     dey
   bne fill_plane_loop
 beq end_plane  ;,; jmp end_plane
@@ -316,7 +320,7 @@ do_rotated_pb8_plane:
     asl plane_buffer+7
     ror
     dex
-    sta donut_block_buffer, x
+    sta a:donut_block_buffer, x
     dey
   bne flip_bits_loop
 beq end_plane  ;,; jmp end_plane

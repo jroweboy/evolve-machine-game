@@ -44,7 +44,10 @@ static const u8* metasprite_table[(u8)Metasprite::Count] = {
 noinit static u8 shuffle_offset;
 noinit static u8 sprite_slot;
 
+// __attribute__((section(".aligned.oam_buf")))
 extern u8 OAM_BUF[256];
+// static u8* dummy[256] __attribute__((__used__)) = &OAM_BUF;
+
 // volatile OAMData* OAM = &*reinterpret_cast<volatile OAMData*>(&OAM_BUF);
 
 prg_rom_2 static void draw_object(u8 id) {

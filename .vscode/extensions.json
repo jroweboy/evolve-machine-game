@@ -3,8 +3,7 @@
         "alchemic-raker.alchemy65",
         "llvm-vs-code-extensions.vscode-clangd",
         "ms-vscode.cmake-tools",
-        "boukichi.watch-run",
-        "rioj7.command-variable"
+        "pucelle.run-on-save"
     ],
     "unwantedRecommendations": [
         "ms-vscode.cpp-tools"

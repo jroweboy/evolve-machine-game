@@ -20,6 +20,7 @@ function(add_ca65_source)
   target_link_options(${CA65_TARGET} PRIVATE
       -Wl,-od65-path=${OD65_BIN}
       -Wl,-ld65-path=${LD65_BIN}
+      -Wno-error=unused-command-line-argument
   )
   cmake_path(GET CA65_SRC STEM filestem)
   cmake_path(GET CA65_SRC PARENT_PATH filepath)

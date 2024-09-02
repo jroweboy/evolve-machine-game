@@ -62,8 +62,8 @@ struct Room {
     u8 side_id;
     ScrollType scroll;
     // X, Y position of the top left corner of the whole room.
-    s16 x;
-    s16 y;
+    u8 x;
+    u8 y;
 
     // The object type that drops when this room is cleared
     // Update this if the prize has been grabbed

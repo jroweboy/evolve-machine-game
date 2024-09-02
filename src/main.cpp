@@ -72,6 +72,19 @@ static void main_init() {
     // Disable the PPU so we can freely modify its state
     ppu_off();
 
+    set_chr_bank(3);
+    u32 magic;
+    vram_adr(0x2000 - 4);
+    vram_read(&magic, 4);
+    if (magic != 0x600dc0de) {
+        vram_adr(0);
+        vram_fill(0xff, 0x2000);
+        vram_adr(0x2000 - 4);
+        magic = 0x600dc0de;
+        vram_write(&magic, 4);
+        // warm_boot = true; // todo figure out warm boot
+    }
+
     set_mirroring(MIRROR_VERTICAL);
 
     // set 8x16 sprite mode

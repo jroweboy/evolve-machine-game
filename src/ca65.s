@@ -4,32 +4,6 @@
 A53_REG_SELECT	= $5000
 A53_REG_VALUE	= $8000
 
-; Reserve 0x110 bytes of data?
-; .section .noinit.ca65_reserved,"aw",@nobits
-; .globl ca65_reserved
-; ca65_reserved:
-;   .zero 0x110
-
-; .globl _current_music
-; _current_music = ca65_reserved
-
-; .globl _next_music
-; _next_music = ca65_reserved + 1
-
-; .globl _sfx_queue
-; _sfx_queue = ca65_reserved + 2
-
-; This is a bit hacky, but we put donut compression at $c003
-; by marking this as the highest priority init block
-; and just jump over this block during init
-; .section .init.000,"axR",@progbits
-;     jmp after_donut_block
-; .globl donut_decompress_block
-; donut_decompress_block:
-;     .incbin "ca65/prgc.bin"
-; after_donut_block:
-
-
 .section .text.donut,"ax",@progbits
 .globl donut_decompress
 donut_decompress:
@@ -46,6 +20,7 @@ audio_init:
     lda #$ff
     sta $4017
     sta next_song
+    
     jsr __run_audio
     lda #$fe
     sta next_song
@@ -79,24 +54,5 @@ inc_global_timer:
 .section .nmi.055,"axR",@progbits
 .globl oam_update_nmi
 oam_update_nmi:
-        lda #>OAM_BUF
-        sta OAMDMA
-
-; .section .text.audio,"ax",@progbits
-; .globl play_song
-; play_song:
-;     sta _next_music
-;     rts
-
-; .section .text.audio,"ax",@progbits
-; .globl play_sfx
-; play_sfx:
-;     sta _sfx_queue
-;     rts
-
-; We don't have to do any crazy shenanigans to for famistudio to the start of the bank
-; because its the only thing in this bank.
-; .section .prg_rom_0,"a"
-; .globl custom_audio
-; custom_audio:
-;     .incbin "ca65/prg8.bin"
+    lda #>OAM_BUF
+    sta OAMDMA

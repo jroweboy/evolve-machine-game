@@ -39,11 +39,13 @@ prg_rom_2 extern "C" u8 check_object_collision(u8 filter, u8 obj_idx);
 
 constexpr static void load_collision_parameter(u8 obj_idx) {
     const auto obj = objects[obj_idx];
-    obj_collision_parameter.x = obj.x + obj.hitbox.x;
-    obj_collision_parameter.y = obj.y + obj.hitbox.y;
+    obj_collision_parameter.x = obj.x->as_i() + obj.hitbox.x;
+    obj_collision_parameter.y = obj.y->as_i() + obj.hitbox.y;
     obj_collision_parameter.width = obj.hitbox.width;
     obj_collision_parameter.height = obj.hitbox.height;
 }
+
+constexpr auto PLAYER_MOVESPEED = 1.25_8_8;
 
 prg_rom_2 static void check_player_collision() {
     load_collision_parameter(0);
@@ -76,33 +78,33 @@ prg_rom_2 static void check_player_collision() {
 prg_rom_2 static void move_player() {
     auto player = objects[0];
     auto pressed = pad_state(0);
-    s16 original_y = player.y;
+    s16 original_y = player.y->as_i();
     if (pressed & PAD_UP) {
         player.direction = Direction::Up;
         player.metasprite = Metasprite::KittyUp;
-        player.y--;
+        player.y = player.y.get() - PLAYER_MOVESPEED;
     } else if (pressed & PAD_DOWN) {
         player.direction = Direction::Down;
         player.metasprite = Metasprite::KittyDown;
-        player.y++;
+        player.y = player.y.get() + PLAYER_MOVESPEED;
     }
-    if (player.y != original_y) {
+    if (player.y->as_i() != original_y) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
         if (collision > 0) {
             player.y = original_y;
         }
     }
-    s16 original_x = player.x;
+    s16 original_x = player.x->as_i();
     if (pressed & PAD_LEFT) {
         player.direction = Direction::Left;
         player.metasprite = Metasprite::KittyLeft;
-        player.x--;
+        player.x = player.x.get() - PLAYER_MOVESPEED;
     } else if (pressed & PAD_RIGHT) {
         player.direction = Direction::Right;
         player.metasprite = Metasprite::KittyRight;
-        player.x++;
+        player.x = player.x.get() + PLAYER_MOVESPEED;
     }
-    if (player.x != original_x) {
+    if (player.x->as_i() != original_x) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
         if (collision > 0) {
             player.x = original_x;
@@ -155,48 +157,49 @@ prg_rom_2 static void scroll_screen() {
     // This room has scroll in it
     auto player = objects[0];
     if (room.scroll == ScrollType::Vertical) {
-        s16 screen_pos_y = player.y - room.y - view_y;
+        s16 screen_pos_y = player.y->as_i() - room.y - view_y.as_i();
         if (screen_pos_y < 0 || screen_pos_y > 239) {
             return;
         }
         if (screen_pos_y > 0x88 && view_y != 240) {
-            view_y += 1;
+            view_y += PLAYER_MOVESPEED;
         }
         if (screen_pos_y < 0x68 && view_y != 0) {
-            view_y -= 1;
+            view_y -= PLAYER_MOVESPEED;
         }
     } else {
-        s16 screen_pos_x = player.x - room.x - view_x;
+        s16 screen_pos_x = player.x->as_i() - room.x - view_x.as_i();
         if (screen_pos_x < 0 || screen_pos_x > 255) {
             return;
         }
         if (screen_pos_x > 0x90 && view_x != 255) {
-            view_x += 1;
+            view_x += PLAYER_MOVESPEED;
         }
         if (screen_pos_x < 0x70 && view_x != 0) {
-            view_x -= 1;
+            view_x -= PLAYER_MOVESPEED;
         }
     }
-    scroll(view_x, view_y);
+    scroll(view_x.as_i(), view_y.as_i());
 }
 
 prg_rom_2 static void check_screen_transition() {
     auto player = objects[0];
     // since this check happens every frame, we cache the room boundaries
-    if (player.x < room.x || player.x > room_bounds_x || player.y < room.y || player.y > room_bounds_y) {
+    if (player.x->as_i() < room.x || player.x->as_i() > room_bounds_x 
+        || player.y->as_i() < room.y || player.y->as_i() > room_bounds_y) {
         game_mode = GameMode::MapLoader;
     }
 }
 
 prg_rom_2 static Direction get_direction() {
     auto player = objects[0];
-    if (player.x < room.x) {
+    if (player.x->as_i() < room.x) {
         return Direction::Left;
-    } else if (player.y < room.y) {
+    } else if (player.y->as_i() < room.y) {
         return Direction::Up;
-    } else if (player.x > room_bounds_x) {
+    } else if (player.x->as_i() > room_bounds_x) {
         return Direction::Right;
-    } else if (player.y > room_bounds_y) {
+    } else if (player.y->as_i() > room_bounds_y) {
         return Direction::Down;
     }
     return Direction::Error;
@@ -252,15 +255,15 @@ prg_rom_2 static void correct_player_position(Direction direction) {
     
     switch (room.scroll) {
     case ScrollType::Horizontal:
-        view_x = MMAX(player.x - room.x - 0x88, 0);
+        view_x = MMAX(player.x->as_i() - room.x - 0x88, 0);
         break;
     case ScrollType::Vertical:
-        view_y = MMAX(player.y - room.y - 0x78, 0);
+        view_y = MMAX(player.y->as_i() - room.y - 0x78, 0);
         break;
     default:
         break;
     }
-    scroll(view_x, view_y);
+    scroll(view_x.as_i(), view_y.as_i());
 }
 
 prg_rom_2 static void load_new_map() {
@@ -276,13 +279,13 @@ prg_rom_2 static void load_new_map() {
 
     Direction direction = get_direction();
     SectionBase vertical_section;
-    bool is_bottom_section = player.y - room.y > 240;
+    bool is_bottom_section = player.y->as_i() - room.y > 240;
     if (lead.room_base == SectionBase::StartDown || lead.room_base == SectionBase::StartUp) {
         vertical_section = is_bottom_section ? SectionBase::StartDown : SectionBase::StartUp;
     } else {
         vertical_section = is_bottom_section ? SectionBase::Bottom : SectionBase::Top;
     }
-    SectionBase horizontal_section = player.x - room.x > 255 ? SectionBase::Right : SectionBase::Left;
+    SectionBase horizontal_section = player.x->as_i() - room.x > 255 ? SectionBase::Right : SectionBase::Left;
     switch (room.scroll) {
     case ScrollType::Single:
         section_id = lead.exit[(u8)direction];

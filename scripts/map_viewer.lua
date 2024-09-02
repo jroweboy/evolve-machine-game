@@ -15,10 +15,20 @@ local SIZE_OF_ROOM = 6
 local SIZE_OF_SECTION = 43
 local SECTION_OFFSET = SIZE_OF_ROOM * 32
 
+function load_room(room_id)
+  local room_addr = 0x6000 + (room_id)*SIZE_OF_ROOM
+  local lead_id = emu.read(room_addr + 0, emu.memType.nesChrRam, false)
+  local side_id = emu.read(room_addr + 1, emu.memType.nesChrRam, false)
+  local scroll = emu.read(room_addr + 2, emu.memType.nesChrRam, false)
+  local x = emu.read(room_addr + 3, emu.memType.nesChrRam, false)
+  local y = emu.read(room_addr + 4, emu.memType.nesChrRam, false)
+  local prize = emu.read(room_addr + 5, emu.memType.nesChrRam, false)
+  return lead_id, side_id, scroll, x, y, prize
+end
+
 function draw_section(section_id, other_id, is_lead)
   local section_addr = SECTION_OFFSET + (section_id * SIZE_OF_SECTION)
   local other_addr = SECTION_OFFSET + (other_id * SIZE_OF_SECTION)
--- emu.log("section_id: "..section_id.." other_id: "..other_id)
   local room_id = emu.read(section_addr + 0, emu.memType.nesChrRam, false)
   local nametable = emu.read(section_addr + 1, emu.memType.nesChrRam, false)
   local room_base = emu.read(section_addr + 2, emu.memType.nesChrRam, false)
@@ -26,6 +36,7 @@ function draw_section(section_id, other_id, is_lead)
   for i=1, 4 do
     exits[i] = emu.read(section_addr + 3 + i - 1, emu.memType.nesChrRam, false)
   end
+  emu.log(string.format("section_id: %d exits: %02x, %02x, %02x, %02x", section_id, exits[1], exits[2], exits[3], exits[4]))
   local objects = {}
   -- for i=1, 6 do
   --   objects[i] = emu.read(section_addr + 7 + i - 1, emu.memType.nesChrRam, false)
@@ -44,7 +55,7 @@ function draw_section(section_id, other_id, is_lead)
   for i=1, 4 do
     local ex = exits[i]
     -- emu.log(ex)
-    if (ex < 0xe0) then
+    if (ex == 0xe0) then
       local pair_color = 0xff0000ff
       if (is_lead) then
         pair_color = 0xffff0000
@@ -63,24 +74,25 @@ function draw_section(section_id, other_id, is_lead)
 end
 
 function dump_map()
+  emu.log("Dumping map")
   for i = 0, 8 do
     for j = 0, 8 do
       local box_x = 256 - (8-i)*BOX_WIDTH
       local box_y = (8-j)*BOX_HEIGHT
       emu.drawRectangle(box_x, box_y, BOX_WIDTH, BOX_HEIGHT, 0xaa777777)
-      local room_addr = 0x6000 + (i*8+j)*8
       local room_id = i*8 + (j)
-      local lead_id = emu.read(room_addr + 0, emu.memType.nesChrRam, false)
-      local side_id = emu.read(room_addr + 1, emu.memType.nesChrRam, false)
-      local scroll = emu.read(room_addr + 2, emu.memType.nesChrRam, false)
-      local x = emu.read(room_addr + 3, emu.memType.nesChrRam, false)
-      local y = emu.read(room_addr + 4, emu.memType.nesChrRam, false)
-      local prize = emu.read(room_addr + 5, emu.memType.nesChrRam, false)
-      if (lead_id ~= 0xff or side_id ~= 0xff) then
-        -- we have an actual room so load the lead and side section data
-        draw_section(lead_id, side_id, true)
-        draw_section(side_id, lead_id, false)
-      end 
+      lead_id, side_id, scroll, x, y, prize = load_room(room_id)
+      if (lead_id == 0xff and side_id == 0xff) then
+        goto continue
+      end
+      emu.log(string.format("room_id: %d, lead_id %02x, side_id %02x, scroll %02x, x %02x, y %02x, prize: %02x", room_id, lead_id, side_id, scroll, x, y, prize))
+
+
+      -- we have an actual room so load the lead and side section data
+      draw_section(lead_id, side_id, true)
+      draw_section(side_id, lead_id, false)
+
+      ::continue::
     end
   end
 end

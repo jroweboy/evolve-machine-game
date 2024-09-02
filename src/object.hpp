@@ -2,6 +2,9 @@
 #pragma once
 
 #include <soa.h>
+#include <fixed_point.h>
+
+using namespace fixedpoint_literals;
 
 #include "common.hpp"
 
@@ -29,8 +32,8 @@ enum CollisionType {
 };
 
 struct Object {
-    s16 x;
-    s16 y;
+    f16_8 x;
+    f16_8 y;
     
     Hitbox hitbox;
     

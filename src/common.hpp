@@ -1,12 +1,15 @@
 
 #pragma once 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+// #ifdef __cplusplus
+// extern "C" {
+// #endif
 
 #ifdef NES
 #include <peekpoke.h>
+#include <fixed_point.h>
+
+using namespace fixedpoint_literals;
 #endif
 #include <stdbool.h>
 #include <stdint.h>
@@ -20,7 +23,7 @@ typedef int32_t   s32;
 
 // global decompress function defined in asm
 // This raw decompress function is defined at 0xc000
-extern void donut_decompress(const void* data);
+extern "C" void donut_decompress(const void* data);
 
 enum class MainMode : u8 {
     TitleScreen = 0,
@@ -75,8 +78,8 @@ enum State : u8 {
     Dead = 0xff,
 };
 
-extern u8 view_x;
-extern u8 view_y;
+extern f8_8 view_x;
+extern f8_8 view_y;
 
 /// MainMode determines which main task the game will run. 
 extern MainMode main_mode;
@@ -140,7 +143,7 @@ constexpr u8 FIXED_BANK = 3;
 
 extern "C" void __putchar(char c);
 
-#ifdef __cplusplus
-}
-#endif
+// #ifdef __cplusplus
+// }
+// #endif
 

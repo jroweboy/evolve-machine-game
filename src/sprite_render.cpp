@@ -16,8 +16,8 @@ struct OAMData {
 };
 
 
-__attribute__((section(".zp"))) u8 view_x;
-__attribute__((section(".zp"))) u8 view_y;
+__attribute__((section(".zp"))) f8_8 view_x;
+__attribute__((section(".zp"))) f8_8 view_y;
 extern const u8 kitty_walk_right[];
 extern const u8 kitty_walk_up[];
 extern const u8 kitty_walk_down[];
@@ -58,8 +58,8 @@ prg_rom_2 static void draw_object(u8 id) {
         return;
     }
 
-    s16 screen_x = object.x - room.x - view_x;
-    s16 screen_y = object.y - room.y - view_y;
+    s16 screen_x = object.x->as_i() - room.x - view_x.as_i();
+    s16 screen_y = object.y->as_i() - room.y - view_y.as_i();
 
     auto frame = metasprite_table[static_cast<u8>(object.metasprite.get())];
     // auto addr = reinterpret_cast<const u16*>(spr)[object.direction];

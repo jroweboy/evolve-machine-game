@@ -292,8 +292,8 @@ void write_room_to_chrram(u8 id) {
 
 prg_rom_2 static void set_room_xy(u8 map_id) {
     // Side is the top room, so the X,Y coords are based on that one.
-    room.x = (map_id & 0b111) << 8;
-    room.y = (map_id / 8) << 8;
+    room.x = ((u16)(map_id & 0b111)) << 8;
+    room.y = ((u16)(map_id / 8)) << 8;
 }
 
 prg_rom_2 GenerateStats generate_dungeon() {

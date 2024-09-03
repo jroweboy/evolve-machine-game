@@ -16,8 +16,8 @@ struct OAMData {
 };
 
 
-__attribute__((section(".zp"))) fu8_8 view_x;
-__attribute__((section(".zp"))) fu8_8 view_y;
+__attribute__((section(".zp"))) u8 view_x;
+__attribute__((section(".zp"))) u8 view_y;
 extern const u8 kitty_walk_right[];
 extern const u8 kitty_walk_up[];
 extern const u8 kitty_walk_down[];
@@ -57,12 +57,12 @@ prg_rom_2 static void draw_object(u8 id) {
     if ((object.state & State::Hidden) != 0x0) {
         return;
     }
-    s16 screen_x = object.x->as_i() - room.x - view_x.as_i();
-    s16 screen_y = object.y->as_i() - room.y - view_y.as_i();
-        DEBUGGER(object.y->as_i());
-        DEBUGGER(object.y->as_i() >> 8);
-        DEBUGGER(room.y >> 8);
-        DEBUGGER(view_y.as_i());
+    s16 screen_x = object.x->as_i() - room.x - view_x;
+    s16 screen_y = object.y->as_i() - room.y - view_y;
+        // DEBUGGER(object.y->as_i());
+        // DEBUGGER(object.y->as_i() >> 8);
+        // DEBUGGER(room.y >> 8);
+        // DEBUGGER(view_y);
     // DEBUGGER(screen_x);
     // DEBUGGER(screen_y);
 

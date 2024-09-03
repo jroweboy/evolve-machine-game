@@ -14,6 +14,10 @@
 #include "object.hpp"
 #include "sprite_render.hpp"
 
+
+constexpr auto PLAYER_MOVESPEED = 1.20_8_8;
+
+
 extern volatile char FRAME_CNT1;
 
 // marks if the previous frame was a lag frame.
@@ -44,8 +48,6 @@ constexpr static void load_collision_parameter(u8 obj_idx) {
     obj_collision_parameter.width = obj.hitbox.width;
     obj_collision_parameter.height = obj.hitbox.height;
 }
-
-constexpr auto PLAYER_MOVESPEED = 1.25_8_8;
 
 prg_rom_2 static void check_player_collision() {
     load_collision_parameter(0);
@@ -157,7 +159,7 @@ prg_rom_2 static void scroll_screen() {
     // This room has scroll in it
     auto player = objects[0];
     if (room.scroll == ScrollType::Vertical) {
-        s16 screen_pos_y = player.y->as_i() - room.y - view_y.as_i();
+        s16 screen_pos_y = player.y->as_i() - room.y - view_y;
         // DEBUGGER(player.y->as_i());
         // DEBUGGER(player.y->as_i() >> 8);
         // DEBUGGER(room.y >> 8);
@@ -165,23 +167,66 @@ prg_rom_2 static void scroll_screen() {
         if (screen_pos_y < 0 || screen_pos_y > 239) {
             return;
         }
-        if (screen_pos_y > 0x88 && view_y != 240) {
-            view_y += PLAYER_MOVESPEED;
-        } else if (screen_pos_y < 0x68 && view_y != 0) {
-            view_y -= PLAYER_MOVESPEED;
+        // if (screen_pos_y > 0x88 && view_y < 240) {
+        //     view_y += PLAYER_MOVESPEED;
+        // } else if (screen_pos_y < 0x68 && view_y != 0) {
+        //     view_y -= PLAYER_MOVESPEED;
+        // }
+        u8 orig_view_y = view_y;
+        if (screen_pos_y > 0x78) {
+            if (view_y < 240) {
+                if (screen_pos_y >= 0x90) {
+                    view_y += 2;
+                } else {
+                    view_y += 1;
+                }
+                if (orig_view_y > view_y) {
+                    view_y = 240;
+                }
+            }
+        } else if (screen_pos_y < 0x58)  {
+            if (view_y > 0) {
+                if (screen_pos_y < 0x50) {
+                    view_y -= 2;
+                } else {
+                    view_y -= 1;
+                }
+                if (orig_view_y < view_y) {
+                    view_y = 0;
+                }
+            }
         }
     } else {
-        s16 screen_pos_x = player.x->as_i() - room.x - view_x.as_i();
+        s16 screen_pos_x = player.x->as_i() - room.x - view_x;
         if (screen_pos_x < 0 || screen_pos_x > 255) {
             return;
         }
-        if (screen_pos_x > 0x90 && view_x != 255) {
-            view_x += PLAYER_MOVESPEED;
-        } else if (screen_pos_x < 0x70 && view_x != 0) {
-            view_x -= PLAYER_MOVESPEED;
+        u8 orig_view_x = view_x;
+        if (screen_pos_x > 0x88) {
+            if (view_x < 255) {
+                if (screen_pos_x >= 0x90) {
+                    view_x += 2;
+                } else {
+                    view_x += 1;
+                }
+                if (orig_view_x > view_x) {
+                    view_x = 255;
+                }
+            }
+        } else if (screen_pos_x < 0x78) {
+            if (view_x > 0) {
+                if (screen_pos_x < 0x70) {
+                    view_x -= 2;
+                } else {
+                    view_x -= 1;
+                }
+                if (orig_view_x < view_x) {
+                    view_x = 0;
+                }
+            }
         }
     }
-    scroll(view_x.as_i(), view_y.as_i());
+    scroll(view_x, view_y);
 }
 
 prg_rom_2 static void check_screen_transition() {
@@ -265,7 +310,7 @@ prg_rom_2 static void correct_player_position(Direction direction) {
     default:
         break;
     }
-    scroll(view_x.as_i(), view_y.as_i());
+    scroll(view_x, view_y);
 }
 
 prg_rom_2 static void load_new_map() {

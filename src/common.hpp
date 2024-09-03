@@ -10,6 +10,8 @@
 #include <fixed_point.h>
 
 using namespace fixedpoint_literals;
+#else
+#define fu8_8 u16
 #endif
 #include <stdbool.h>
 #include <stdint.h>
@@ -78,8 +80,8 @@ enum State : u8 {
     Dead = 0xff,
 };
 
-extern fu8_8 view_x;
-extern fu8_8 view_y;
+extern u8 view_x;
+extern u8 view_y;
 
 /// MainMode determines which main task the game will run. 
 extern MainMode main_mode;

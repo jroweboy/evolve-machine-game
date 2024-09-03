@@ -118,8 +118,8 @@ function draw_object_hitbox()
   local room = emu.getLabelAddress("room")["address"]
   local room_x = emu.readWord(room + 3, emu.memType.nesDebug)
   local room_y = emu.readWord(room + 5, emu.memType.nesDebug)
-  local scroll_x = emu.read(emu.getLabelAddress("view_x")["address"]+1, emu.memType.nesDebug, false)
-  local scroll_y = emu.read(emu.getLabelAddress("view_y")["address"]+1, emu.memType.nesDebug, false)
+  local scroll_x = emu.read(emu.getLabelAddress("view_x")["address"], emu.memType.nesDebug, false)
+  local scroll_y = emu.read(emu.getLabelAddress("view_y")["address"], emu.memType.nesDebug, false)
 
   -- local scroll_x = ram8("view_x")
   -- local scroll_y = ram8("view_y")
@@ -165,8 +165,8 @@ function draw_solid_hitbox()
   local room = emu.getLabelAddress("room")["address"]
   local room_x = emu.readWord(room + 3, emu.memType.nesDebug)
   local room_y = emu.readWord(room + 5, emu.memType.nesDebug)
-  local scroll_x = emu.read(emu.getLabelAddress("view_x")["address"]+1, emu.memType.nesDebug, false)
-  local scroll_y = emu.read(emu.getLabelAddress("view_y")["address"]+1, emu.memType.nesDebug, false)
+  local scroll_x = emu.read(emu.getLabelAddress("view_x")["address"], emu.memType.nesDebug, false)
+  local scroll_y = emu.read(emu.getLabelAddress("view_y")["address"], emu.memType.nesDebug, false)
   for i = 0, SOLID_OBJECT_COUNT-1 do
     local obj = solids + i
     local state = emu.read(obj + SOLID_OBJECT_OFFSETOF_STATE, emu.memType.nesDebug)
@@ -217,8 +217,8 @@ function load_room(room_id)
 end
 
 function draw_section(section_id, other_id, is_lead)
-  local section_addr = SECTION_OFFSET + (section_id * SIZE_OF_SECTION)
-  local other_addr = SECTION_OFFSET + (other_id * SIZE_OF_SECTION)
+  local section_addr = 0x6000 + SECTION_OFFSET + (section_id * SIZE_OF_SECTION)
+  local other_addr = 0x6000 + SECTION_OFFSET + (other_id * SIZE_OF_SECTION)
   local room_id = emu.read(section_addr + 0, emu.memType.nesChrRam, false)
   local nametable = emu.read(section_addr + 1, emu.memType.nesChrRam, false)
   local room_base = emu.read(section_addr + 2, emu.memType.nesChrRam, false)
@@ -226,7 +226,7 @@ function draw_section(section_id, other_id, is_lead)
   for i=1, 4 do
     exits[i] = emu.read(section_addr + 3 + i - 1, emu.memType.nesChrRam, false)
   end
-  emu.log(string.format("section_id: %d exits: %02x, %02x, %02x, %02x", section_id, exits[1], exits[2], exits[3], exits[4]))
+  -- emu.log(string.format("section_id: %d exits: %02x, %02x, %02x, %02x", section_id, exits[1], exits[2], exits[3], exits[4]))
   local objects = {}
   -- for i=1, 6 do
   --   objects[i] = emu.read(section_addr + 7 + i - 1, emu.memType.nesChrRam, false)
@@ -235,53 +235,93 @@ function draw_section(section_id, other_id, is_lead)
   local grid_x = section_id // 8
   local grid_y = section_id % 8
   local box_x = 256 - (8-grid_x)*BOX_WIDTH
-  local box_y = (8-grid_y)*BOX_HEIGHT
+  local box_y = (grid_y)*BOX_HEIGHT
   if (is_lead == true) then
     emu.drawString(box_x+6, box_y+4, "L")
   else
     emu.drawString(box_x+6, box_y+4, "S")
   end
-
+  -- emu.drawString(box_x, box_y, string.format("%d%d", grid_x, grid_y))
+  -- emu.log(string.format("section_id: %02x exits: %02x, %02x, %02x, %02x", section_id, exits[1], exits[2], exits[3], exits[4]))
   for i=1, 4 do
     local ex = exits[i]
     -- emu.log(ex)
-    if (ex < 0xe0) then
-      local pair_color = 0xff0000ff
+    if (ex == 0xe0) then
+      -- draw a small green box to mark that this is a neighbor room
+      local pair_color = 0x00ff00
+      if (i == 1) then
+        emu.drawRectangle(box_x + BOX_WIDTH/2 - 2, box_y - 2, 4, 4, pair_color, true)
+      elseif (i == 2) then
+        emu.drawRectangle(box_x + BOX_WIDTH-2, box_y + BOX_HEIGHT/2 - 2, 4, 4, pair_color, true)
+      elseif (i == 3) then
+        emu.drawRectangle(box_x + BOX_WIDTH/2 - 2, box_y + BOX_HEIGHT-2, 4, 4, pair_color, true)
+      else
+        emu.drawRectangle(box_x - 2, box_y + BOX_HEIGHT/2 - 2, 4, 4, pair_color, true)
+      end
+    elseif (ex < 0xe0) then
+      -- draw a unique color to mark the exits
+      local pair_color = 0x0000ff
       if (is_lead) then
-        pair_color = 0xffff0000
+        pair_color = 0xff0000
       end
       if (i == 1) then
-        emu.drawRectangle(box_x+2, box_y, BOX_WIDTH-4, 2, pair_colo, true)
+        emu.drawRectangle(box_x+2, box_y, BOX_WIDTH-4, 2, 0xff0000, true)
       elseif (i == 2) then
-        emu.drawRectangle(box_x+BOX_WIDTH-2, box_y+2, 2, BOX_HEIGHT-4, pair_color, true)
+        emu.drawRectangle(box_x+BOX_WIDTH-2, box_y+2, 2, BOX_HEIGHT-4, 0xffff00, true)
       elseif (i == 3) then
-        emu.drawRectangle(box_x+2, box_y+BOX_HEIGHT-2, BOX_WIDTH-4, 2, pair_color, true)
+        emu.drawRectangle(box_x+2, box_y+BOX_HEIGHT-2, BOX_WIDTH-4, 2, 0x0000ff, true)
       else
-        emu.drawRectangle(box_x, box_y+2, 2, BOX_HEIGHT-4, pair_color, true)
+        emu.drawRectangle(box_x, box_y+2, 2, BOX_HEIGHT-4, 0xff00ff, true)
+      end
+    else
+      -- draw a white bar to mark the walls
+      if (i == 1) then
+        emu.drawRectangle(box_x, box_y, BOX_WIDTH, 2, 0xffffff, true)
+      elseif (i == 2) then
+        emu.drawRectangle(box_x+BOX_WIDTH, box_y, 2, BOX_HEIGHT, 0xffffff, true)
+      elseif (i == 3) then
+        emu.drawRectangle(box_x, box_y+BOX_HEIGHT, BOX_WIDTH, 2, 0xffffff, true)
+      else
+        emu.drawRectangle(box_x, box_y, 2, BOX_HEIGHT, 0xffffff, true)
       end
     end
   end
 end
 
 function dump_map()
-  emu.log("Dumping map")
+  -- emu.log("Dumping map")
+  local objects = emu.getLabelAddress("objects")["address"]
+  local player_x = emu.read(objects + OBJECT_OFFSETOF_X_HI, emu.memType.nesDebug)
+  -- x = (emu.read(objects + OBJECT_OFFSETOF_X_HI, emu.memType.nesDebug) << 8) | x
+  local player_y = emu.read(objects + OBJECT_OFFSETOF_Y_HI, emu.memType.nesDebug)
+  -- y = (emu.read(objects + OBJECT_OFFSETOF_Y_HI, emu.memType.nesDebug) << 8) | y
   for i = 0, 8 do
     for j = 0, 8 do
       local box_x = 256 - (8-i)*BOX_WIDTH
-      local box_y = (8-j)*BOX_HEIGHT
+      local box_y = (j)*BOX_HEIGHT
       emu.drawRectangle(box_x, box_y, BOX_WIDTH, BOX_HEIGHT, 0xaa777777)
       local room_id = i*8 + (j)
       lead_id, side_id, scroll, x, y, prize = load_room(room_id)
       if (lead_id == 0xff and side_id == 0xff) then
         goto continue
       end
-      emu.log(string.format("room_id: %d, lead_id %02x, side_id %02x, scroll %02x, x %02x, y %02x, prize: %02x", room_id, lead_id, side_id, scroll, x, y, prize))
-
+      -- emu.log(string.format("room_id: %d, lead_id %02x, side_id %02x, scroll %02x, x %02x, y %02x, prize: %02x", room_id, lead_id, side_id, scroll, x, y, prize))
 
       -- we have an actual room so load the lead and side section data
       draw_section(lead_id, side_id, true)
       draw_section(side_id, lead_id, false)
 
+      -- local room = emu.getLabelAddress("room")["address"]
+      -- local room_x = emu.readWord(room + 3, emu.memType.nesDebug)
+      -- local room_y = emu.readWord(room + 5, emu.memType.nesDebug)
+      if (player_x == i and player_y == j) then
+        emu.log(string.format("x: %02x, y: %02x", player_x, player_y))
+        -- local grid_x = room_id // 8
+        -- local grid_y = room_id % 8
+        local _x = 256 - (8-i)*BOX_WIDTH
+        local _y = (j)*BOX_HEIGHT
+        emu.drawString(_x+6, _y+4, "X")
+      end
       ::continue::
     end
   end

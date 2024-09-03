@@ -169,9 +169,16 @@ int main() {
                 break;
             case MainMode::GenerateDungeon: {
                 set_prg_bank(2);
-                u8 id = Dungeon::generate_dungeon();
+                u8 total_rooms = 0;
+                u8 start_id = 0;
+                do {
+                    const auto[room_id, room_count] = Dungeon::generate_dungeon();
+                    total_rooms = room_count;
+                    start_id = room_id;
+                } while (total_rooms < 32);
+                
                 main_mode = MainMode::GamePlay;
-                MapLoader::load_map(id);
+                MapLoader::load_map(start_id);
                 // FALLTHROUGH
             }
             case MainMode::GamePlay:

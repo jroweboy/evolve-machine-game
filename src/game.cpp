@@ -158,13 +158,16 @@ prg_rom_2 static void scroll_screen() {
     auto player = objects[0];
     if (room.scroll == ScrollType::Vertical) {
         s16 screen_pos_y = player.y->as_i() - room.y - view_y.as_i();
+        // DEBUGGER(player.y->as_i());
+        // DEBUGGER(player.y->as_i() >> 8);
+        // DEBUGGER(room.y >> 8);
+        // DEBUGGER(view_y.as_i());
         if (screen_pos_y < 0 || screen_pos_y > 239) {
             return;
         }
         if (screen_pos_y > 0x88 && view_y != 240) {
             view_y += PLAYER_MOVESPEED;
-        }
-        if (screen_pos_y < 0x68 && view_y != 0) {
+        } else if (screen_pos_y < 0x68 && view_y != 0) {
             view_y -= PLAYER_MOVESPEED;
         }
     } else {
@@ -174,8 +177,7 @@ prg_rom_2 static void scroll_screen() {
         }
         if (screen_pos_x > 0x90 && view_x != 255) {
             view_x += PLAYER_MOVESPEED;
-        }
-        if (screen_pos_x < 0x70 && view_x != 0) {
+        } else if (screen_pos_x < 0x70 && view_x != 0) {
             view_x -= PLAYER_MOVESPEED;
         }
     }
@@ -334,6 +336,7 @@ prg_rom_2 void update() {
         case GameMode::MapLoader:
             pal_fade_to(4, 0, 2);
             ppu_off();
+            // DEBUGGER(0);
             load_new_map();
             // fallthrough
         case GameMode::InGame:
@@ -351,6 +354,7 @@ prg_rom_2 void update() {
     move_player();
     check_player_collision();
     run_weapon_bob();
+    // DEBUGGER();
     scroll_screen();
     check_screen_transition();
     POKE(0x4123, 4);

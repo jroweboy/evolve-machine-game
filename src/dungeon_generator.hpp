@@ -52,7 +52,12 @@ constexpr u8 OppositeDirection(u8 direction) {
     return (direction + 2) & 0b11;
 }
 
-prg_rom_2 u8 generate_dungeon();
+struct GenerateStats {
+    u8 start_id;
+    u8 room_count;
+};
+
+prg_rom_2 GenerateStats generate_dungeon();
 
 u8 load_room_id_by_section(u8 section_id);
 void load_section_to_lead(u8 section_id);

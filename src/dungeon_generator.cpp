@@ -292,11 +292,11 @@ void write_room_to_chrram(u8 id) {
 
 prg_rom_2 static void set_room_xy(u8 map_id) {
     // Side is the top room, so the X,Y coords are based on that one.
-    room.x = (map_id & 0b111);
-    room.y = (map_id / 8);
+    room.x = (map_id & 0b111) << 8;
+    room.y = (map_id / 8) << 8;
 }
 
-prg_rom_2 u8 generate_dungeon() {
+prg_rom_2 GenerateStats generate_dungeon() {
     // List of visited tiles and their room_ids
     MapId map;
     for (auto& num : map) { num = 0xff; }
@@ -511,7 +511,7 @@ prg_rom_2 u8 generate_dungeon() {
     dump_map(map, to_fill);
 #endif
 
-    return start_id;
+    return GenerateStats{.start_id = start_id, .room_count = id};
 }
 }
 #ifndef NES

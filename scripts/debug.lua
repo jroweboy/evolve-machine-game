@@ -8,6 +8,93 @@ function ram16(label, signed)
   return emu.readWord(emu.getLabelAddress(label)["address"], emu.memType.nesDebug, signed or false)
 end
 
+-- debug perf
+
+scope_count = 4
+
+frame_number = 0
+
+
+performance_counters = {}
+performance_average = {}
+for i = 0, scope_count do
+  performance_average[i] = {}
+end
+performance_max = {}
+for i = 0, scope_count do
+    performance_max[i] = 0
+end
+last_scope = 0
+last_cycle_count = 0
+
+-- Returns the sum of a sequence of values
+local function sum(x)
+    local s = 0
+    for _, v in ipairs(x) do s = s + v end
+    return s
+end
+
+-- Calculates the arithmetic mean of a set of values
+-- x       : an array of values
+-- returns : the arithmetic mean
+local function arithmetic_mean(x)
+    return (sum(x) / #x)
+end
+
+color_names = {
+    [0]="uncounted",
+    [1]="idle",
+    [2]="audio",
+    [3]="entities",
+    [4]="metasprites",
+}
+
+function debug_write(address, value)
+  local emu_state = emu.getState() 
+  local new_scope = value
+  local duration = emu_state["cpu.cycleCount"] - last_cycle_count
+  last_cycle_count = emu_state["cpu.cycleCount"]
+  
+  performance_counters[last_scope] = duration
+  last_scope = new_scope
+end
+
+y_offset = 0
+
+function draw_parameter(key)
+  parameter_string = string.format("%s:", color_names[key])
+  local value = performance_counters[key]
+  if (value ~= nil) then
+    if (value >= 0) then
+	  emu.drawString(10, y_offset, parameter_string, 0x00FFFFFF, 0x40200020)
+	  y_offset = y_offset + 9
+	  local mean = arithmetic_mean(performance_average[key])
+	  local max = performance_max[key]
+	  parameter_string = string.format("  %s (%.1f%%)\t| %s \t| %s", value, value * 100.0 / 29780.5, math.floor(mean), max);
+	  emu.drawString(10, y_offset, parameter_string, 0x00FFFFFF, 0x40200020)
+	  y_offset = y_offset + 9
+    end
+  end
+end
+
+function draw_performance_counters()
+  y_offset = 140
+  for i = 0, scope_count do
+    local value = performance_counters[i]
+    draw_parameter(i)
+    performance_average[i][frame_number] = value
+    if (value ~= nil and value > performance_max[i]) then
+      performance_max[i] = value
+    end
+    frame_number = frame_number + 1
+    if (frame_number > 300) then
+      frame_number = 0
+    end
+  end
+end
+
+-- debug collision
+
 OBJECT_COUNT = 12
 SOLID_OBJECT_COUNT = 20
 
@@ -23,7 +110,7 @@ OBJECT_OFFSETOF_HITBOX_Y = 7 * OBJECT_COUNT
 OBJECT_OFFSETOF_WIDTH    = 8 * OBJECT_COUNT
 OBJECT_OFFSETOF_HEIGHT   = 9 * OBJECT_COUNT
 
-OBJECT_OFFSETOF_STATE = 9 * OBJECT_COUNT
+OBJECT_OFFSETOF_STATE = 11 * OBJECT_COUNT
 
 function draw_object_hitbox()
   local objects = emu.getLabelAddress("objects")["address"]
@@ -31,10 +118,11 @@ function draw_object_hitbox()
   local room = emu.getLabelAddress("room")["address"]
   local room_x = emu.readWord(room + 3, emu.memType.nesDebug)
   local room_y = emu.readWord(room + 5, emu.memType.nesDebug)
-  local scroll_x_lo = emu.getLabelAddress("view_x")["address"]
+  local scroll_x = emu.read(emu.getLabelAddress("view_x")["address"]+1, emu.memType.nesDebug, false)
+  local scroll_y = emu.read(emu.getLabelAddress("view_y")["address"]+1, emu.memType.nesDebug, false)
 
-  local scroll_x = ram8("view_x")
-  local scroll_y = ram8("view_y")
+  -- local scroll_x = ram8("view_x")
+  -- local scroll_y = ram8("view_y")
   for i = 0, OBJECT_COUNT-1 do
     local obj = objects + i
     local state = emu.read(obj + OBJECT_OFFSETOF_STATE, emu.memType.nesDebug)
@@ -77,8 +165,8 @@ function draw_solid_hitbox()
   local room = emu.getLabelAddress("room")["address"]
   local room_x = emu.readWord(room + 3, emu.memType.nesDebug)
   local room_y = emu.readWord(room + 5, emu.memType.nesDebug)
-  local scroll_x = ram8("view_x")
-  local scroll_y = ram8("view_y")  
+  local scroll_x = emu.read(emu.getLabelAddress("view_x")["address"]+1, emu.memType.nesDebug, false)
+  local scroll_y = emu.read(emu.getLabelAddress("view_y")["address"]+1, emu.memType.nesDebug, false)
   for i = 0, SOLID_OBJECT_COUNT-1 do
     local obj = solids + i
     local state = emu.read(obj + SOLID_OBJECT_OFFSETOF_STATE, emu.memType.nesDebug)
@@ -109,9 +197,11 @@ function draw_solid_hitbox()
   end
 end
 
+-- debug map
+
 local BOX_WIDTH = 16
 local BOX_HEIGHT = 16
-local SIZE_OF_ROOM = 6
+local SIZE_OF_ROOM = 8
 local SIZE_OF_SECTION = 43
 local SECTION_OFFSET = SIZE_OF_ROOM * 32
 
@@ -121,8 +211,8 @@ function load_room(room_id)
   local side_id = emu.read(room_addr + 1, emu.memType.nesChrRam, false)
   local scroll = emu.read(room_addr + 2, emu.memType.nesChrRam, false)
   local x = emu.read(room_addr + 3, emu.memType.nesChrRam, false)
-  local y = emu.read(room_addr + 4, emu.memType.nesChrRam, false)
-  local prize = emu.read(room_addr + 5, emu.memType.nesChrRam, false)
+  local y = emu.read(room_addr + 5, emu.memType.nesChrRam, false)
+  local prize = emu.read(room_addr + 7, emu.memType.nesChrRam, false)
   return lead_id, side_id, scroll, x, y, prize
 end
 
@@ -155,7 +245,7 @@ function draw_section(section_id, other_id, is_lead)
   for i=1, 4 do
     local ex = exits[i]
     -- emu.log(ex)
-    if (ex == 0xe0) then
+    if (ex < 0xe0) then
       local pair_color = 0xff0000ff
       if (is_lead) then
         pair_color = 0xffff0000
@@ -197,12 +287,15 @@ function dump_map()
   end
 end
 
-
 function frame_start()
-  local solid_objects = emu.getLabelAddress("solid_objects")["address"]
   draw_object_hitbox()
   draw_solid_hitbox()
   dump_map()
+  -- draw_performance_counters()
+  --now reset performance counters for the next frame
+  for i = 0, scope_count do
+    performance_counters[i] = 0
+  end
 end
 
 emu.addEventCallback(frame_start, emu.eventType.nmi)
@@ -223,3 +316,4 @@ function cb(address, value)
 end
 
 emu.addMemoryCallback(cb, emu.callbackType.write, 0x401b)
+emu.addMemoryCallback(debug_write, emu.callbackType.write, 0x4123)

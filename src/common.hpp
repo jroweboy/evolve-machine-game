@@ -78,8 +78,8 @@ enum State : u8 {
     Dead = 0xff,
 };
 
-extern f8_8 view_x;
-extern f8_8 view_y;
+extern fu8_8 view_x;
+extern fu8_8 view_y;
 
 /// MainMode determines which main task the game will run. 
 extern MainMode main_mode;

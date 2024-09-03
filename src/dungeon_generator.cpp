@@ -243,7 +243,7 @@ namespace Dungeon {
 // u8 starting_room_id;
 
 u8 load_room_id_by_section(u8 id) {
-    vram_adr(SectionOffset + id * sizeof(Section));
+    vram_adr(SectionOffset + id * sizeof(Section) + offsetof(Section, room_id));
     u8 room_id;
     vram_read(&room_id, sizeof(u8));
     return room_id;

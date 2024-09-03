@@ -175,7 +175,7 @@ prg_rom_2 static void scroll_screen() {
         u8 orig_view_y = view_y;
         if (screen_pos_y > 0x78) {
             if (view_y < 240) {
-                if (screen_pos_y >= 0x90) {
+                if (screen_pos_y >= 0x80) {
                     view_y += 2;
                 } else {
                     view_y += 1;

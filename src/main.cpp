@@ -73,17 +73,19 @@ static void main_init() {
     ppu_off();
 
     set_chr_bank(3);
-    u32 magic;
-    vram_adr(0x2000 - 4);
-    vram_read(&magic, 4);
-    if (magic != 0x600dc0de) {
         vram_adr(0);
         vram_fill(0xff, 0x2000);
-        vram_adr(0x2000 - 4);
-        magic = 0x600dc0de;
-        vram_write(&magic, 4);
-        // warm_boot = true; // todo figure out warm boot
-    }
+    // u32 magic;
+    // vram_adr(0x2000 - 4);
+    // vram_read(&magic, 4);
+    // if (magic != 0x600dc0de) {
+        // vram_adr(0);
+        // vram_fill(0xff, 0x2000);
+        // vram_adr(0x2000 - 4);
+        // u32 magic = 0x600dc0de;
+        // vram_write(&magic, 4);
+        // warm_boot = true; // todo figure out what to warm boot
+    // }
 
     set_mirroring(MIRROR_VERTICAL);
 
@@ -175,7 +177,7 @@ int main() {
                     const auto[room_id, room_count] = Dungeon::generate_dungeon();
                     total_rooms = room_count;
                     start_id = room_id;
-                } while (total_rooms < 32);
+                } while (total_rooms < Dungeon::ROOM_MINIMUM);
                 
                 main_mode = MainMode::GamePlay;
                 MapLoader::load_map(start_id);

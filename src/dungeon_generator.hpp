@@ -18,7 +18,8 @@ static constexpr u8 LeadLUT[4] = { 0x20, 0x24, 0x28, 0x20 };
 static constexpr u8 SideLUT[4] = { 0x28, 0x20, 0x20, 0x24 };
 
 // TODO maybe increase the room limit each level you beat?
-constexpr u8 ROOM_LIMIT = 32;
+constexpr u8 ROOM_MINIMUM = 32;
+constexpr u8 ROOM_LIMIT = 64;
 
 
 constexpr u8 NO_EXIT = 0xff;

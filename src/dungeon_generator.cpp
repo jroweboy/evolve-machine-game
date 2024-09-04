@@ -10,10 +10,12 @@
 // enum class 
 
 #include <array>
+#include <fixed_point.h>
 
 #include "dungeon_generator.hpp"
 #include "common.hpp"
 #include "map.hpp"
+#include "object.hpp"
 //#include "object.hpp"
 
 // Offset in ram for where the sections start
@@ -141,19 +143,20 @@ prg_rom_2 static u8 GetNeighborId(u8 me, u8 direction) {
             return 0xff;
         return me - 1;
     default:
+        DEBUGGER(direction);
         return 0xff;
     }
 }
 
-// TODO: Change vram_read/write to just vram_poke/peak for speed
 // Optimized routine to read just the section's exit information and either update it 
 // if its Dungeon::EXIT_PENDING or return false if theres no exit
 prg_rom_2 static u8 update_section_exit(u8 my_id, u8 direction, u8 new_exit) {
     // Read out this particular exit from the section
     u16 offset = SectionOffset + my_id * sizeof(Section) + offsetof(Section, exit) + direction;
     vram_adr(offset);
-    u8 exit;
-    vram_read(&exit, 1);
+    PEEK(0x2007);
+    u8 exit = PEEK(0x2007);
+    // vram_read(&exit, 1);
     // Check to see if the neighbor has us marked as exit or not
     if (exit == Dungeon::NO_EXIT || exit == Dungeon::SIDE_ROOM) {
         // and if we aren't an exit then don't do anything.
@@ -163,21 +166,17 @@ prg_rom_2 static u8 update_section_exit(u8 my_id, u8 direction, u8 new_exit) {
     // Since this section was waiting for us to fill this exit, update both the exit
     // and the entrance.
     vram_adr(offset);
-    vram_write(&new_exit, 1);
+    POKE(0x2007, new_exit);
+    // vram_write(&new_exit, 1);
     return exit;
 }
-
-// Loads the exit data for a different room in the map
-// and updates the particular exit for their neighbor
-//static void update_exits(const MapId& map, u8 room_id) {
-//}
 
 // A side cell is the attached room to the new map_id, since each
 // cell is 1x2 or 2x1;
 prg_rom_2 static u8 get_side_cell(const MapId& map, u8 position) {
     s8 i = 3;
     u8 u = rand() & 0b11;
-    while (i > 0) {
+    while (i >= 0) {
         u8 maybe_side = GetNeighborId(position, u);
         if (maybe_side < Dungeon::SIZE && map[maybe_side] == 0xff) {
             return maybe_side;
@@ -227,6 +226,8 @@ prg_rom_2 static void update_section_exits(const MapId& map, Section& section, u
         u8 opps = Dungeon::OppositeDirection(direction);
         u8 updated_exit = update_section_exit(neighbor, direction, opps);
         if (updated_exit == Dungeon::NO_EXIT) {
+            // if the neighbor has no_exit marked here, then mark this as no exit too
+            section.exit[direction] = Dungeon::NO_EXIT;
             continue;
         } else if (updated_exit == Dungeon::SIDE_ROOM) {
             section.exit[opps] = Dungeon::SIDE_ROOM;
@@ -311,6 +312,9 @@ prg_rom_2 GenerateStats generate_dungeon() {
     
     // Setup the initial bank
     set_chr_bank(3);
+
+    vram_adr(0);
+    vram_fill(0xff, 0x2000);
 #endif
 
     ////////////////////
@@ -339,6 +343,11 @@ prg_rom_2 GenerateStats generate_dungeon() {
     side.room_base = SectionBase::StartUp;
     // room x/y is based on the top left spot on the map
     set_room_xy(side_id);
+    
+    ////////////////////
+    // Step -1: Set the player position for debug purposes
+    objects[0].x = f16_8(room.x);
+    objects[0].y = f16_8(room.y);
 
     // clear out the exits for the room sections. we'll update the exits with
     // the ids to the next rooom when we process that room.
@@ -376,6 +385,10 @@ prg_rom_2 GenerateStats generate_dungeon() {
     std::wcout << L"fill_write: " << fill_write << std::endl;
     dump_map(map, to_fill);
 #endif
+
+    // for (u8 k=0; k < 30; k++) {
+    //     ppu_wait_nmi();
+    // }
 
     while ((++id) < ROOM_LIMIT && fill_read < fill_write) {
         ////////////////////
@@ -496,6 +509,10 @@ prg_rom_2 GenerateStats generate_dungeon() {
         }
 
         write_room_to_chrram(id);
+
+        // for (u8 k=0; k < 30; k++) {
+        //     ppu_wait_nmi();
+        // }
 
 #ifndef NES
         std::wcout << L"id: " << id << std::endl;

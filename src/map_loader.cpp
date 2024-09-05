@@ -31,7 +31,7 @@ struct SectionLookup {
 #define SOA_STRUCT SectionLookup
 #define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(palette) MEMBER(mirroring) MEMBER(chr_offset) MEMBER(chr_count)
 #include <soa-struct.inc>
-extern const soa::Array<SectionLookup, 7> section_lut;
+extern const soa::Array<SectionLookup, static_cast<u8>(SectionBase::Count)> section_lut;
 
 noinit Room room;
 noinit Section lead;
@@ -55,7 +55,7 @@ static void read_map_room(u8 section_id) {
 }
 
 // TODO: store the offset in RAM for the loaded objects
-constexpr u8 get_tile_offset(const ObjectType& obj) {
+constexpr u8 get_tile_offset(ObjectType obj) {
     switch (obj) {
     case ObjectType::Player:
         return 0;
@@ -99,7 +99,7 @@ struct SectionObjectLookup {
 #define SOA_STRUCT SectionObjectLookup
 #define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count) MEMBER(pos)
 #include <soa-struct.inc>
-// extern const soa::Array<SectionObjectLookup, 4> section_object_lut;
+extern const soa::Array<SectionObjectLookup, 4> section_object_lut;
 
 struct RoomObjectRect {
     s16 x;
@@ -110,7 +110,7 @@ struct RoomObjectRect {
 #define SOA_STRUCT RoomObjectRect
 #define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
 #include <soa-struct.inc>
-extern const soa::Array<RoomObjectRect, room_object_collision_start_count> room_collision_lut;
+extern const soa::Array<RoomObjectRect, room_object_collision_total> room_collision_lut;
 
 struct SectionExitLut {
     std::array<SectionObjectRect, 4> exits;
@@ -118,8 +118,9 @@ struct SectionExitLut {
 #define SOA_STRUCT SectionExitLut
 #define SOA_MEMBERS MEMBER(exits)
 #include <soa-struct.inc>
-extern const soa::Array<SectionExitLut, static_cast<u8>(SectionBase::Count)> room_base_exit_lut;
+extern const soa::Array<SectionExitLut, static_cast<u8>(SectionBase::Count)> section_exit_lut;
 
+// constexpr std::array<u8, 1> offset_lut = {1};
 
 static void load_section(const Section& section) {
     u16 nmt_addr = ((u16)section.nametable) << 8;
@@ -128,31 +129,31 @@ static void load_section(const Section& section) {
     donut_decompress(nametable);
 
     // now load the exits
-    // for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
-    //     if ((section.exit[i] & 0x80) == 0) {
-    //         auto graphics = section_object_lut[i];
-    //         // if we haven't loaded this exit type, copy it into chr
-    //         if (room_obj_chr_counts[i] == 0) {
-    //             room_obj_chr_counts[i] = bg_chr_count;
-    //             vram_adr(bg_chr_offset);
-    //             donut_decompress(graphics.chr);
-    //             bg_chr_offset += graphics.chr_offset;
-    //             bg_chr_count += graphics.chr_count;
-    //         }
-    //         // and now we can write the tile data to the nametable
-    //         auto exitlut = room_base_exit_lut[static_cast<u8>(section.room_base)];
-    //         auto exit = exitlut->exits[i]; 
-    //         u8 chr_offset = room_obj_chr_counts[i];
-    //         u8 offset = 0;
-    //         for (u8 h=0; h < graphics.pos.height; ++h) {
-    //             vram_adr(nmt_addr + 0);
-    //             for (u8 w=0; w < graphics.pos.width; ++w) {
-    //                 vram_put(graphics.nametable[offset] + chr_offset);
-    //                 ++offset;
-    //             }
-    //         }
-    //     }
-    // }
+    for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
+        if ((section.exit[i] & 0x80) == 0) {
+            auto graphics = section_object_lut[i];
+            // if we haven't loaded this exit type, copy it into chr
+            if (room_obj_chr_counts[i] == 0) {
+                room_obj_chr_counts[i] = bg_chr_count;
+                vram_adr(bg_chr_offset);
+                donut_decompress(graphics.chr);
+                bg_chr_offset += graphics.chr_offset;
+                bg_chr_count += graphics.chr_count;
+            }
+            // and now we can write the tile data to the nametable
+            // auto exitlut = section_exit_lut[static_cast<u8>(section.room_base)];
+            // auto exit = exitlut->exits[i]; 
+            u8 chr_offset = room_obj_chr_counts[i];
+            u8 offset = 0;
+            for (u8 h=0; h < graphics.pos.height; ++h) {
+                vram_adr(nmt_addr + 0);
+                for (u8 w=0; w < graphics.pos.width; ++w) {
+                    vram_put(graphics.nametable[offset] + chr_offset);
+                    ++offset;
+                }
+            }
+        }
+    }
 
     // load the attributes for this nametable into a buffer that we can update with the
     // objects as they are loaded
@@ -199,31 +200,13 @@ static void load_section(const Section& section) {
         slot.hitbox.width = init.hitbox.width;
         slot.hitbox.height = init.hitbox.height;
     }
-    // Load the basic solid objects from this style of map
-    // const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
-    //     : room.scroll == ScrollType::Horizontal ? leftright_walls : single_walls;
-    // i = 0;
-    // for (const auto& wall : walls) {
-    //     if (wall.state == (CollisionType)0) {
-    //         continue;
-    //     }
-    //     auto slot = solid_objects[i++];
-    //     if (i > SOLID_OBJECT_COUNT) {
-    //         break;
-    //     }
-    //     slot.state = wall.state;
-    //     slot.x = room.x + wall.x;
-    //     slot.y = room.y + wall.y;
-    //     slot.width = wall.width;
-    //     slot.height = wall.height;
-    // }
 
     set_prg_bank(GRAPHICS_BANK);
 }
 
-[[maybe_unused]] constexpr u8 section_base_to_mapstyle_lut[] = {
+// [[maybe_unused]] constexpr u8 section_base_to_mapstyle_lut[] = {
 
-};
+// };
 
 namespace MapLoader {
 
@@ -276,9 +259,32 @@ namespace MapLoader {
         sp_chr_count += weapons_chr_count;
         sp_chr_offset += weapons_chr_offset;
 
+        // Load the basic solid objects from this style of map
+        // const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
+        //     : room.scroll == ScrollType::Horizontal ? leftright_walls : single_walls;
+        // room_collision_lut[]
+        set_prg_bank(GRAPHICS_BANK);
+        
+        u8 i = 0;
+        for (const auto& wall : room_collision_lut) {
+            // if (wall.state == (CollisionType)0) {
+            //     continue;
+            // }
+            auto slot = solid_objects[i++];
+            if (i > SOLID_OBJECT_COUNT) {
+                break;
+            }
+            // slot.state = wall.state;
+            // TODO add this field to the export
+            slot.state = CollisionType::Solid;
+            slot.x = room.x + wall.x;
+            slot.y = room.y + wall.y;
+            slot.width = wall.width;
+            slot.height = wall.height;
+        }
+
+
         // now load the collision data for this map
-
-
         load_section(lead);
 
         if (side.room_id != Dungeon::NO_EXIT) {

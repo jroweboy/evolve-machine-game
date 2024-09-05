@@ -331,33 +331,13 @@ function dump_map()
   local box_x = 254 - (8-player_x)*BOX_WIDTH
   local box_y = 2+(player_y)*BOX_HEIGHT
   emu.drawString(box_x+6, box_y+4, "X")
-  -- for i = 0, 7 do
-    -- for j = 0, 7 do
-      -- local room = emu.getLabelAddress("room")["address"]
-      -- local room_x = emu.readWord(room + 3, emu.memType.nesDebug)
-      -- local room_y = emu.readWord(room + 5, emu.memType.nesDebug)
-        -- emu.log(string.format("x: %02x, y: %02x", player_x, player_y))
-      -- if (player_x == j and player_y == i) then
-        -- emu.log(string.format("x: %02x, y: %02x, box_x: %d, box_y: %d", player_x, player_y, box_x, box_y))
-        -- local grid_x = room_id // 8
-        -- local grid_y = room_id % 8
-        -- local _x = 256 - (8-i)*BOX_WIDTH
-        -- local _y = (j)*BOX_HEIGHT
-        -- local grid_y = section_id // 8
-        -- local grid_x = section_id % 8
-        -- local box_x = 254 - (8-grid_x)*BOX_WIDTH
-        -- local box_y = 2+(grid_y)*BOX_HEIGHT
-        -- emu.log(string.format("x: %02x, y: %02x", box_x+6, box_y+4))
-      -- end
-    -- end
-  -- end
 end
 
 function frame_start()
   draw_object_hitbox()
   draw_solid_hitbox()
   dump_map()
-  -- draw_performance_counters()
+  draw_performance_counters()
   --now reset performance counters for the next frame
   for i = 0, scope_count do
     performance_counters[i] = 0

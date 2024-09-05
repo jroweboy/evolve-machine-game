@@ -85,6 +85,8 @@ def main(nestiler: Path, fin: Path, fout: Path):
   # so we can import them as linker symbols
   chr_offset = {}
   chr_count = {}
+  chr_width = {}
+  chr_height = {}
   
   # split leftright.bmp and updown.bmp into separate files
   with Image.open(room_path / "leftright.bmp") as im:

@@ -23,6 +23,7 @@ struct Hitbox {
 #include <soa-struct.inc>
 
 enum CollisionType {
+    None = 0,
     Solid = 1 << 0,
     Damage = 1 << 1,
     Pickup = 1 << 2,
@@ -113,7 +114,7 @@ extern soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 
 // Data for the basic room layouts
 // 4 corners
-constexpr u8 ROOM_WALL_COUNT = 2 * 4;
+// constexpr u8 ROOM_WALL_COUNT = 2 * 4;
 // extern SolidObject updown_walls[ROOM_WALL_COUNT];
 // extern SolidObject leftright_walls[ROOM_WALL_COUNT];
 // extern SolidObject single_walls[ROOM_WALL_COUNT];

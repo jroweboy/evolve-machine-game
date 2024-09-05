@@ -152,31 +152,32 @@ updown_palette:
 
 ;;;;;;;; Objects
 
-; .section .prg_rom_1.room_object_lut,"aR",@progbits
-; .globl room_object_lut
-; room_object_lut:
-; ; nmt lo
-;     .byte door_up_nmt@mos16lo, door_right_nmt@mos16lo, door_down_nmt@mos16lo, door_left_nmt@mos16lo
-; ; nmt hi
-;     .byte door_up_nmt@mos16hi, door_right_nmt@mos16hi, door_down_nmt@mos16hi, door_left_nmt@mos16hi
-; ; chr lo
-;     .byte door_up_chr_dnt@mos16lo, door_right_chr_dnt@mos16lo, door_down_chr_dnt@mos16lo, door_left_chr_dnt@mos16lo
-; ; chr hi
-;     .byte door_up_chr_dnt@mos16hi, door_right_chr_dnt@mos16hi, door_down_chr_dnt@mos16hi, door_left_chr_dnt@mos16hi
-; ; atr lo
-;     .byte door_up_atr@mos16lo, door_right_atr@mos16lo, door_down_atr@mos16lo, door_left_atr@mos16lo
-; ; atr hi
-;     .byte door_up_atr@mos16hi, door_right_atr@mos16hi, door_down_atr@mos16hi, door_left_atr@mos16hi
-; ; chr offset lo
-;     .byte door_up_chr_offset@mos16lo, door_right_chr_offset@mos16lo, door_down_chr_offset@mos16lo, door_left_chr_offset@mos16lo
-; ; chr offset hi
-;     .byte door_up_chr_offset@mos16hi, door_right_chr_offset@mos16hi, door_down_chr_offset@mos16hi, door_left_chr_offset@mos16hi
-; ; chr count
-;     .byte door_up_chr_count, door_right_chr_count, door_down_chr_count, door_left_chr_count
+.section .prg_rom_1.section_object_lut,"aR",@progbits
+.globl section_object_lut
+section_object_lut:
+; nmt lo
+    .byte door_up_nmt@mos16lo, door_right_nmt@mos16lo, door_down_nmt@mos16lo, door_left_nmt@mos16lo
+; nmt hi
+    .byte door_up_nmt@mos16hi, door_right_nmt@mos16hi, door_down_nmt@mos16hi, door_left_nmt@mos16hi
+; chr lo
+    .byte door_up_chr_dnt@mos16lo, door_right_chr_dnt@mos16lo, door_down_chr_dnt@mos16lo, door_left_chr_dnt@mos16lo
+; chr hi
+    .byte door_up_chr_dnt@mos16hi, door_right_chr_dnt@mos16hi, door_down_chr_dnt@mos16hi, door_left_chr_dnt@mos16hi
+; atr lo
+    .byte door_up_atr@mos16lo, door_right_atr@mos16lo, door_down_atr@mos16lo, door_left_atr@mos16lo
+; atr hi
+    .byte door_up_atr@mos16hi, door_right_atr@mos16hi, door_down_atr@mos16hi, door_left_atr@mos16hi
+; chr offset lo
+    .byte door_up_chr_offset@mos16lo, door_right_chr_offset@mos16lo, door_down_chr_offset@mos16lo, door_left_chr_offset@mos16lo
+; chr offset hi
+    .byte door_up_chr_offset@mos16hi, door_right_chr_offset@mos16hi, door_down_chr_offset@mos16hi, door_left_chr_offset@mos16hi
+; chr count
+    .byte door_up_chr_count, door_right_chr_count, door_down_chr_count, door_left_chr_count
 ; ; width
 ;     .byte door_up_width, door_right_width, door_down_width, door_left_width
 ; ; height
 ;     .byte door_up_height, door_right_height, door_down_height, door_left_height
+    .byte 8, 8, 8, 8, 8, 8, 8, 8
 
 .section .prg_rom_1,"aR",@progbits
 .globl door_down_chr_dnt

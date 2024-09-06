@@ -3,7 +3,7 @@
 .globl check_solid_collision_x
 
 .set OBJECT_COUNT, 12
-.set SOLID_OBJECT_COUNT, 20
+.set SOLID_OBJECT_COUNT, 40
 
 .set OBJECT_OFFSETOF_X_FR, 0 * OBJECT_COUNT
 .set OBJECT_OFFSETOF_X_LO, 1 * OBJECT_COUNT

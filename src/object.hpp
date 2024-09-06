@@ -9,7 +9,7 @@ using namespace fixedpoint_literals;
 #include "common.hpp"
 
 constexpr u8 OBJECT_COUNT = 12;
-constexpr u8 SOLID_OBJECT_COUNT = 20;
+constexpr u8 SOLID_OBJECT_COUNT = 40;
 
 struct Hitbox {
     s8 x;
@@ -111,6 +111,7 @@ struct SolidObject {
 
 // Array of current room solid objects
 extern soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
+extern u8 solid_object_offset;
 
 // Data for the basic room layouts
 // 4 corners

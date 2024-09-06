@@ -1,4 +1,5 @@
 
+
 #include <mapper.h>
 #include <neslib.h>
 #include <peekpoke.h>
@@ -101,16 +102,7 @@ struct SectionObjectLookup {
 #include <soa-struct.inc>
 extern const soa::Array<SectionObjectLookup, 4> section_object_lut;
 
-struct RoomObjectRect {
-    s16 x;
-    s16 y;
-    u8 width;
-    u8 height;
-};
-#define SOA_STRUCT RoomObjectRect
-#define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
-#include <soa-struct.inc>
-extern const soa::Array<RoomObjectRect, room_object_collision_total> room_collision_lut;
+extern const soa::Array<SectionObjectRect, section_object_collision_total> section_collision_lut;
 
 struct SectionExitLut {
     std::array<SectionObjectRect, 4> exits;
@@ -121,37 +113,97 @@ struct SectionExitLut {
 extern const soa::Array<SectionExitLut, static_cast<u8>(SectionBase::Count)> section_exit_lut;
 
 // constexpr std::array<u8, 1> offset_lut = {1};
+struct RoomObjectRect {
+    s16 x;
+    s16 y;
+    u8 width;
+    u8 height;
+};
+
+
+__attribute__((section(".prg_rom_1.section_table")))
+const u8 section_collision_offset[static_cast<u8>(SectionBase::Count) + 1] = {
+    section_object_collision_bottom_offset,
+    section_object_collision_left_offset,
+    section_object_collision_right_offset,
+    section_object_collision_single_offset,
+    section_object_collision_startdown_offset,
+    section_object_collision_startup_offset,
+    section_object_collision_top_offset,
+    section_object_collision_total
+};
+
+__attribute__((section(".prg_rom_1.wall_offset_x")))
+const u8 section_x_hi[static_cast<u8>(SectionBase::Count)] = {
+    0, 0, 1, 0, 0, 0, 0
+};
+
+__attribute__((section(".prg_rom_1.wall_offset_y")))
+const u8 section_y[static_cast<u8>(SectionBase::Count)] = {
+    240, 0, 0, 0, 240, 0, 0
+};
+
+static bool add_solid_wall(const SectionObjectRect& wall, SectionBase section) {
+    if (solid_object_offset >= SOLID_OBJECT_COUNT) {
+        return false;
+    }
+    auto slot = solid_objects[solid_object_offset++];
+    // slot.state = wall.state;
+    // TODO add this field to the export
+    slot.state = CollisionType::Solid;
+    // DEBUGGER(section);
+    slot.x = room.x + wall.x + (((u16)section_x_hi[(u8)section]) << 8);
+    slot.y = room.y + wall.y + (u16)section_y[(u8)section];
+    slot.width = wall.width;
+    slot.height = wall.height;
+    return true;
+}
 
 static void load_section(const Section& section) {
+    u8 section_base = static_cast<u8>(section.room_base);
     u16 nmt_addr = ((u16)section.nametable) << 8;
     vram_adr(nmt_addr);
-    const char* nametable = section_lut[static_cast<u8>(section.room_base)].nametable;
+    const char* nametable = section_lut[section_base].nametable;
     donut_decompress(nametable);
+    
+    set_prg_bank(GRAPHICS_BANK);
+    
+    for (u8 i = section_collision_offset[section_base]; i < section_collision_offset[section_base + 1]; ++i) {
+        const auto& wall = section_collision_lut[i];
+        // if (wall.state == (CollisionType)0) {
+        //     continue;
+        // }
+        add_solid_wall(wall, section.room_base);
+    }
 
     // now load the exits
     for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
         if ((section.exit[i] & 0x80) == 0) {
-            auto graphics = section_object_lut[i];
-            // if we haven't loaded this exit type, copy it into chr
-            if (room_obj_chr_counts[i] == 0) {
-                room_obj_chr_counts[i] = bg_chr_count;
-                vram_adr(bg_chr_offset);
-                donut_decompress(graphics.chr);
-                bg_chr_offset += graphics.chr_offset;
-                bg_chr_count += graphics.chr_count;
-            }
-            // and now we can write the tile data to the nametable
-            // auto exitlut = section_exit_lut[static_cast<u8>(section.room_base)];
-            // auto exit = exitlut->exits[i]; 
-            u8 chr_offset = room_obj_chr_counts[i];
-            u8 offset = 0;
-            for (u8 h=0; h < graphics.pos.height; ++h) {
-                vram_adr(nmt_addr + 0);
-                for (u8 w=0; w < graphics.pos.width; ++w) {
-                    vram_put(graphics.nametable[offset] + chr_offset);
-                    ++offset;
-                }
-            }
+            // auto graphics = section_object_lut[i];
+            // // if we haven't loaded this exit type, copy it into chr
+            // if (room_obj_chr_counts[i] == 0) {
+            //     room_obj_chr_counts[i] = bg_chr_count;
+            //     vram_adr(bg_chr_offset);
+            //     donut_decompress(graphics.chr);
+            //     bg_chr_offset += graphics.chr_offset;
+            //     bg_chr_count += graphics.chr_count;
+            // }
+            // // and now we can write the tile data to the nametable
+            // // auto exitlut = section_exit_lut[static_cast<u8>(section.room_base)];
+            // // auto exit = exitlut->exits[i]; 
+            // u8 chr_offset = room_obj_chr_counts[i];
+            // u8 offset = 0;
+            // for (u8 h=0; h < graphics.pos.height; ++h) {
+            //     vram_adr(nmt_addr + 0);
+            //     for (u8 w=0; w < graphics.pos.width; ++w) {
+            //         vram_put(graphics.nametable[offset] + chr_offset);
+            //         ++offset;
+            //     }
+            // }
+        } else {
+            // There's no exit at this spot, so add the collision in
+            const auto& wall = section_exit_lut[(u8)section.room_base]->exits[i];
+            add_solid_wall(wall, section.room_base);
         }
     }
 
@@ -263,31 +315,13 @@ namespace MapLoader {
         // const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
         //     : room.scroll == ScrollType::Horizontal ? leftright_walls : single_walls;
         // room_collision_lut[]
-        set_prg_bank(GRAPHICS_BANK);
-        
-        u8 i = 0;
-        for (const auto& wall : room_collision_lut) {
-            // if (wall.state == (CollisionType)0) {
-            //     continue;
-            // }
-            auto slot = solid_objects[i++];
-            if (i > SOLID_OBJECT_COUNT) {
-                break;
-            }
-            // slot.state = wall.state;
-            // TODO add this field to the export
-            slot.state = CollisionType::Solid;
-            slot.x = room.x + wall.x;
-            slot.y = room.y + wall.y;
-            slot.width = wall.width;
-            slot.height = wall.height;
-        }
 
-
+        DEBUGGER(1);
         // now load the collision data for this map
         load_section(lead);
 
         if (side.room_id != Dungeon::NO_EXIT) {
+            DEBUGGER(2);
             load_section(side);
         }
 

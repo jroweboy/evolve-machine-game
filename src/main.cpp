@@ -34,6 +34,7 @@ noinit u8 sp_chr_count;
 // Define the global object arrays
 noinit soa::Array<Object, OBJECT_COUNT> objects;
 noinit soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
+noinit u8 solid_object_offset;
 
 // IRQ handler that will just increment a counter and return
 extern "C" void irq_detection();

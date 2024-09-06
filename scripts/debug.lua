@@ -96,7 +96,7 @@ end
 -- debug collision
 
 OBJECT_COUNT = 12
-SOLID_OBJECT_COUNT = 20
+SOLID_OBJECT_COUNT = 40
 
 OBJECT_OFFSETOF_X_FR = 0 * OBJECT_COUNT
 OBJECT_OFFSETOF_X_LO = 1 * OBJECT_COUNT
@@ -337,7 +337,7 @@ function frame_start()
   draw_object_hitbox()
   draw_solid_hitbox()
   dump_map()
-  draw_performance_counters()
+  -- draw_performance_counters()
   --now reset performance counters for the next frame
   for i = 0, scope_count do
     performance_counters[i] = 0

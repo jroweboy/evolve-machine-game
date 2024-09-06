@@ -213,11 +213,11 @@ prg_rom_1 static void load_section(const Section& section) {
                     ++offset;
                 }
             }
-            // And now the attrs
-        } else {
+            // TODO: And now the attrs
+
             // DEBUGGER(1);
-            // There's no exit at this spot, so add the collision box
-            const auto wall = section_exit_lut[(u8)section.room_base*4 + i].get();
+            // There's an exit at this spot, so add the collision box
+            // const auto wall = section_exit_lut[(u8)section.room_base*4 + i].get();
             add_solid_wall(wall, section.room_base);
         }
     }

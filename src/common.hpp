@@ -146,6 +146,8 @@ constexpr u8 FIXED_BANK = 3;
 
 extern "C" void __putchar(char c);
 
+#define NTADR(x, y) (((y) << 5) | (x))
+
 // #ifdef __cplusplus
 // }
 // #endif

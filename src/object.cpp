@@ -4,7 +4,7 @@
 #include "object.hpp"
 #include "common.hpp"
 
-prg_rom_2 ObjectInitData object_init_data[(u8)ObjectType::Count] = {
+prg_rom_1 ObjectInitData object_init_data[(u8)ObjectType::Count] = {
     {
         .metasprite = Metasprite::KittyLeft,
         .hitbox = { .x = 0, .y = 8, .width = 8, .height = 8},

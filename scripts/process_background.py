@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
+import math
 import sys
 import subprocess
-from PIL import Image
+from PIL import Image # type: ignore
 from pathlib import Path
 from struct import *
 from donut import compress
@@ -85,8 +86,10 @@ def main(nestiler: Path, fin: Path, fout: Path):
   # so we can import them as linker symbols
   chr_offset = {}
   chr_count = {}
-  chr_width = {}
-  chr_height = {}
+  nmt_width = {}
+  nmt_height = {}
+  atr_width = {}
+  atr_height = {}
   
   # split leftright.bmp and updown.bmp into separate files
   with Image.open(room_path / "leftright.bmp") as im:
@@ -161,6 +164,12 @@ def main(nestiler: Path, fin: Path, fout: Path):
   ]
   for obj in objs:
     params = []
+    img = Image.open(obj)
+    w,h = img.size
+    nmt_width[obj.stem] = w // 8
+    nmt_height[obj.stem] = h // 8
+    atr_width[obj.stem] = int(math.ceil(w / 8))
+    atr_height[obj.stem] = int(math.ceil(h / 8))
     chr_path = rawchr_path / f"{obj.stem}.chr"
     params += nestiler_params_bg(nestiler, chr_path)
     params += make_input_params(0, obj, rawnmt_path, outatr_path, rawpal_path)
@@ -200,6 +209,25 @@ def main(nestiler: Path, fin: Path, fout: Path):
   for name,off in chr_offset.items():
     asm_file += f"""
 .set {name}_chr_offset, {off}"""
+
+  asm_file += """
+
+; NMT width/height
+"""
+  for name,width in nmt_width.items():
+    asm_file += f"""
+.set {name}_nmt_width, {width}
+.set {name}_nmt_height, {nmt_height[name]}"""
+
+  asm_file += """
+
+; att width/height
+"""
+  for name,width in atr_width.items():
+    asm_file += f"""
+.set {name}_atr_width, {width}
+.set {name}_atr_height, {atr_height[name]}"""
+
   asm_file += """
 
 ; CHR count - ie the number of 8x8 tiles used by this block

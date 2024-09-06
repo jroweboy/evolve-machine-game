@@ -25,10 +25,10 @@ def parse_xml_section_object(root: ET.Element, section: str):
     obj = objexits.find(f'object[@name="{objname}"]')
     if obj is not None:
       section_exits.append([
-        int(obj.attrib["x"])//8%32,
-        int(obj.attrib["y"])//8%30,
-        int(obj.attrib["width"])//8,
-        int(obj.attrib["height"])//8,
+        int(obj.attrib["x"]), #//8%32,
+        int(obj.attrib["y"]), #//8%30,
+        int(obj.attrib["width"]), #//8,
+        int(obj.attrib["height"]), #//8,
       ])
     else:
       section_exits.append([0,0,0,0])
@@ -112,9 +112,9 @@ constexpr unsigned char section_object_collision_{f}_offset = {sum(len(x) for x 
 section_collision_lut:
 ;; Section collision data
 ; x
-{nl.join([".byte " + ",".join([f"{int(row[0])&0xff}" for row in col]) for col in section_collisions])}
+{nl.join([".byte " + ",".join([f"{int(row[0]) % 256}" for row in col]) for col in section_collisions])}
 ; y
-{nl.join([".byte " + ",".join([f"{int(row[1])&0xff}" for row in col]) for col in section_collisions])}
+{nl.join([".byte " + ",".join([f"{int(row[1]) % 240}" for row in col]) for col in section_collisions])}
 ; width
 {nl.join([".byte " + ",".join([f"{row[2]}" for row in col]) for col in section_collisions])}
 ; height
@@ -124,10 +124,10 @@ section_collision_lut:
 .section .prg_rom_1.section_exit_lut,"aR",@progbits
 .globl section_exit_lut
 section_exit_lut:
-; x (nmt position)
-{nl.join([".byte " + ",".join([f"{row[0]}" for row in col]) for col in section_exits])}
-; y (nmt position)
-{nl.join([".byte " + ",".join([f"{row[1]}" for row in col]) for col in section_exits])}
+; x
+{nl.join([".byte " + ",".join([f"{int(row[0]) % 256}" for row in col]) for col in section_exits])}
+; y
+{nl.join([".byte " + ",".join([f"{int(row[1]) % 240}" for row in col]) for col in section_exits])}
 ; width
 {nl.join([".byte " + ",".join([f"{row[2]}" for row in col]) for col in section_exits])}
 ; height

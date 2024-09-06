@@ -182,7 +182,6 @@ function draw_solid_hitbox()
     local screen_x = x - room_x - scroll_x
     local screen_y = y - room_y - scroll_y
     --emu.log("solid screen_x: "..x)
-    --if (screen_x >= 0 and screen_x <= 256 and screen_y >= 0 and screen_y <= 240) then
       --local hb_x = emu.read(obj + SOLID_OBJECT_OFFSETOF_HITBOX_X, emu.memType.nesDebug)
       --local hb_y = emu.read(obj + SOLID_OBJECT_OFFSETOF_HITBOX_Y, emu.memType.nesDebug)
       local hb_w = emu.read(obj + SOLID_OBJECT_OFFSETOF_WIDTH, emu.memType.nesDebug)
@@ -191,8 +190,11 @@ function draw_solid_hitbox()
       -- emu.drawRectangle(screen_x-1,screen_y-1,3,3,0xcc00ff00)
       -- draw a rectangle for the obj hitbox
       emu.drawRectangle(screen_x, screen_y, hb_w, hb_h, 0x600000ff)
-      emu.drawString(screen_x + hb_w / 2, screen_y + hb_h / 2, ""..i)
-    --end
+    local label_x = screen_x + hb_w / 2
+    local label_y = screen_y + hb_h / 2
+    if (label_x >= 0 and label_x <= 256 and label_y >= 0 and label_y <= 240) then
+      emu.drawString(label_x, label_y, ""..i)
+    end
     ::continue::
   end
 end

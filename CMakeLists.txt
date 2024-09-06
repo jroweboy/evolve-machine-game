@@ -90,7 +90,7 @@ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -g -gdwarf-4
     -Wall -Wextra -Werror # Same goes for the linker
     -Wno-error=unused-command-line-argument
-    # -mreserve-zp=10
+    -mreserve-zp=13
 
     # make functions non-recursive by default
     -fnonreentrant

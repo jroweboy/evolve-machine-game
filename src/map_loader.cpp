@@ -121,25 +121,25 @@ struct RoomObjectRect {
 };
 
 
-__attribute__((section(".prg_rom_1.section_table")))
-const u8 section_collision_offset[static_cast<u8>(SectionBase::Count) + 1] = {
-    section_object_collision_bottom_offset,
-    section_object_collision_left_offset,
-    section_object_collision_right_offset,
-    section_object_collision_single_offset,
-    section_object_collision_startdown_offset,
-    section_object_collision_startup_offset,
-    section_object_collision_top_offset,
-    section_object_collision_total
+const u8 section_collision_offset[] 
+__attribute__((section(".prg_rom_1.section_table"))) = {
+    0,
+    2,
+    6,
+    8,
+    12,
+    14,
+    19,
+    25
 };
 
-__attribute__((section(".prg_rom_1.wall_offset_x")))
-const u8 section_x_hi[static_cast<u8>(SectionBase::Count)] = {
+const u8 section_x_hi[static_cast<u8>(SectionBase::Count)] 
+__attribute__((section(".prg_rom_1.wall_offset_x"))) = {
     0, 0, 1, 0, 0, 0, 0
 };
 
-__attribute__((section(".prg_rom_1.wall_offset_y")))
-const u8 section_y[static_cast<u8>(SectionBase::Count)] = {
+const u8 section_y[static_cast<u8>(SectionBase::Count)] 
+__attribute__((section(".prg_rom_1.wall_offset_y"))) = {
     240, 0, 0, 0, 240, 0, 0
 };
 
@@ -160,15 +160,16 @@ static bool add_solid_wall(const SectionObjectRect& wall, SectionBase section) {
 }
 
 static void load_section(const Section& section) {
-    u8 section_base = static_cast<u8>(section.room_base);
+    // u8 section_base = static_cast<u8>(section.room_base);
     u16 nmt_addr = ((u16)section.nametable) << 8;
     vram_adr(nmt_addr);
-    const char* nametable = section_lut[section_base].nametable;
+    const char* nametable = section_lut[static_cast<u8>(section.room_base)].nametable;
     donut_decompress(nametable);
     
     set_prg_bank(GRAPHICS_BANK);
     
-    for (u8 i = section_collision_offset[section_base]; i < section_collision_offset[section_base + 1]; ++i) {
+    for (u8 i = section_collision_offset[static_cast<u8>(section.room_base)];
+        i < section_collision_offset[static_cast<u8>(section.room_base) + 1]; ++i) {
         const auto& wall = section_collision_lut[i];
         // if (wall.state == (CollisionType)0) {
         //     continue;

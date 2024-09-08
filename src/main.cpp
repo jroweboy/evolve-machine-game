@@ -30,6 +30,7 @@ noinit u16 bg_chr_offset;
 noinit u8 bg_chr_count;
 noinit u16 sp_chr_offset;
 noinit u8 sp_chr_count;
+noinit u8 hud_tile_offset;
 
 // Define the global object arrays
 noinit soa::Array<Object, OBJECT_COUNT> objects;
@@ -103,8 +104,7 @@ static void main_init() {
 
     set_prg_bank(2);
     
-    Sprite::move_sprites_offscreen();
-
+    move_all_sprites_offscreen();
 }
 
 void irq_detect() {

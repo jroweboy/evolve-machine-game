@@ -1,4 +1,5 @@
 
+#include <fixed_point.h>
 #include <neslib.h>
 #include <mapper.h>
 #include <peekpoke.h>
@@ -66,7 +67,7 @@ prg_rom_2 static void check_player_collision() {
                 weapon.state = State::EquippedWeapon;
                 weapon.attribute = obj.attribute.get();
                 weapon.tile_offset = obj.tile_offset.get();
-                if (tmp > (Metasprite)0) {
+                if (tmp > Metasprite::None) {
                     obj.metasprite = tmp;
                     obj.state = State::GroundedWeapon;
                 } else {
@@ -160,10 +161,6 @@ prg_rom_2 static void scroll_screen() {
     auto player = objects[0];
     if (room.scroll == ScrollType::Vertical) {
         s16 screen_pos_y = player.y->as_i() - room.y - view_y;
-        // DEBUGGER(player.y->as_i());
-        // DEBUGGER(player.y->as_i() >> 8);
-        // DEBUGGER(room.y >> 8);
-        // DEBUGGER(view_y.as_i());
         if (screen_pos_y < 0 || screen_pos_y > 239) {
             return;
         }
@@ -294,9 +291,9 @@ prg_rom_2 static void correct_player_position(Direction direction) {
         s16 x_offset = player_position_x_offset[offset];
         s16 y_offset = player_position_y_offset[offset];
         if (x_offset) {
-            player.x = room.x + x_offset;
+            player.x = f16_8(room.x + x_offset);
         } else if (y_offset) {
-            player.y = room.y + y_offset;
+            player.y = f16_8(room.y + y_offset);
         }
     }
     
@@ -317,6 +314,8 @@ prg_rom_2 static void load_new_map() {
     // find what room we exited to. there's probably a smarter way to do this, but its during
     // a loading transition so i don't care too much to optimize it.
     // save previous room 
+    set_chr_bank(3);
+
     Dungeon::write_room_to_chrram(lead.room_id);
     Dungeon::write_section_lead(room.lead_id);
     Dungeon::write_section_side(room.side_id);
@@ -332,22 +331,26 @@ prg_rom_2 static void load_new_map() {
     } else {
         vertical_section = is_bottom_section ? SectionBase::Bottom : SectionBase::Top;
     }
+    
     SectionBase horizontal_section = player.x->as_i() - room.x > 255 ? SectionBase::Right : SectionBase::Left;
+    u8 direction_a = Dungeon::GetNeighborId(room.lead_id, (u8)direction);
+    u8 direction_b = Dungeon::GetNeighborId(room.lead_id, (u8)direction);
     switch (room.scroll) {
     case ScrollType::Single:
-        section_id = lead.exit[(u8)direction];
+        section_id = direction_a;
         break;
     case ScrollType::Horizontal:
         section_id = lead.room_base == horizontal_section
-            ? lead.exit[(u8)direction]
-            : side.exit[(u8)direction];
+            ? direction_a
+            : direction_b;
         break;
     case ScrollType::Vertical:
         section_id = lead.room_base == vertical_section
-            ? lead.exit[(u8)direction]
-            : side.exit[(u8)direction];
+            ? direction_a
+            : direction_b;
         break;
     }
+
     MapLoader::load_map(section_id);
     // build the new map bounds
     calculate_screen_bounds();
@@ -381,7 +384,6 @@ prg_rom_2 void update() {
         case GameMode::MapLoader:
             pal_fade_to(4, 0, 2);
             ppu_off();
-            // DEBUGGER(0);
             load_new_map();
             // fallthrough
         case GameMode::InGame:
@@ -399,7 +401,6 @@ prg_rom_2 void update() {
     move_player();
     check_player_collision();
     run_weapon_bob();
-    // DEBUGGER();
     scroll_screen();
     check_screen_transition();
     POKE(0x4123, 4);
@@ -407,8 +408,8 @@ prg_rom_2 void update() {
     // Skip drawing sprites this frame if we lagged on the previous frame.
     // This should help us get caught up if we process too much in one frame
     if (!lag_frame) {
-        Sprite::move_sprites_offscreen();
-        Sprite::draw_objects();
+        // Sprite::move_sprites_offscreen();
+        draw_all_metasprites();
     }
     lag_frame = frame != FRAME_CNT1;
     

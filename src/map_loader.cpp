@@ -150,7 +150,6 @@ static bool add_solid_wall(const SectionObjectRect& wall, SectionBase section) {
     // slot.state = wall.state;
     // TODO add this field to the export
     slot.state = CollisionType::Solid;
-    // DEBUGGER(section);
     slot.x = room.x + wall.x + (((u16)section_x_hi[(u8)section]) << 8);
     slot.y = room.y + wall.y + (u16)section_y[(u8)section];
     slot.width = wall.width;
@@ -184,7 +183,7 @@ prg_rom_1 static void load_section(const Section& section) {
 
     // now load the exits
     for (u8 i = RoomObject::DOOR_UP; i <= RoomObject::DOOR_LEFT; ++i) {
-        if ((section.exit[i] & 0x80) == 0) {
+        if ((section.exit[i] & 0x80) != 0) {
             // Theres an exit at this spot, so replace the chr tiles with the
             // the graphics for the new exit
             auto graphics = section_object_lut[i];
@@ -206,7 +205,6 @@ prg_rom_1 static void load_section(const Section& section) {
             // Load the tiles
             for (u8 h=0; h < wall.height/8; ++h) {
                 auto addr = nmt_addr | NTADR((u16)wall.x/8, (u16)(wall.y/8) + h);
-                // DEBUGGER(addr);
                 vram_adr(addr);
                 for (u8 w=0; w < wall.width/8; ++w) {
                     vram_put(graphics.nametable.get()[offset] + chr_offset);
@@ -215,7 +213,6 @@ prg_rom_1 static void load_section(const Section& section) {
             }
             // TODO: And now the attrs
 
-            // DEBUGGER(1);
             // There's an exit at this spot, so add the collision box
             // const auto wall = section_exit_lut[(u8)section.room_base*4 + i].get();
             add_solid_wall(wall, section.room_base);
@@ -297,8 +294,22 @@ namespace MapLoader {
         bg_chr_offset += section_lut[room_base].chr_offset;
         bg_chr_count += section_lut[room_base].chr_count;
 
+        // Load the basic solid objects from this style of map
+        // const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
+        //     : room.scroll == ScrollType::Horizontal ? leftright_walls : single_walls;
+        // room_collision_lut[]
+
+        // now load the collision data for this map
+        // set_prg_bank(GRAPHICS_BANK);
+        load_section(lead);
+
+        if (side.room_id != Dungeon::NO_EXIT) {
+            load_section(side);
+        }
+
         // always add the kitty tile to the CHR
-        sp_chr_count = 0;
+        // start on the chr offset at $1000
+        sp_chr_count = 1;
         sp_chr_offset = 0x1000;
         vram_adr(sp_chr_offset);
         donut_decompress(&kitty_chr);
@@ -306,6 +317,7 @@ namespace MapLoader {
         sp_chr_offset += kitty_chr_offset;
 
         // Load HUD font
+        hud_tile_offset = sp_chr_count;
         vram_adr(sp_chr_offset);
         donut_decompress(&hudfont_chr);
         sp_chr_count += hud_chr_count;
@@ -317,20 +329,6 @@ namespace MapLoader {
         sp_chr_count += weapons_chr_count;
         sp_chr_offset += weapons_chr_offset;
 
-        // Load the basic solid objects from this style of map
-        // const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
-        //     : room.scroll == ScrollType::Horizontal ? leftright_walls : single_walls;
-        // room_collision_lut[]
-
-        // DEBUGGER(1);
-        // now load the collision data for this map
-        // set_prg_bank(GRAPHICS_BANK);
-        load_section(lead);
-
-        if (side.room_id != Dungeon::NO_EXIT) {
-            // DEBUGGER(2);
-            load_section(side);
-        }
         // set_prg_bank(CODE_BANK);
         // if we are using a vertical configuration, update the mirroring config
         u8 mirroring = section_lut[room_base].mirroring;

@@ -98,6 +98,6 @@ struct Section {
 
 // The global RAM allocation for the room that the player is entering.
 
-extern Room room;
-extern Section lead;
-extern Section side;
+extern "C" Room room;
+extern "C" Section lead;
+extern "C" Section side;

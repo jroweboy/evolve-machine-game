@@ -122,32 +122,6 @@ static void dump_map(const MapId& map, const MapId& to_fill) {
 }
 #endif
 
-// me is the current map index
-// neighbor is one of the following
-//    0
-// 3 [ ] 1
-//    2
-prg_rom_2 static u8 GetNeighborId(u8 me, u8 direction) {
-    switch (direction) {
-        // The y bounds check will happen after the function by checking if its < DUNGEON_WIDTH * DUNGEON_HEIGHT
-    case 0:
-        return me - Dungeon::WIDTH;
-    case 2:
-        return me + Dungeon::WIDTH;
-    case 1:
-        if ((me & 0b111) == Dungeon::WIDTH - 1)
-            return 0xff;
-        return me + 1;
-    case 3:
-        if ((me & 0b111) == 0)
-            return 0xff;
-        return me - 1;
-    default:
-        DEBUGGER(direction);
-        return 0xff;
-    }
-}
-
 // Optimized routine to read just the section's exit information and either update it 
 // if its Dungeon::EXIT_PENDING or return false if theres no exit
 prg_rom_2 static u8 update_section_exit(u8 my_id, u8 direction, u8 new_exit) {
@@ -177,7 +151,7 @@ prg_rom_2 static u8 get_side_cell(const MapId& map, u8 position) {
     s8 i = 3;
     u8 u = rand() & 0b11;
     while (i >= 0) {
-        u8 maybe_side = GetNeighborId(position, u);
+        u8 maybe_side = Dungeon::GetNeighborId(position, u);
         if (maybe_side < Dungeon::SIZE && map[maybe_side] == 0xff) {
             return maybe_side;
         }
@@ -205,7 +179,7 @@ prg_rom_2 static void add_sections_to_fill(Section& section, MapId& to_fill, u8&
         // if we rolled a side that already has an exit skip it.
         if ((todo & (1 << i)) == 0 || section.exit[i] <= Dungeon::SIDE_ROOM) continue;
 
-        u8 map_pos = GetNeighborId(me, i);
+        u8 map_pos = Dungeon::GetNeighborId(me, i);
         // If the index goes out of bounds, then skip it too
         if (map_pos >= Dungeon::SIZE) continue;
 
@@ -217,7 +191,7 @@ prg_rom_2 static void add_sections_to_fill(Section& section, MapId& to_fill, u8&
 
 prg_rom_2 static void update_section_exits(const MapId& map, Section& section, u8 me) {
     for (u8 i = 0; i < 4; ++i) {
-        u8 neighbor = GetNeighborId(me, i);
+        u8 neighbor = Dungeon::GetNeighborId(me, i);
         if (neighbor >= Dungeon::SIZE || map[neighbor] == Dungeon::NO_EXIT) continue;
         // if we have a neighbor that was waiting for us to add the exit, then
         // update their exits now. Get the direction *from* me to the neighbor
@@ -241,10 +215,36 @@ prg_rom_2 static void update_section_exits(const MapId& map, Section& section, u
 
 namespace Dungeon {
 
+// me is the current map index
+// neighbor is one of the following
+//    0
+// 3 [ ] 1
+//    2
+u8 GetNeighborId(u8 me, u8 direction) {
+    switch (direction) {
+        // The y bounds check will happen after the function by checking if its < DUNGEON_WIDTH * DUNGEON_HEIGHT
+    case 0:
+        return me - Dungeon::WIDTH;
+    case 2:
+        return me + Dungeon::WIDTH;
+    case 1:
+        if ((me & 0b111) == Dungeon::WIDTH - 1)
+            return 0xff;
+        return me + 1;
+    case 3:
+        if ((me & 0b111) == 0)
+            return 0xff;
+        return me - 1;
+    default:
+        // DEBUGGER(direction);
+        return 0xff;
+    }
+}
+
 // u8 starting_room_id;
 
 u8 load_room_id_by_section(u8 id) {
-    vram_adr(SectionOffset + id * sizeof(Section) + offsetof(Section, room_id));
+    vram_adr(SectionOffset + (u16)id * sizeof(Section) + offsetof(Section, room_id));
     PEEK(0x2007);
     return PEEK(0x2007);
     // vram_read(&room_id, sizeof(u8));
@@ -252,7 +252,7 @@ u8 load_room_id_by_section(u8 id) {
 }
 
 void load_section_to_lead(u8 id) {
-    vram_adr(SectionOffset + id * sizeof(Section));
+    vram_adr(SectionOffset + (u16)id * sizeof(Section));
     u8* cast = reinterpret_cast<u8*>(&lead);
     vram_read(cast, sizeof(Section));
 }
@@ -262,19 +262,19 @@ void load_section_to_side(u8 id) {
         side.room_id = Dungeon::NO_EXIT;
         return;
     }
-    vram_adr(SectionOffset + id * sizeof(Section));
+    vram_adr(SectionOffset + (u16)id * sizeof(Section));
     u8* cast = reinterpret_cast<u8*>(&side);
     vram_read(cast, sizeof(Section));
 }
 
 void write_section_lead(u8 id) {
-    vram_adr(SectionOffset + id * sizeof(Section));
+    vram_adr(SectionOffset + (u16)id * sizeof(Section));
     const u8* cast = reinterpret_cast<const u8*>(&lead);
     vram_write(cast, sizeof(Section));
 }
 
 void write_section_side(u8 id) {
-    vram_adr(SectionOffset + id * sizeof(Section));
+    vram_adr(SectionOffset + (u16)id * sizeof(Section));
     const u8* cast = reinterpret_cast<const u8*>(&side);
     vram_write(cast, sizeof(Section));
 }
@@ -376,7 +376,6 @@ prg_rom_2 GenerateStats generate_dungeon() {
 
     // and then save our first room to CHR RAM.
     write_room_to_chrram(id);
-
     // also write out the current sections
     write_section_lead(room.lead_id);
     write_section_side(room.side_id);

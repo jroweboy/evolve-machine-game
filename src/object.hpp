@@ -8,8 +8,8 @@ using namespace fixedpoint_literals;
 
 #include "common.hpp"
 
-constexpr u8 OBJECT_COUNT = 12;
-constexpr u8 SOLID_OBJECT_COUNT = 40;
+constexpr u8 OBJECT_COUNT = 16;
+constexpr u8 SOLID_OBJECT_COUNT = 32;
 
 struct Hitbox {
     s8 x;
@@ -57,18 +57,18 @@ struct Object {
     u8 animation_frame;
     s8 frame_counter;
 
-    Direction direction;
-    u8 speed;
-
     /// Currently used only to set the palette of the object
     u8 attribute;
+
+    Direction direction;
+    u8 speed;
 
     s8 hp;
     u8 atk;
 
     /// Counter for number of iframes this object has.
     u8 iframe;
-};
+} __attribute__((packed));
 
 #define SOA_STRUCT Object
 #define SOA_MEMBERS \
@@ -97,14 +97,13 @@ struct ObjectInitData {
 
 extern ObjectInitData object_init_data[(u8)ObjectType::Count];
 
-
 struct SolidObject {
     CollisionType state;
     s16 x;
     s16 y;
     u8 width;
     u8 height;
-};
+} __attribute__((packed));
 #define SOA_STRUCT SolidObject
 #define SOA_MEMBERS MEMBER(state) MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
 #include <soa-struct.inc>

@@ -51,6 +51,7 @@ enum class ObjectType : u8 {
 };
 
 enum class Metasprite : u8 {
+    None,
     KittyRight,
     KittyUp,
     KittyDown,
@@ -115,6 +116,8 @@ extern u8 bg_chr_count;
 /// Same as `bg_chr_offset` but for the CHR in 0x1000
 extern u16 sp_chr_offset;
 extern u8 sp_chr_count;
+
+extern "C" u8 hud_tile_offset;
 
 #define prg_rom_1 __attribute__((section(".prg_rom_1")))
 #define prg_rom_2 __attribute__((section(".prg_rom_2")))

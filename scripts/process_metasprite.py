@@ -48,8 +48,8 @@ def main(fin: Path, fout: Path):
               offset = 8
           spr_x = spr[3] - grid_x - offset
           # NOTICE: we change the order slightly to allow skipping a sprite if its offscreen
-          # print(f" {attr}, {tile_id}, {spr_y}, {spr_x}")
-          sprites.append(pack("<BBbb", attr, tile_id, spr_y, spr_x))
+          # print(f" {tile_id}, {attr}, {spr_y}, {spr_x}")
+          sprites.append(pack("<BBbb", tile_id, attr, spr_y, spr_x))
         
         if len(sprites) == 0:
           continue

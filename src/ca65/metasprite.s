@@ -76,8 +76,8 @@ shuffle_offset: .res 1
 MetaspriteReserve "NULL"
 METASPRITE_0 = $0000
 
-MetaspriteAnimation "kitty", "walk_right",  4, 5, 6, 7
 MetaspriteAnimation "kitty", "walk_up",     0, 1, 2, 3
+MetaspriteAnimation "kitty", "walk_right",  4, 5, 6, 7
 MetaspriteAnimation "kitty", "walk_down",   8, 9, 10, 11
 MetaspriteAnimation "kitty", "walk_left",   12, 13, 14, 15
 
@@ -90,12 +90,19 @@ MetaspriteAnimation "weapons", "cube",     12, 13, 14, 15
 
 
 
+.segment "_pprg__rom__1"
+.export kitty_chr
+kitty_chr:
+.incbin "gen/sprites/kitty.chr.dnt"
+.byte $ff, $ff
+
+.export weapons_chr
+weapons_chr:
+.incbin "gen/sprites/weapons.chr.dnt"
+.byte $ff, $ff
 
 
-
-
-
-
+.segment "_pprg__rom__2"
 
 
 
@@ -167,9 +174,12 @@ Tile = $0e ; __rc14
 DrawMetasprite:
   cpx #0
   beq @Exit
-  cpy #2
+  cpy #1
   bne :+
-    jmp .loword(DrawHud)
+    jsr .loword(DrawHud)
+    ; Really ghetto, but just draw the HUD whenever slot 1 is drawn
+    ldy #1
+    ldx objects + OBJECT_METASPRITE,y
   :
   lda objects + OBJECT_STATE,y
   ; If state is negative then the object is hidden
@@ -207,7 +217,8 @@ DrawMetasprite:
   
   ; Check the animation data and frame
   ldx sprite_slot
-  ldy objects + OBJECT_ANIM_FRAME
+  lda objects + OBJECT_ANIM_FRAME,y
+  tay
   lda (Ptr),y
   tay
   bpl RenderLoop ; unconditional
@@ -313,6 +324,9 @@ LoopEnded:
 .export draw_all_metasprites := DrawAllMetasprites
 DrawAllMetasprites:
 
+  ; DEBUG - clear metasprites
+  jsr .loword(MoveAllSpritesOffscreen)
+
   lda room + ROOM_X_LO
   clc
   adc view_x
@@ -400,7 +414,7 @@ ObjectLoopNegative:
       ; implicit carry clear
       adc #OBJECT_COUNT
     :
-    ; skip index zero and 1 since we draw the player first always.
+    ; skip index zero since we draw the player first always.
     cmp #2
     bcc NextLoop2
       ; TODO check offscreenbits to make sure they are onscreen still

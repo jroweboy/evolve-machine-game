@@ -143,13 +143,24 @@ prg_rom_2 static void run_weapon_bob() {
     }
     auto player = objects[0];
     
-    // reuse the weapon HP as the bob timer
+    // reuse the weapon HP and iframe as the bob timer
     weapon.x = player.x.get() - 4;
     weapon.y = player.y.get() + weapon_bob_y_offset[weapon.hp];
 
-    weapon.frame_counter = (weapon.frame_counter + 1) & 0b00000111;
-    if (weapon.frame_counter == 0) {
+    weapon.iframe = (weapon.iframe + 1) & 0b00000111;
+    if (weapon.iframe == 0) {
         weapon.hp = (weapon.hp + 1) & 0b00000111;
+    }
+
+    // if the player uses an attack, animate the spin
+    if ((get_pad_new(0) & PAD_B) != 0 && weapon.frame_counter < 0) {
+        weapon.frame_counter = 32;
+    }
+    if (weapon.frame_counter >= 0) {
+        weapon.frame_counter--;
+        if (weapon.frame_counter == 24 || weapon.frame_counter == 16 || weapon.frame_counter == 8 || weapon.frame_counter == 0) {
+            weapon.animation_frame = (weapon.animation_frame + 1) & 0b11;
+        }
     }
 }
 
@@ -362,7 +373,7 @@ prg_rom_2 static void load_new_map() {
 
 constexpr char sprites_pal[] = {
     0x0f, 0x03, 0x00, 0x27,
-    0x0f, 0x1c, 0x31, 0x30,
+    0x0f, 0x06, 0x26, 0x30,
     0x0f, 0x10, 0x20, 0x30,
     0x0f, 0x10, 0x20, 0x30,
 };

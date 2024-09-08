@@ -52,8 +52,8 @@ enum class ObjectType : u8 {
 
 enum class Metasprite : u8 {
     None,
-    KittyRight,
     KittyUp,
+    KittyRight,
     KittyDown,
     KittyLeft,
 

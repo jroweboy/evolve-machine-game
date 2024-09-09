@@ -2,6 +2,8 @@
 #include <mapper.h>
 #include <neslib.h>
 
+#include "graphics.hpp"
+#include "header/graphics_constants.hpp"
 #include "nes_extra.hpp"
 #include "common.hpp"
 #include "music.hpp"
@@ -35,13 +37,13 @@ namespace Titlescreen {
         set_chr_bank(0);
         vram_adr(0x00);
         // donut_decompress(&title_chr);
-        huffmunch_decompress_vram(Archive::TitlescreenChr);
+        donut_decompress_vram(Archive::titlescreen_chr);
 
         vram_adr(NAMETABLE_A);
-        huffmunch_decompress_vram(Archive::TitlescreenAtrNmt);
+        donut_decompress_vram(Archive::titlescreen_atr_nmt);
         // donut_decompress(&title_bin);
 
-        huffmunch_decompress_buffer(Archive::TitlescreenPal);
+        donut_decompress_buffer(Archive::titlescreen_pal);
         pal_bg(decompress_buffer);
         pal_bright(0);
 

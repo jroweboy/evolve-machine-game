@@ -22,7 +22,7 @@
 .export donut_decompress_block, donut_block ;, donut_block_ayx, donut_block_x
 .export donut_block_buffer
 .exportzp donut_stream_ptr
-.exportzp donut_block_count
+; .exportzp donut_block_count
 
 ; jroweboy: We alias these with __rc5 - __rc20
 ; since we only call donut from the main thread its fine
@@ -31,9 +31,9 @@ temp = $05  ; 15 bytes are used
 ; jroweboy - donut starts at this addr + 64 because ???? but it works out just fine anyway
 donut_block_buffer = $0100  ; 64 bytes
 
-.segment "_pzp":zeropage
-donut_stream_ptr:       .res 2
-donut_block_count:      .res 1
+; .segment "_pzp":zeropage
+; donut_stream_ptr:       .res 2
+; donut_block_count:      .res 1
 
 .segment "_pprg__rom__fixed"
 
@@ -46,12 +46,16 @@ donut_block_count:      .res 1
 ;   stx donut_block_count
 ; ;,; jmp donut_block_x
 ; .endproc
+
+donut_stream_ptr = $02
+; donut_block_count = $00
+
 .proc donut_block
 PPU_DATA = $2007
-  lda $02
-  sta donut_stream_ptr
-  lda $03
-  sta donut_stream_ptr+1
+  ; lda $02
+  ; sta donut_stream_ptr
+  ; lda $03
+  ; sta donut_stream_ptr+1
   block_loop:
     ldx #0
     jsr donut_decompress_block
@@ -66,8 +70,9 @@ PPU_DATA = $2007
       sta PPU_DATA
       inx
       bmi upload_loop
-    ldx donut_block_count
-    bne block_loop
+    bpl block_loop
+    ; ldx donut_block_count
+    ; bne block_loop
 end_block_upload:
 rts
 .endproc
@@ -275,7 +280,7 @@ end_block:
     inc donut_stream_ptr+1
   add_stream_ptr_no_inc_high_byte:
   ldx block_offset_end
-  dec donut_block_count
+  ; dec donut_block_count
 rts
 
 do_zero_plane:

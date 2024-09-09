@@ -74,7 +74,8 @@ add_executable(${CMAKE_PROJECT_NAME}
 )
 
 include(AddCa65Source)
-add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/huffmunch.s)
+# add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/huffmunch.s)
+add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/donut.s)
 add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/music.s)
 add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/metasprite.s)
 
@@ -114,7 +115,6 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_
 
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     GraphicsAssets
-    # GeneratedCA65Binaries
     Metasprites
     # Second-party, included in llvm-mos
     neslib

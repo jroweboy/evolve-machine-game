@@ -11,63 +11,89 @@ decompress_buffer = $100
 .globl decompress_buffer
 
 .section .prg_rom_1.compress,"ax",@progbits
-.globl huffmunch_decompress_vram
-huffmunch_decompress_vram:
+.globl donut_decompress_vram
+donut_decompress_vram:
+    asl
     tax
-    lda #<compressed_data
-    sta huffmunch_zpblock+0
-    lda #>compressed_data
-    sta huffmunch_zpblock+1
-    ldy #0
-    jsr huffmunch_load
-    sty __rc1
-    stx __rc0
-    cpx #0
-    bne .A1
-        ; Special case for if the low byte is $00 but the high byte is not
-        jsr huffmunch_read
-        sta $2007
-        dec __rc0
-        dec __rc1
-        bmi .A2
-.A1:
-        jsr huffmunch_read
-        sta $2007
-        dec __rc0
-        bne .A1
-    dec __rc1
-    bpl .A1
-.A2:
-    rts
+    ; clc always clear if a < 128
+    lda compressed_data,x
+    adc #<compressed_data
+    sta __rc2
+    lda compressed_data+1,x
+    adc #>compressed_data
+    sta __rc3
+    jmp donut_block
 
-
-
-.globl huffmunch_decompress_buffer
-huffmunch_decompress_buffer:
+.globl donut_decompress_buffer
+donut_decompress_buffer:
+    asl
     tax
-    lda #<compressed_data
-    sta huffmunch_zpblock+0
-    lda #>compressed_data
-    sta huffmunch_zpblock+1
-    ldy #0
-    sty __rc1
-    jsr huffmunch_load
-    stx __rc0
-    ; cpx #0
-    ; beq .B2
-.B1:
-        jsr huffmunch_read
-        ldy __rc1
-        sta decompress_buffer,y
-        inc __rc1
-        dec __rc0
-        bne .B1
-.B2:
-    rts
+    ; clc always clear if a < 128
+    lda compressed_data,x
+    adc #<compressed_data
+    sta __rc2
+    lda compressed_data+1,x
+    adc #>compressed_data
+    sta __rc3
+    ldx #0
+    jmp donut_decompress_block
+
+; huffmunch code
+;     tax
+;     lda #<compressed_data
+;     sta huffmunch_zpblock+0
+;     lda #>compressed_data
+;     sta huffmunch_zpblock+1
+;     ldy #0
+;     jsr huffmunch_load
+;     sty __rc1
+;     stx __rc0
+;     cpx #0
+;     bne .A1
+;         ; Special case for if the low byte is $00 but the high byte is not
+;         jsr huffmunch_read
+;         sta $2007
+;         dec __rc0
+;         dec __rc1
+;         bmi .A2
+; .A1:
+;         jsr huffmunch_read
+;         sta $2007
+;         dec __rc0
+;         bne .A1
+;     dec __rc1
+;     bpl .A1
+; .A2:
+;     rts
+
+
+
+; .globl donut_decompress_buffer
+; donut_decompress_buffer:
+;     tax
+;     lda #<compressed_data
+;     sta huffmunch_zpblock+0
+;     lda #>compressed_data
+;     sta huffmunch_zpblock+1
+;     ldy #0
+;     sty __rc1
+;     jsr huffmunch_load
+;     stx __rc0
+;     ; cpx #0
+;     ; beq .B2
+; .B1:
+;         jsr huffmunch_read
+;         ldy __rc1
+;         sta decompress_buffer,y
+;         inc __rc1
+;         dec __rc0
+;         bne .B1
+; .B2:
+;     rts
 
 .section .prg_rom_1.compressed_data,"aR",@progbits
 compressed_data:
-.incbin "compressed/archive0000.hfm"
+.incbin "compressed/archive.dnt"
 
 ; .globl donut_decompress
 ; donut_decompress:

@@ -2,6 +2,7 @@
 
 import argparse
 import math
+import struct
 import sys
 import subprocess
 from PIL import Image # type: ignore
@@ -85,16 +86,18 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
   obj_path = fin / "objects"
   special_path = fin / "special"
   header_path = fout / "header"
+  rawatr_path = fout / "raw" / "atr"
   rawchr_path = fout / "raw" / "chr"
   rawnmt_path = fout / "raw" / "nmt"
   rawpal_path = fout / "raw" / "pal"
   rawtmp_path = fout / "raw" / "tmp"
+  outspr_path = fout / "sprites"
   outchr_path = fout / "graphics" / "chr"
   outnmt_path = fout / "graphics" / "nmt"
   outatr_path = fout / "graphics" / "atr"
   outpal_path = fout / "graphics" / "pal"
   outcompress_path = fout / "compressed"
-  for p in [rawchr_path,rawnmt_path,rawpal_path,rawtmp_path,outchr_path,outnmt_path,outatr_path,outpal_path]:
+  for p in [rawatr_path,rawchr_path,rawnmt_path,rawpal_path,rawtmp_path,outchr_path,outnmt_path,outatr_path,outpal_path,outcompress_path]:
     p.mkdir(parents=True, exist_ok=True)
 
   # store a list of the chr tile count and offset
@@ -125,8 +128,8 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
     chr_path = rawchr_path / f"{first.stem}{second.stem}.chr"
     params = []
     params += nestiler_params_bg(nestiler, rawchr_path / f"{first.stem}{second.stem}.chr", opts)
-    params += make_input_params(0, first, rawnmt_path, outatr_path, rawpal_path)
-    params += make_input_params(1, second, rawnmt_path, outatr_path, rawpal_path)
+    params += make_input_params(0, first, rawnmt_path, rawatr_path, rawpal_path)
+    params += make_input_params(1, second, rawnmt_path, rawatr_path, rawpal_path)
     params += make_palette_params(chr_path, rawpal_path)
     run_nes_tiler(nestiler, *params)
     concat_palette(f"{first.stem}{second.stem}", rawpal_path, outpal_path)
@@ -136,7 +139,7 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
     params = []
     chr_path = rawchr_path / f"{screen.stem}.chr"
     params += nestiler_params_bg(nestiler, chr_path)
-    params += make_input_params(0, screen, rawnmt_path, outatr_path, rawpal_path)
+    params += make_input_params(0, screen, rawnmt_path, rawatr_path, rawpal_path)
     params += make_palette_params(chr_path, rawpal_path)
     run_nes_tiler(nestiler, *params)
     concat_palette(f"{screen.stem}", rawpal_path, outpal_path)
@@ -187,34 +190,75 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
     atr_height[obj.stem] = int(math.ceil(h / 8))
     chr_path = rawchr_path / f"{obj.stem}.chr"
     params += nestiler_params_bg(nestiler, chr_path)
-    params += make_input_params(0, obj, rawnmt_path, outatr_path, rawpal_path)
+    params += make_input_params(0, obj, rawnmt_path, rawatr_path, rawpal_path)
     params += make_palette_params(chr_path, rawpal_path)
     run_nes_tiler(nestiler, *params)
     concat_palette(f"{obj.stem}", rawpal_path, outpal_path)
 
-  run_huffmunch(huffmunch, outcompress_path)
+  # run_huffmunch(huffmunch, outcompress_path)
+
   # compress all the chr files
   for chr in rawchr_path.glob("*.chr"):
     with open(chr, 'rb') as f:
       raw_chr = f.read()
-      # byts = compress(raw_chr, allow_partial=True)
+      byts = compress(raw_chr, allow_partial=True)
       r = len(raw_chr)
-      # w = len(byts)
+      w = len(byts)
       chr_offset[chr.stem] = r
       chr_count[chr.stem] = r // 16
-  #     ratio = 1 - (w / r)
-  #     print("<total> :{:>6.1%} ({} => {} bytes, {})".format(ratio, r, w, chr.stem), file=sys.stderr)
-  #     byts += b"\xff\xff" # add a terminator bit here
-  #     with open(outchr_path / f"{chr.stem}.chr.dnt", 'wb') as o:
-  #       o.write(byts)
+      ratio = 1 - (w / r)
+      print("<total> :{:>6.1%} ({} => {} bytes, {})".format(ratio, r, w, chr.stem), file=sys.stderr)
+      byts += b"\xff\xff" # add a terminator bit here
+      with open(outchr_path / f"{chr.stem}.chr.dnt", 'wb') as o:
+        o.write(byts)
 
   # # compress all the nmt files too
-  # for nmt in rawnmt_path.glob("*.nmt"):
-  #   with open(nmt, 'rb') as f:
-  #     byts = compress(f.read(), allow_partial=True)
-  #     byts += b"\xff\xff" # add a terminator bit here
-  #     with open(outnmt_path / f"{nmt.stem}.nmt.dnt", 'wb') as o:
-  #       o.write(byts)
+  for nmt in rawnmt_path.glob("*.nmt"):
+    with open(nmt, 'rb') as f:
+      byts = compress(f.read(), allow_partial=True)
+      byts += b"\xff\xff" # add a terminator bit here
+      with open(outnmt_path / f"{nmt.stem}.nmt.dnt", 'wb') as o:
+        o.write(byts)
+  
+  # compress all the atr files too
+  for atr in rawatr_path.glob("*.atr"):
+    with open(atr, 'rb') as f:
+      byts = compress(f.read(), allow_partial=True)
+      byts += b"\xff\xff" # add a terminator bit here
+      with open(outatr_path / f"{atr.stem}.atr.dnt", 'wb') as o:
+        o.write(byts)
+
+  # compress all the pal files too cause why not at this point
+  for p in outpal_path.glob("*.pal"):
+    with open(p, 'rb') as f:
+      byts = compress(f.read(), allow_partial=True)
+      byts += b"\xff\xff" # add a terminator bit here
+      with open(outpal_path / f"{p.stem}.pal.dnt", 'wb') as o:
+        o.write(byts)
+
+  # Combine everything into a single output file
+  # The metasprite building code runs first
+  with open(outcompress_path / f"archive.raw.dnt", 'wb') as o:
+    file_count = 0
+    file_size = []
+    file_name = []
+    for p in [outatr_path, outchr_path, outnmt_path, outpal_path, outspr_path]:
+      for f in p.glob("*.dnt"):
+        with open(f, 'rb') as i:
+          byts = i.read()
+          o.write(byts)
+          file_count += 1
+          file_size += [len(byts)]
+          file_name += [f.stem]
+      
+  # add the sizes to the front of the file
+  with open(outcompress_path / f"archive.raw.dnt", 'rb') as o, open(outcompress_path / f"archive.dnt", 'wb') as n:
+    offset = file_count * 2
+    for i in range(file_count):
+      n.write(struct.pack("<H", offset))
+      offset += file_size[i]
+
+    n.write(o.read())
 
   # write the asm file with all the CHR tile sizes and offsets
   asm_file = """
@@ -255,6 +299,23 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
 /// Generated by process_background.py
 
 #pragma once
+"""
+
+
+  hpp_file += f"""
+// generated Archive lookup
+
+enum class Archive : unsigned char {{
+"""
+  for name in file_name:
+    hpp_file += f"""
+    {name.replace(".", "_")},"""
+  hpp_file += f"""
+    Count,
+}};
+"""
+
+  hpp_file += """
 // CHR offsets - ie the total number of bytes used by this block
 """
   for name,off in chr_offset.items():

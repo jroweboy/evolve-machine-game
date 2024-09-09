@@ -80,7 +80,8 @@ function(build_nes_tiles)
 
   set(all_out_files
 
-    ${out_compresspath}/archive.hfm
+  # ${out_compresspath}/archive.hfm
+    ${out_compresspath}/archive.dnt
 
     # room compressed chr
     # ${out_chrpath}/leftright.chr.dnt

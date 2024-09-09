@@ -49,7 +49,6 @@ find_package(Python3 REQUIRED)
 add_executable(${CMAKE_PROJECT_NAME}
     src/ca65.s
     src/game.s
-    src/graphics.s
     src/vector_math.s
 
     src/common.hpp
@@ -75,8 +74,8 @@ add_executable(${CMAKE_PROJECT_NAME}
 )
 
 include(AddCa65Source)
+add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/huffmunch.s)
 add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/music.s)
-add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/donut.s)
 add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/metasprite.s)
 
 target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE

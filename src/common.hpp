@@ -25,7 +25,65 @@ typedef int32_t   s32;
 
 // global decompress function defined in asm
 // This raw decompress function is defined at 0xc000
-extern "C" void donut_decompress(const void* data);
+// extern "C" void donut_decompress(const void* data);
+
+enum class Archive : u8 {
+    DoorDownAtr,
+    DoorLeftAtr,
+    DoorRightAtr,
+    DoorUpAtr,
+    DownAtr,
+    LeftAtr,
+    RightAtr,
+    SingleAtr,
+    StartdownAtr,
+    StartupAtr,
+    UpAtr,
+
+    DoorDownChr,
+    DoorLeftChr,
+    DoorRightChr,
+    DoorUpChr,
+    HudFontChr,
+    LeftRightChr,
+    SingleChr,
+    StartupStartdownChr,
+    TitlescreenChr,
+    UpdownChr,
+
+    DoorDownNmt,
+    DoorLeftNmt,
+    DoorRightNmt,
+    DoorUpNmt,
+    DownNmt,
+    LeftNmt,
+    RightNmt,
+    SingleNmt,
+    StartdownNmt,
+    StartupNmt,
+    UpNmt,
+    TitlescreenAtrNmt,
+
+    DoorDownPal,
+    DoorLeftPal,
+    DoorRightPal,
+    DoorUpPal,
+    LeftRightPal,
+    SinglePal,
+    StartupStartdownPal,
+    TitlescreenPal,
+    UpdownPal,
+
+    KittyChr,
+    WeaponsChr,
+    Count,
+};
+
+extern "C" void huffmunch_decompress_vram(Archive file);
+extern "C" void huffmunch_decompress_buffer(Archive file);
+extern u8 decompress_buffer[64];
+// extern "C" void huffmunch_load_archive(Archive file);
+// extern "C" u8 huffmunch_read();
 
 enum class MainMode : u8 {
     TitleScreen = 0,

@@ -18,6 +18,20 @@ def run_nes_tiler(nestiler: Path, *args):
   # print(done.stdout)
   return done.stdout
 
+def run_huffmunch(huffmunch: Path, outpath: Path):
+  cmd = [str(huffmunch / "huffmunch.exe"),
+     "-V", # -V verbose
+     "-X", "0", # number of attempt, 0 is infinite
+     "-S", "6", # width of data from 2 - 16 (6 seems to be good compression for our data)
+     "-L", str(huffmunch / "huffmunch_list.txt"),
+     str(outpath / "archive.hfm")
+    ]
+  done = subprocess.run(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, text=True)
+  if done.stderr != None:
+    print(done.stderr)
+  print(f"huffmunch CMD ({' '.join(cmd)}) output:\n{done.stdout}")
+  return done.stdout
+
 def make_input_params(i: int, input: Path, outnmt: Path, outatr: Path, outpal: Path):
   file = [f"-i{i}", str(input)]
   nmt =   [f"-a{i}", str(outnmt / f"{input.stem}.nmt")]
@@ -65,7 +79,7 @@ def concat_palette(name: str, fin: Path, fout: Path):
             out.write(pal2.read())
             out.write(pal3.read())
 
-def main(nestiler: Path, fin: Path, fout: Path):
+def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
   # make all the output directories first
   room_path = fin / "rooms"
   obj_path = fin / "objects"
@@ -79,6 +93,7 @@ def main(nestiler: Path, fin: Path, fout: Path):
   outnmt_path = fout / "graphics" / "nmt"
   outatr_path = fout / "graphics" / "atr"
   outpal_path = fout / "graphics" / "pal"
+  outcompress_path = fout / "compressed"
   for p in [rawchr_path,rawnmt_path,rawpal_path,rawtmp_path,outchr_path,outnmt_path,outatr_path,outpal_path]:
     p.mkdir(parents=True, exist_ok=True)
 
@@ -177,28 +192,29 @@ def main(nestiler: Path, fin: Path, fout: Path):
     run_nes_tiler(nestiler, *params)
     concat_palette(f"{obj.stem}", rawpal_path, outpal_path)
 
+  run_huffmunch(huffmunch, outcompress_path)
   # compress all the chr files
   for chr in rawchr_path.glob("*.chr"):
     with open(chr, 'rb') as f:
       raw_chr = f.read()
-      byts = compress(raw_chr, allow_partial=True)
+      # byts = compress(raw_chr, allow_partial=True)
       r = len(raw_chr)
-      w = len(byts)
+      # w = len(byts)
       chr_offset[chr.stem] = r
       chr_count[chr.stem] = r // 16
-      ratio = 1 - (w / r)
-      print("<total> :{:>6.1%} ({} => {} bytes, {})".format(ratio, r, w, chr.stem), file=sys.stderr)
-      byts += b"\xff\xff" # add a terminator bit here
-      with open(outchr_path / f"{chr.stem}.chr.dnt", 'wb') as o:
-        o.write(byts)
+  #     ratio = 1 - (w / r)
+  #     print("<total> :{:>6.1%} ({} => {} bytes, {})".format(ratio, r, w, chr.stem), file=sys.stderr)
+  #     byts += b"\xff\xff" # add a terminator bit here
+  #     with open(outchr_path / f"{chr.stem}.chr.dnt", 'wb') as o:
+  #       o.write(byts)
 
-  # compress all the nmt files too
-  for nmt in rawnmt_path.glob("*.nmt"):
-    with open(nmt, 'rb') as f:
-      byts = compress(f.read(), allow_partial=True)
-      byts += b"\xff\xff" # add a terminator bit here
-      with open(outnmt_path / f"{nmt.stem}.nmt.dnt", 'wb') as o:
-        o.write(byts)
+  # # compress all the nmt files too
+  # for nmt in rawnmt_path.glob("*.nmt"):
+  #   with open(nmt, 'rb') as f:
+  #     byts = compress(f.read(), allow_partial=True)
+  #     byts += b"\xff\xff" # add a terminator bit here
+  #     with open(outnmt_path / f"{nmt.stem}.nmt.dnt", 'wb') as o:
+  #       o.write(byts)
 
   # write the asm file with all the CHR tile sizes and offsets
   asm_file = """
@@ -262,10 +278,15 @@ if __name__ == '__main__':
   
   parser.add_argument('nestiler', metavar='nestiler', type=str,
                       help='Path to nestiler')
+  parser.add_argument('huffmunch', metavar='huffmunch', type=str,
+                      help='Path to huffmunch')
   parser.add_argument('fin', metavar='in', type=str,
                       help='CHR Directory')
   parser.add_argument('fout', metavar='out', type=str,
                       help='Gen Directory')
                       
   args = parser.parse_args()
-  main(Path(args.nestiler).resolve(), Path(args.fin).resolve(), Path(args.fout).resolve())
+  main(Path(args.nestiler).resolve(),
+       Path(args.huffmunch).resolve(),
+       Path(args.fin).resolve(),
+       Path(args.fout).resolve())

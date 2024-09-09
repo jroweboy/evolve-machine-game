@@ -16,6 +16,7 @@ function(build_nes_tiles)
   endif()
 
   set(NESTILER_DIR ${CMAKE_SOURCE_DIR}/tools/${CMAKE_HOST_SYSTEM_NAME}/nestiler)
+  set(HUFFMUNCH_DIR ${CMAKE_SOURCE_DIR}/tools/)
 
   if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
     find_file(NESTILER_EXE nestiler REQUIRED HINTS ${NESTILER_DIR})
@@ -57,6 +58,7 @@ function(build_nes_tiles)
   set(out_atrpath ${TILES_DEST}/graphics/atr)
   set(out_palpath ${TILES_DEST}/graphics/pal)
   set(out_asmpath ${TILES_DEST}/header)
+  set(out_compresspath ${TILES_DEST}/compressed)
 
   set(all_in_files
     # all room bmps
@@ -77,25 +79,27 @@ function(build_nes_tiles)
   )
 
   set(all_out_files
+
+    ${out_compresspath}/archive.hfm
+
     # room compressed chr
-    ${out_chrpath}/leftright.chr.dnt
-    ${out_chrpath}/updown.chr.dnt
-    ${out_chrpath}/startupstartdown.chr.dnt
-    ${out_chrpath}/single.chr.dnt
+    # ${out_chrpath}/leftright.chr.dnt
+    # ${out_chrpath}/updown.chr.dnt
+    # ${out_chrpath}/startupstartdown.chr.dnt
+    # ${out_chrpath}/single.chr.dnt
 
-
-    ${out_chrpath}/hudfont.chr.dnt
-    ${out_chrpath}/titlescreen.chr.dnt
+    # ${out_chrpath}/hudfont.chr.dnt
+    # ${out_chrpath}/titlescreen.chr.dnt
 
     # compressed nametables
-    ${out_nmtpath}/down.nmt.dnt
-    ${out_nmtpath}/left.nmt.dnt
-    ${out_nmtpath}/right.nmt.dnt
-    ${out_nmtpath}/single.nmt.dnt
-    ${out_nmtpath}/startup.nmt.dnt
-    ${out_nmtpath}/startdown.nmt.dnt
-    ${out_nmtpath}/up.nmt.dnt
-    ${out_nmtpath}/titlescreen_atr.nmt.dnt
+    # ${out_nmtpath}/down.nmt.dnt
+    # ${out_nmtpath}/left.nmt.dnt
+    # ${out_nmtpath}/right.nmt.dnt
+    # ${out_nmtpath}/single.nmt.dnt
+    # ${out_nmtpath}/startup.nmt.dnt
+    # ${out_nmtpath}/startdown.nmt.dnt
+    # ${out_nmtpath}/up.nmt.dnt
+    # ${out_nmtpath}/titlescreen_atr.nmt.dnt
 
     # attributes for the nmts that aren't special
     ${out_atrpath}/down.atr
@@ -107,10 +111,10 @@ function(build_nes_tiles)
     ${out_atrpath}/up.atr
 
     # all objects
-    ${out_nmtpath}/door_down.nmt.dnt
-    ${out_nmtpath}/door_left.nmt.dnt
-    ${out_nmtpath}/door_right.nmt.dnt
-    ${out_nmtpath}/door_up.nmt.dnt
+    # ${out_nmtpath}/door_down.nmt.dnt
+    # ${out_nmtpath}/door_left.nmt.dnt
+    # ${out_nmtpath}/door_right.nmt.dnt
+    # ${out_nmtpath}/door_up.nmt.dnt
     ${out_atrpath}/door_down.atr
     ${out_atrpath}/door_left.atr
     ${out_atrpath}/door_right.atr
@@ -128,12 +132,13 @@ function(build_nes_tiles)
     COMMAND ${CMAKE_COMMAND} -E make_directory ${out_nmtpath}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${out_atrpath}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${out_palpath}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${out_compresspath}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${out_asmpath}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${rawchr_path}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${rawtmp_path}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${rawnmt_path}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${rawpal_path}
-    COMMAND ${Python3_EXECUTABLE} ${process_script} ${NESTILER_DIR} ${TILES_SRC} ${TILES_DEST}
+    COMMAND ${Python3_EXECUTABLE} ${process_script} ${NESTILER_DIR} ${HUFFMUNCH_DIR} ${TILES_SRC} ${TILES_DEST}
     COMMAND ${Python3_EXECUTABLE} ${tiled_script} ${TILES_SRC} ${TILES_DEST}
     DEPENDS ${all_in_files} ${process_script} ${compressor_script} ${tiled_script}
   )

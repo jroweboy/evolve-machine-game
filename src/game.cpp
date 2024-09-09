@@ -94,7 +94,7 @@ prg_rom_2 static void move_player() {
     if (player.y->as_i() != original_y) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
         if (collision > 0) {
-            player.y = original_y;
+            // player.y = original_y;
         }
     }
     s16 original_x = player.x->as_i();
@@ -110,7 +110,7 @@ prg_rom_2 static void move_player() {
     if (player.x->as_i() != original_x) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
         if (collision > 0) {
-            player.x = original_x;
+            // player.x = original_x;
         }
     }
     if (pressed & (PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_UP)) {

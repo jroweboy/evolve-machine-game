@@ -7,8 +7,8 @@
 
 #include "common.hpp"
 #include "dungeon_generator.hpp"
+#include "header/graphics_constants.hpp"
 #include "header/sprites_constants.hpp"
-#include "graphics.hpp"
 #include "map_loader.hpp"
 #include "map.hpp"
 #include "object.hpp"
@@ -20,10 +20,10 @@ constexpr u8 hud_chr_count = 12 * 2;
 constexpr u16 hud_chr_offset = hud_chr_count * 16;
 
 struct SectionLookup {
-    const char* nametable;
-    const char* chr;
-    const char* attribute;
-    const char* palette;
+    Archive nametable;
+    Archive chr;
+    Archive attribute;
+    Archive palette;
     u8 mirroring;
     u16 chr_offset;
     u8 chr_count;
@@ -32,7 +32,15 @@ struct SectionLookup {
 #define SOA_STRUCT SectionLookup
 #define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(palette) MEMBER(mirroring) MEMBER(chr_offset) MEMBER(chr_count)
 #include <soa-struct.inc>
-extern const soa::Array<SectionLookup, static_cast<u8>(SectionBase::Count)> section_lut;
+const soa::Array<SectionLookup, static_cast<u8>(SectionBase::Count)> section_lut = {
+    {Archive::DownNmt, Archive::UpdownChr, Archive::DownAtr, Archive::UpdownPal, MIRROR_HORIZONTAL, updown_chr_offset, updown_chr_count},
+    {Archive::LeftNmt, Archive::LeftRightChr, Archive::LeftAtr, Archive::LeftRightPal, MIRROR_VERTICAL, leftright_chr_offset, leftright_chr_count},
+    {Archive::RightNmt, Archive::LeftRightChr, Archive::RightAtr, Archive::LeftRightPal, MIRROR_VERTICAL, leftright_chr_offset, leftright_chr_count},
+    {Archive::SingleNmt, Archive::SingleChr, Archive::SingleAtr, Archive::SinglePal, MIRROR_VERTICAL, single_chr_offset, single_chr_count},
+    {Archive::StartdownNmt, Archive::StartupStartdownChr, Archive::StartdownAtr, Archive::StartupStartdownPal, MIRROR_HORIZONTAL, startupstartdown_chr_offset, startupstartdown_chr_count},
+    {Archive::StartupNmt, Archive::StartupStartdownChr, Archive::StartupAtr, Archive::StartupStartdownPal, MIRROR_HORIZONTAL, startupstartdown_chr_offset, startupstartdown_chr_count},
+    {Archive::UpNmt, Archive::UpdownChr, Archive::UpAtr, Archive::UpdownPal, MIRROR_HORIZONTAL, updown_chr_offset, updown_chr_count},
+};
 
 noinit Room room;
 noinit Section lead;
@@ -90,9 +98,9 @@ struct SectionObjectRect {
 #include <soa-struct.inc>
 
 struct SectionObjectLookup {
-    const char* nametable;
-    const char* chr;
-    const char* attribute; // TODO
+    Archive nametable;
+    Archive chr;
+    Archive attribute; // TODO
     u16 chr_offset;
     u8 chr_count;
     // SectionObjectRect pos;
@@ -100,11 +108,17 @@ struct SectionObjectLookup {
 #define SOA_STRUCT SectionObjectLookup
 #define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count)
 #include <soa-struct.inc>
-extern const soa::Array<SectionObjectLookup, 4> section_object_lut;
+const soa::Array<SectionObjectLookup, 4> section_object_lut = {
+    {}
+};
 
-extern const soa::Array<SectionObjectRect, section_object_collision_total> section_collision_lut;
+const soa::Array<SectionObjectRect, section_object_collision_total> section_collision_lut = {
+    {}
+};
 
-extern const soa::Array<SectionObjectRect, static_cast<u8>(SectionBase::Count) * 4> section_exit_lut;
+const soa::Array<SectionObjectRect, static_cast<u8>(SectionBase::Count) * 4> section_exit_lut = {
+    {}
+};
 
 // constexpr std::array<u8, 1> offset_lut = {1};
 struct RoomObjectRect {
@@ -161,15 +175,17 @@ prg_rom_1 static void load_section(const Section& section) {
     // u8 section_base = static_cast<u8>(section.room_base);
     u16 nmt_addr = ((u16)section.nametable) << 8;
     vram_adr(nmt_addr);
-    const char* nametable = section_lut[static_cast<u8>(section.room_base)].nametable;
-    donut_decompress(nametable);
+    // const char* nametable = section_lut[static_cast<u8>(section.room_base)].nametable;
+    // donut_decompress(nametable);
+    huffmunch_decompress_vram(section_lut[static_cast<u8>(section.room_base)].nametable);
 
     // load the attributes for this nametable into a buffer that we can update with the
     // objects as they are loaded
     std::array<u8, 64> attr_buffer;
-    const char* attr = section_lut[static_cast<u8>(section.room_base)].attribute;
+    // huffmunch_load_archive(section_lut[static_cast<u8>(section.room_base)].nametable);
+    // const char* attr = section_lut[static_cast<u8>(section.room_base)].attribute;
     for (u8 i = 0; i < 64; ++i) {
-        attr_buffer[i] = attr[i];
+        attr_buffer[i] = decompress_buffer[i]; // huffmunch_read(); // attr[i];
     }
     
     for (u8 i = section_collision_offset[static_cast<u8>(section.room_base)];
@@ -191,7 +207,8 @@ prg_rom_1 static void load_section(const Section& section) {
             if (room_obj_chr_counts[i] == 0) {
                 room_obj_chr_counts[i] = bg_chr_count;
                 vram_adr(bg_chr_offset);
-                donut_decompress(graphics.chr);
+                // donut_decompress(graphics.chr);
+                huffmunch_decompress_vram(graphics.chr);
                 bg_chr_offset += graphics.chr_offset;
                 bg_chr_count += graphics.chr_count;
             }
@@ -202,12 +219,14 @@ prg_rom_1 static void load_section(const Section& section) {
             const auto wall = section_exit_lut[(u8)section.room_base*4 + i].get();
             u8 chr_offset = room_obj_chr_counts[i];
             u8 offset = 0;
+            huffmunch_decompress_buffer(graphics.nametable);
             // Load the tiles
             for (u8 h=0; h < wall.height/8; ++h) {
                 auto addr = nmt_addr | NTADR((u16)wall.x/8, (u16)(wall.y/8) + h);
                 vram_adr(addr);
                 for (u8 w=0; w < wall.width/8; ++w) {
-                    vram_put(graphics.nametable.get()[offset] + chr_offset);
+                    // u8 byt = huffmunch_read();
+                    vram_put(decompress_buffer[offset] + chr_offset);
                     ++offset;
                 }
             }
@@ -289,8 +308,9 @@ namespace MapLoader {
         set_chr_bank(0);
         vram_adr(0x00);
         u8 room_base = static_cast<u8>(lead.room_base);
-        const char* chr = section_lut[room_base].chr;
-        donut_decompress(chr);
+        // const char* chr = section_lut[room_base].chr;
+        // donut_decompress(chr);
+        huffmunch_decompress_vram(section_lut[room_base].chr);
         bg_chr_offset += section_lut[room_base].chr_offset;
         bg_chr_count += section_lut[room_base].chr_count;
 
@@ -312,20 +332,23 @@ namespace MapLoader {
         sp_chr_count = 1;
         sp_chr_offset = 0x1000;
         vram_adr(sp_chr_offset);
-        donut_decompress(&kitty_chr);
+        // donut_decompress(&kitty_chr);
+        huffmunch_decompress_vram(Archive::KittyChr);
         sp_chr_count += kitty_chr_count;
         sp_chr_offset += kitty_chr_offset;
 
         // Load HUD font
         hud_tile_offset = sp_chr_count;
         vram_adr(sp_chr_offset);
-        donut_decompress(&hudfont_chr);
+        // donut_decompress(&hudfont_chr);
+        huffmunch_decompress_vram(Archive::HudFontChr);
         sp_chr_count += hud_chr_count;
         sp_chr_offset += hud_chr_offset;
 
         // and load the weapons
         vram_adr(sp_chr_offset);
-        donut_decompress(&weapons_chr);
+        // donut_decompress(&weapons_chr);
+        huffmunch_decompress_vram(Archive::WeaponsChr);
         sp_chr_count += weapons_chr_count;
         sp_chr_offset += weapons_chr_offset;
 
@@ -334,8 +357,10 @@ namespace MapLoader {
         u8 mirroring = section_lut[room_base].mirroring;
         set_mirroring(mirroring);
 
-        const char* palette = section_lut[room_base].palette;
-        pal_bg(palette);
+        // const char* palette = section_lut[room_base].palette;
+        // std::array<u8, 16> palette;
+        huffmunch_decompress_buffer(section_lut[room_base].palette);
+        pal_bg(decompress_buffer);
 
         pal_bright(0);
         

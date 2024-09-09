@@ -4,7 +4,6 @@
 
 #include "nes_extra.hpp"
 #include "common.hpp"
-#include "graphics.hpp"
 #include "music.hpp"
 #include "rand.hpp"
 #include "title_screen.hpp"
@@ -35,12 +34,15 @@ namespace Titlescreen {
         // set the address to the start of CHR RAM and decompress the CHR
         set_chr_bank(0);
         vram_adr(0x00);
-        donut_decompress(&title_chr);
+        // donut_decompress(&title_chr);
+        huffmunch_decompress_vram(Archive::TitlescreenChr);
 
         vram_adr(NAMETABLE_A);
-        donut_decompress(&title_bin);
+        huffmunch_decompress_vram(Archive::TitlescreenAtrNmt);
+        // donut_decompress(&title_bin);
 
-        pal_bg(title_palette);
+        huffmunch_decompress_buffer(Archive::TitlescreenPal);
+        pal_bg(decompress_buffer);
         pal_bright(0);
 
 

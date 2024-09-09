@@ -150,7 +150,7 @@ check_solid_collision:
     lda solid_state
     rts
 
-.section ".noinit.late"
+.section ".zp.noinit"
 .globl obj_collision_parameter
 obj_collision_parameter:
     .space 6

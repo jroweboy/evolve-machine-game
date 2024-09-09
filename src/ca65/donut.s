@@ -35,7 +35,7 @@ donut_block_buffer = $0100  ; 64 bytes
 ; donut_stream_ptr:       .res 2
 ; donut_block_count:      .res 1
 
-.segment "_pprg__rom__fixed"
+.segment "_pprg__rom__1": absolute
 
 ;;
 ; helper subroutine for passing parameters with registers
@@ -58,7 +58,7 @@ PPU_DATA = $2007
   ; sta donut_stream_ptr+1
   block_loop:
     ldx #0
-    jsr donut_decompress_block
+    jsr .loword(donut_decompress_block)
     cpx #64
     bne end_block_upload
       ; bail if donut_decompress_block does not
@@ -184,7 +184,7 @@ continue_normal_block:
   unpack_shorthand_plane_def:
     and #$03
     tax
-    lda shorthand_plane_def_table, x
+    lda .loword(shorthand_plane_def_table), x
   plane_def_ready:
   ror is_rotated
   sta plane_def

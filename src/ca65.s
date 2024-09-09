@@ -115,6 +115,8 @@ audio_init:
     lda #$fe
     sta next_song
     sta current_song
+    sta sfx_queue1
+    sta sfx_queue2
 
 .section .nmi.200,"axR",@progbits
     lda #2

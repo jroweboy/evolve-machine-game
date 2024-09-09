@@ -220,7 +220,7 @@ namespace Dungeon {
 //    0
 // 3 [ ] 1
 //    2
-u8 GetNeighborId(u8 me, u8 direction) {
+prg_rom_2 u8 GetNeighborId(u8 me, u8 direction) {
     switch (direction) {
         // The y bounds check will happen after the function by checking if its < DUNGEON_WIDTH * DUNGEON_HEIGHT
     case 0:
@@ -243,7 +243,7 @@ u8 GetNeighborId(u8 me, u8 direction) {
 
 // u8 starting_room_id;
 
-u8 load_room_id_by_section(u8 id) {
+prg_rom_2 u8 load_room_id_by_section(u8 id) {
     vram_adr(SectionOffset + (u16)id * sizeof(Section) + offsetof(Section, room_id));
     PEEK(0x2007);
     return PEEK(0x2007);
@@ -251,13 +251,13 @@ u8 load_room_id_by_section(u8 id) {
     // return room_id;
 }
 
-void load_section_to_lead(u8 id) {
+prg_rom_2 void load_section_to_lead(u8 id) {
     vram_adr(SectionOffset + (u16)id * sizeof(Section));
     u8* cast = reinterpret_cast<u8*>(&lead);
     vram_read(cast, sizeof(Section));
 }
 
-void load_section_to_side(u8 id) {
+prg_rom_2 void load_section_to_side(u8 id) {
     if (id == Dungeon::NO_EXIT) {
         side.room_id = Dungeon::NO_EXIT;
         return;
@@ -267,25 +267,25 @@ void load_section_to_side(u8 id) {
     vram_read(cast, sizeof(Section));
 }
 
-void write_section_lead(u8 id) {
+prg_rom_2 void write_section_lead(u8 id) {
     vram_adr(SectionOffset + (u16)id * sizeof(Section));
     const u8* cast = reinterpret_cast<const u8*>(&lead);
     vram_write(cast, sizeof(Section));
 }
 
-void write_section_side(u8 id) {
+prg_rom_2 void write_section_side(u8 id) {
     vram_adr(SectionOffset + (u16)id * sizeof(Section));
     const u8* cast = reinterpret_cast<const u8*>(&side);
     vram_write(cast, sizeof(Section));
 }
 
-void load_room_from_chrram(u8 id) {
+prg_rom_2 void load_room_from_chrram(u8 id) {
     vram_adr(id * sizeof(Room));
     u8* cast = reinterpret_cast<u8*>(&room);
     vram_read(cast, sizeof(Room));
 }
 
-void write_room_to_chrram(u8 id) {
+prg_rom_2 void write_room_to_chrram(u8 id) {
     vram_adr(id * sizeof(Room));
 
     const u8* cast = reinterpret_cast<const u8*>(&room);

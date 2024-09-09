@@ -19,33 +19,9 @@ struct OAMData {
 __attribute__((section(".zp"))) u8 view_x;
 __attribute__((section(".zp"))) u8 view_y;
 
-// extern const u8 kitty_walk_right[];
-// extern const u8 kitty_walk_up[];
-// extern const u8 kitty_walk_down[];
-// extern const u8 kitty_walk_left[];
-
-// extern const u8 weapon_sphere[];
-// extern const u8 weapon_pyramid[];
-// extern const u8 weapon_diamond[];
-// extern const u8 weapon_cube[];
-
-// __attribute__((section(".prg_rom_2.metasprite_table")))
-// static const u8* metasprite_table[(u8)Metasprite::Count] = {
-//     kitty_walk_right,
-//     kitty_walk_up,
-//     kitty_walk_down,
-//     kitty_walk_left,
-    
-//     weapon_sphere,
-//     weapon_pyramid,
-//     weapon_diamond,
-//     weapon_cube,
-// };
-
 noinit u8 shuffle_offset;
 noinit u8 sprite_slot;
 
-// __attribute__((section(".aligned.oam_buf")))
 extern u8 OAM_BUF[256];
 // static u8* dummy[256] __attribute__((__used__)) = &OAM_BUF;
 

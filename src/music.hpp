@@ -23,24 +23,51 @@ extern "C" {
 
 
 enum class Song : u8 { 
-    // EPSMDetected = 0,
+    EPSMDetected = 0,
     Intro,
     DangerousCitty,
     DangerousBattle,
-    // TitleAmbience,
-    // CombatAmbience,
+    DangerousBattleTransition,
+    TitleAmbience,
+    CombatAmbience,
     Boss,
     Silence = 0xfd,
     StopMusic = 0xfe,
     InitEngine = 0xff,
 };
 
-enum Sfx {
-    EPSMDetected = 1 << 0,
+enum class Sfx : u8 {
+    tile_press,
+    menu_upright,
+    menu_downleft,
+    squeak,
+    trinket_collect,
+    health_pickup,
+    powerup_collect,
+    enemy_cry_1,
+    enemy_cry_2,
+    enemy_cry_3,
+    enemy_hurt,
+    enemy_die_small,
+    enemy_die_big,
+    player_hurt,
+    weapon_reloaded,
+    weapon_charged_1,
+    weapon_charged_2,
+    weapon_charged_3,
+    weapon_fire_1,
+    weapon_fire_2,
+    menu_cancel,
+    menu_confirm,
+    menu_select,
+    menu_fanfarestart,
 };
 
 
 extern Song next_song;
+extern Sfx sfx_queue1;
+extern Sfx sfx_queue2;
+
 // __attribute__((leaf)) void play_song(Song song);
 // __attribute__((leaf)) void play_sfx(Sfx song);
 

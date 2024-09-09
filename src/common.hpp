@@ -123,6 +123,7 @@ extern "C" u8 hud_tile_offset;
 #define prg_rom_1 __attribute__((section(".prg_rom_1")))
 #define prg_rom_2 __attribute__((section(".prg_rom_2")))
 #define noinit __attribute__((section(".noinit.late")))
+#define zpnoinit __attribute__((section(".zp.noinit")))
 
 constexpr u8 MUSIC_BANK = 0;
 constexpr u8 GRAPHICS_BANK = 1;

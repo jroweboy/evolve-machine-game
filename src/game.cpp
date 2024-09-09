@@ -8,6 +8,7 @@
 #include "game.hpp"
 #include "dungeon_generator.hpp"
 #include "map.hpp"
+#include "music.hpp"
 // #include "graphics.hpp"
 // #include "map_loader.hpp"
 #include "map_loader.hpp"
@@ -39,10 +40,10 @@ struct ObjectCollisionParameter {
     s8 width;
     s8 height;
 };
-noinit extern ObjectCollisionParameter obj_collision_parameter;
+zpnoinit extern ObjectCollisionParameter obj_collision_parameter;
 prg_rom_2 extern "C" u8 check_object_collision(u8 filter, u8 obj_idx);
 
-constexpr static void load_collision_parameter(u8 obj_idx) {
+prg_rom_2 static void load_collision_parameter(u8 obj_idx) {
     const auto obj = objects[obj_idx];
     obj_collision_parameter.x = obj.x->as_i() + obj.hitbox.x;
     obj_collision_parameter.y = obj.y->as_i() + obj.hitbox.y;
@@ -123,7 +124,7 @@ prg_rom_2 static void move_player() {
 }
 
 constexpr s8 WEAPON_BOB_Y_ORIGIN = -10;
-static constexpr s8 weapon_bob_y_offset[] = {
+static const s8 weapon_bob_y_offset[] = {
     WEAPON_BOB_Y_ORIGIN - 0,
     WEAPON_BOB_Y_ORIGIN - 0,
     WEAPON_BOB_Y_ORIGIN - 1,
@@ -155,6 +156,7 @@ prg_rom_2 static void run_weapon_bob() {
     // if the player uses an attack, animate the spin
     if ((get_pad_new(0) & PAD_B) != 0 && weapon.frame_counter < 0) {
         weapon.frame_counter = 32;
+        sfx_queue1 = Sfx::weapon_fire_1;
     }
     if (weapon.frame_counter >= 0) {
         weapon.frame_counter--;

@@ -243,7 +243,7 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
     file_size = []
     file_name = []
     for p in [outatr_path, outchr_path, outnmt_path, outpal_path, outspr_path]:
-      for f in p.glob("*.dnt"):
+      for f in sorted(p.glob("*.dnt")):
         with open(f, 'rb') as i:
           byts = i.read()
           o.write(byts)
@@ -252,7 +252,9 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
           file_name += [f.stem]
       
   # add the sizes to the front of the file
-  with open(outcompress_path / f"archive.raw.dnt", 'rb') as o, open(outcompress_path / f"archive.dnt", 'wb') as n:
+  with open(
+        outcompress_path / f"archive.raw.dnt", 'rb') as o,open(
+        outcompress_path / f"archive.dnt", 'wb') as n:
     offset = file_count * 2
     for i in range(file_count):
       n.write(struct.pack("<H", offset))

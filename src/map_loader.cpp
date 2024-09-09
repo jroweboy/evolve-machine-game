@@ -183,6 +183,7 @@ prg_rom_1 static void load_section(const Section& section) {
     std::array<u8, 64> attr_buffer;
     // huffmunch_load_archive(section_lut[static_cast<u8>(section.room_base)].nametable);
     // const char* attr = section_lut[static_cast<u8>(section.room_base)].attribute;
+    donut_decompress_buffer(section_lut[static_cast<u8>(section.room_base)].attribute);
     for (u8 i = 0; i < 64; ++i) {
         attr_buffer[i] = decompress_buffer[i]; // huffmunch_read(); // attr[i];
     }

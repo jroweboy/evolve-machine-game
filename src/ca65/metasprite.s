@@ -325,7 +325,7 @@ LoopEnded:
 DrawAllMetasprites:
 
   ; DEBUG - clear metasprites
-  jsr .loword(MoveAllSpritesOffscreen)
+  ; jsr .loword(MoveAllSpritesOffscreen)
 
   lda room + ROOM_X_LO
   clc

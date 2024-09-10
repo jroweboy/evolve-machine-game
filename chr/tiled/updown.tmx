@@ -1,24 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="32" height="60" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="15">
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="32" height="60" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="17">
  <imagelayer id="2" name="background">
   <image source="../rooms/updown.bmp" width="256" height="480"/>
  </imagelayer>
  <objectgroup id="3" name="collision">
-  <object id="1" name="7" x="0" y="448" width="64" height="32"/>
+  <object id="1" name="7" x="0" y="396" width="64" height="85"/>
   <object id="2" name="6" x="0" y="0" width="48" height="32"/>
   <object id="3" name="5" x="208" y="0" width="48" height="32"/>
-  <object id="4" name="4" x="224" y="96" width="32" height="128"/>
-  <object id="5" name="3" x="224" y="224" width="32" height="160"/>
-  <object id="6" name="2" x="208" y="456" width="48" height="24"/>
-  <object id="7" name="1" x="0" y="96" width="32" height="128"/>
-  <object id="8" name="0" x="0" y="224" width="32" height="160"/>
+  <object id="4" name="4" x="224" y="155" width="32" height="70"/>
+  <object id="5" name="3" x="224" y="224" width="32" height="100"/>
+  <object id="6" name="2" x="208" y="394" width="48" height="86"/>
+  <object id="7" name="1" x="0" y="155" width="32" height="70"/>
+  <object id="8" name="0" x="0" y="224" width="32" height="102"/>
+  <object id="15" name="4" x="225" y="70" width="32" height="70"/>
+  <object id="16" name="4" x="0" y="16" width="32" height="70"/>
  </objectgroup>
  <objectgroup id="4" name="exit_spawns">
-  <object id="9" name="up_left" x="0" y="32" width="32" height="64"/>
+  <object id="9" name="up_left" x="0" y="84" width="32" height="72"/>
   <object id="10" name="up_up" x="48" y="0" width="160" height="32"/>
-  <object id="11" name="up_right" x="224" y="32" width="32" height="64"/>
-  <object id="12" name="down_left" x="0" y="384" width="32" height="64"/>
+  <object id="11" name="up_right" x="224" y="84" width="32" height="72"/>
+  <object id="12" name="down_left" x="0" y="324" width="32" height="72"/>
   <object id="13" name="down_down" x="64" y="448" width="144" height="32"/>
-  <object id="14" name="down_right" x="224" y="384" width="32" height="72"/>
+  <object id="14" name="down_right" x="224" y="324" width="32" height="72"/>
  </objectgroup>
 </map>

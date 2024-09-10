@@ -103,23 +103,23 @@ function(build_nes_tiles)
     # ${out_nmtpath}/titlescreen_atr.nmt.dnt
 
     # attributes for the nmts that aren't special
-    ${out_atrpath}/down.atr
-    ${out_atrpath}/left.atr
-    ${out_atrpath}/right.atr
-    ${out_atrpath}/single.atr
-    ${out_atrpath}/startup.atr
-    ${out_atrpath}/startdown.atr
-    ${out_atrpath}/up.atr
+    # ${out_atrpath}/down.atr
+    # ${out_atrpath}/left.atr
+    # ${out_atrpath}/right.atr
+    # ${out_atrpath}/single.atr
+    # ${out_atrpath}/startup.atr
+    # ${out_atrpath}/startdown.atr
+    # ${out_atrpath}/up.atr
 
     # all objects
     # ${out_nmtpath}/door_down.nmt.dnt
     # ${out_nmtpath}/door_left.nmt.dnt
     # ${out_nmtpath}/door_right.nmt.dnt
     # ${out_nmtpath}/door_up.nmt.dnt
-    ${out_atrpath}/door_down.atr
-    ${out_atrpath}/door_left.atr
-    ${out_atrpath}/door_right.atr
-    ${out_atrpath}/door_up.atr
+    # ${out_atrpath}/door_down.atr
+    # ${out_atrpath}/door_left.atr
+    # ${out_atrpath}/door_right.atr
+    # ${out_atrpath}/door_up.atr
 
     # asm constants
     ${out_asmpath}/graphics_constants.hpp

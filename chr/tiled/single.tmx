@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="30" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="9">
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="32" height="30" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="9">
  <imagelayer id="2" name="background">
   <image source="../rooms/single.bmp" width="256" height="240"/>
  </imagelayer>
  <objectgroup id="3" name="collision">
-  <object id="1" name="0" x="0" y="0" width="48" height="48"/>
-  <object id="2" name="1" x="0" y="192" width="48" height="48"/>
-  <object id="3" name="2" x="208" y="192" width="48" height="48"/>
-  <object id="4" name="3" x="208" y="0" width="48" height="48"/>
+  <object id="1" name="0" x="0" y="0" width="48" height="84"/>
+  <object id="2" name="1" x="0" y="156" width="48" height="84"/>
+  <object id="3" name="2" x="208" y="156" width="48" height="84"/>
+  <object id="4" name="3" x="208" y="0" width="48" height="84"/>
  </objectgroup>
  <objectgroup id="4" name="exit_spawns">
   <object id="5" name="single_up" x="48" y="0" width="160" height="48"/>
-  <object id="6" name="single_right" x="208" y="48" width="48" height="144"/>
+  <object id="6" name="single_right" x="208" y="84" width="48" height="72"/>
   <object id="7" name="single_down" x="48" y="192" width="160" height="48"/>
-  <object id="8" name="single_left" x="0" y="48" width="48" height="144"/>
+  <object id="8" name="single_left" x="0" y="84" width="48" height="72"/>
  </objectgroup>
 </map>

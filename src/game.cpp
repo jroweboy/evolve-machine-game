@@ -265,63 +265,102 @@ prg_rom_2 static Direction get_direction() {
 prg_rom_2 static void calculate_screen_bounds() {
     switch (room.scroll) {
     case ScrollType::Single:
-        room_bounds_x = room.x + 256;
-        room_bounds_y = room.y + 240;
+        room_bounds_x = room.x + 256 - 16;
+        room_bounds_y = room.y + 240 - 16;
         break;
     case ScrollType::Horizontal:
-        room_bounds_x = room.x + 256 * 2;
-        room_bounds_y = room.y + 240;
+        room_bounds_x = room.x + 256 * 2 - 16;
+        room_bounds_y = room.y + 240 - 16;
         break;
     case ScrollType::Vertical:
-        room_bounds_x = room.x + 256;
-        room_bounds_y = room.y + 240 * 2;
+        room_bounds_x = room.x + 256 - 16;
+        room_bounds_y = room.y + 240 * 2 - 16;
         break;
     }
 }
 
-__attribute__((section(".prg_rom_2.x_offset_lut"))) static const s16 player_position_x_offset[8] = {
-    // Scroll type Horizontal
-    0, 16, 0, 256 + 224,
-    // Scroll type Vertical
-    0, 16, 0, 224,
-};
-__attribute__((section(".prg_rom_2.y_offset_lut"))) static const s16 player_position_y_offset[8] = {
-    // Scroll type Horizontal
-    224, 0, 16, 0,
-    // Scroll type Vertical
-    240 + 226, 0, 16, 0,
-};
+// __attribute__((section(".prg_rom_2.x_offset_lut"))) static const s8 player_position_x_offset[] = {
+//     // Scroll type Single
+//     0, 16, 0, 224,
+//     // Scroll type Horizontal
+//     0, 16, 0, 256 + 224,
+//     // Scroll type Vertical
+//     0, 16, 0, 224,
+// };
+// __attribute__((section(".prg_rom_2.y_offset_lut"))) static const s8 player_position_y_offset[] = {
+//     // Scroll type Single
+//     224, 0, 16, 0,
+//     // Scroll type Horizontal
+//     224, 0, 16, 0,
+//     // Scroll type Vertical
+//     240 + 226, 0, 16, 0,
+// };
 
-prg_rom_2 static void correct_player_position(Direction direction) {
-    // after a map transition we might need to shift the player a bit to match up with the new map exit
+// prg_rom_2 static void correct_player_position(Direction dir, s16 room_x, s16 room_y) {
+//     // after a map transition we might need to shift the player a bit to match up with the new map exit
+//     auto player = objects[0];
+
+//     // Recalculate the player position so that they are on the place on the screen, but on the opposite direction in the new room
+//     switch (dir) {
+//     case Direction::Down:
+//         screen_y = (240 - screen_y) + 8;
+//         player.y = f16_8();
+//         break;
+//     case Direction::Up:
+//         screen_y = (232 + screen_y) - 8;
+//         break;
+//     case Direction::Right:
+//         screen_x = (255 - screen_x) + 8;
+//         break;
+//     case Direction::Left:
+//         screen_x = (255 + screen_x) + 8;
+//         break;
+//     case Direction::Error:
+//         break;
+//     }
+
+
+
+//     // view_x = 0;
+//     // view_y = 0;
+
+//     // don't add any offset if its the intro cutscene.
+//     // if (direction != Direction::Error) {
+//         // u8 offset = (((u8)room.scroll << 2) & 0b00001100) | (u8) direction;
+//         // s16 x_offset = player_position_x_offset[offset];
+//         // s16 y_offset = player_position_y_offset[offset];
+
+//         // if (x_offset) {
+//         //     player.x = f16_8(room.x + x_offset);
+//         // } else if (y_offset) {
+//         //     player.y = f16_8(room.y + y_offset);
+//         // }
+//     // }
+// }
+
+prg_rom_2 static void update_scroll() {
     auto player = objects[0];
     view_x = 0;
     view_y = 0;
-
-    // don't add any offset if its the intro cutscene.
-    if (direction != Direction::Error && room.scroll != ScrollType::Single) {
-        u8 offset = (((u8)room.scroll << 1) & 0b00000100) | (u8) direction;
-        s16 x_offset = player_position_x_offset[offset];
-        s16 y_offset = player_position_y_offset[offset];
-        if (x_offset) {
-            player.x = f16_8(room.x + x_offset);
-        } else if (y_offset) {
-            player.y = f16_8(room.y + y_offset);
-        }
-    }
-    
     switch (room.scroll) {
     case ScrollType::Horizontal:
-        view_x = MMAX(player.x->as_i() - room.x - 0x88, 0);
+        // if (((player.x->as_i() >> 8) - (room.x >> 8)) > 0) {
+        //     view_x = 0xff;
+        // }
+        view_x = MMAX(player.x->as_i() - room.x - 0x78, 0);
         break;
     case ScrollType::Vertical:
-        view_y = MMAX(player.y->as_i() - room.y - 0x78, 0);
+        // if (((player.y->as_i() >> 8) - (room.y >> 8)) > 0) {
+        //     view_y = 0xf0;
+        // }
+        view_y = MMAX(player.y->as_i() - room.y - 0x68, 0);
         break;
     default:
         break;
     }
     scroll(view_x, view_y);
 }
+
 
 prg_rom_2 static void load_new_map() {
     // find what room we exited to. there's probably a smarter way to do this, but its during
@@ -367,8 +406,48 @@ prg_rom_2 static void load_new_map() {
     MapLoader::load_map(section_id);
     // build the new map bounds
     calculate_screen_bounds();
+
     // And now correct the position of the character
-    correct_player_position(direction);
+    auto& new_section = room.lead_id == section_id ? lead : side;
+    s16 new_x = player.x->as_i();
+    s16 new_y = player.y->as_i();
+    if (vertical_section == SectionBase::Bottom || vertical_section == SectionBase::StartDown) {
+        new_y += 16;
+    }
+    switch (direction) {
+    case Direction::Up:
+        new_y -= 32;
+        break;
+    case Direction::Right:
+        new_x += 16;
+        break;
+    case Direction::Down:
+        new_y += 32;
+        break;
+    case Direction::Left:
+        new_x -= 16;
+        break;
+    case Direction::Error:
+        break;
+    }
+    switch (new_section.room_base) {
+    case SectionBase::Bottom:
+    case SectionBase::StartDown:
+        new_y -= 16;
+    case SectionBase::Left:
+    case SectionBase::Right:
+    case SectionBase::Single:
+    case SectionBase::StartUp:
+    case SectionBase::Top:
+    case SectionBase::Count:
+      break;
+    }
+    
+    player.x = f16_8(new_x);
+    player.y = f16_8(new_y);
+
+    // correct_player_position(direction, );
+    update_scroll();
 
     game_mode = GameMode::InGame;
 }
@@ -388,7 +467,7 @@ prg_rom_2 void init() {
     prev_game_mode = GameMode::MapLoader;
     game_mode = GameMode::InGame;
     calculate_screen_bounds();
-    correct_player_position(Direction::Error);
+    update_scroll();
 }
 
 prg_rom_2 void update() {

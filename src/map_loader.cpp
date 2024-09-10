@@ -130,14 +130,13 @@ struct RoomObjectRect {
 
 const u8 section_collision_offset[] 
 __attribute__((section(".prg_rom_1.section_table"))) = {
-    0,
-    2,
-    6,
-    8,
-    12,
-    14,
-    19,
-    25
+    section_object_collision_bottom_offset,
+    section_object_collision_left_offset,
+    section_object_collision_right_offset,
+    section_object_collision_single_offset,
+    section_object_collision_startdown_offset,
+    section_object_collision_startup_offset,
+    section_object_collision_top_offset,
 };
 
 const u8 section_x_hi[static_cast<u8>(SectionBase::Count)] 
@@ -156,7 +155,7 @@ static bool add_solid_wall(const SectionObjectRect& wall, SectionBase section) {
     if (solid_object_offset >= SOLID_OBJECT_COUNT) {
         return false;
     }
-    if (wall.width == 0 && wall.height == 0) {
+    if (wall.width == 0 || wall.height == 0) {
         return false;
     }
     auto slot = solid_objects[solid_object_offset++];
@@ -190,11 +189,10 @@ prg_rom_1 static void load_section(const Section& section) {
     
     for (u8 i = section_collision_offset[static_cast<u8>(section.room_base)];
         i < section_collision_offset[static_cast<u8>(section.room_base) + 1]; ++i) {
-        const auto wall = section_collision_lut[i];
         // if (wall.state == (CollisionType)0) {
         //     continue;
         // }
-        add_solid_wall(wall, section.room_base);
+        add_solid_wall(section_collision_lut[i].get(), section.room_base);
     }
 
     // now load the exits
@@ -287,7 +285,7 @@ namespace MapLoader {
     void load_map(u8 section_id) {
         // TODO turn off DPCM if its playing
         // ppu_off();
-
+        solid_object_offset = 0;
         for (u8 i=0; i < 4; ++i) {
             room_obj_chr_counts[i] = 0;
         }
@@ -302,6 +300,9 @@ namespace MapLoader {
 
         // TODO save the previous room state when leaving
         read_map_room(section_id);
+
+        
+        set_mirroring(section_lut[(u8)lead.room_base].mirroring);
 
         bg_chr_count = 0;
         bg_chr_offset = 0x0000;

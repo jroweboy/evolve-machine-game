@@ -337,7 +337,7 @@ prg_rom_2 GenerateStats generate_dungeon() {
     room.side_id = side_id;
     room.scroll = ScrollType::Vertical;
     lead.room_id = id;
-    lead.nametable = 0x24;
+    lead.nametable = 0x28;
     lead.room_base = SectionBase::StartDown;
     side.room_id = id;
     side.nametable = 0x20;
@@ -439,44 +439,63 @@ prg_rom_2 GenerateStats generate_dungeon() {
             // I did the GetDirection backwards so it lines up that the
             // lead will be up and left in this setup. (So if direction is UP,
             // then the lead is the first nametable.)
-            Direction dir = GetDirection(side_id, lead_id);
+            // Direction dir = GetDirection(side_id, lead_id);
+            Direction dir = GetDirection(lead_id, side_id);
+            // DEBUGGER(dir);
             lead.nametable = LeadLUT[dir];
             side.nametable = SideLUT[dir];
+            // side.nametable = LeadLUT[dir];
+            // lead.nametable = SideLUT[dir];
             switch (dir) {
                 case Direction::Up:
                     lead.room_base = SectionBase::Top;
                     side.room_base = SectionBase::Bottom;
+                    // lead.room_base = SectionBase::Bottom;
+                    // side.room_base = SectionBase::Top;
                     room.scroll = ScrollType::Vertical;
                     set_room_xy(lead_id);
+                    // set_room_xy(side_id);
                     break;
                 case Direction::Down:
                     lead.room_base = SectionBase::Bottom;
                     side.room_base = SectionBase::Top;
+                    // lead.room_base = SectionBase::Top;
+                    // side.room_base = SectionBase::Bottom;
                     room.scroll = ScrollType::Vertical;
                     set_room_xy(side_id);
+                    // set_room_xy(lead_id);
                     break;
                 case Direction::Right:
                     lead.room_base = SectionBase::Right;
                     side.room_base = SectionBase::Left;
+                    // lead.room_base = SectionBase::Left;
+                    // side.room_base = SectionBase::Right;
                     room.scroll = ScrollType::Horizontal;
                     set_room_xy(side_id);
+                    // set_room_xy(lead_id);
                     break;
                 case Direction::Left:
                     lead.room_base = SectionBase::Left;
                     side.room_base = SectionBase::Right;
+                    // lead.room_base = SectionBase::Right;
+                    // side.room_base = SectionBase::Left;
                     room.scroll = ScrollType::Horizontal;
                     set_room_xy(lead_id);
+                    // set_room_xy(side_id);
                     break;
                 default:
                     break;
             }
             
             // Since we know we have a side and we know the direction, update this info here
-            lead.exit[dir] = Dungeon::SIDE_ROOM;
+            // lead.exit[dir] = Dungeon::SIDE_ROOM;
+            lead.exit[OppositeDirection(dir)] = Dungeon::SIDE_ROOM;
         }
         else {
             lead.nametable = 0x20;
             lead.room_base = SectionBase::Single;
+            // room.scroll = ScrollType::Single;
+            set_room_xy(lead_id);
         }
 
 

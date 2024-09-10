@@ -239,12 +239,15 @@ function draw_section(section_id, other_id, is_lead)
   local grid_x = section_id % 8
   local box_x = 254 - (8-grid_x)*BOX_WIDTH
   local box_y = 2+(grid_y)*BOX_HEIGHT
-  -- if (is_lead == true) then
-  --   emu.drawString(box_x+6, box_y+4, "L")
+  local sec_type = "S"
+  if (is_lead == true) then
+    sec_type = "L"
+  end
+  emu.drawString(box_x+2, box_y+2, string.format("%s%d", sec_type, nametable - 0x20))
   -- else
-  --   emu.drawString(box_x+6, box_y+4, "S")
+    -- emu.drawString(box_x+2, box_y+2, "S")
   -- end
-  emu.drawString(box_x + 2, box_y + 2, string.format("%d%d", grid_x, grid_y))
+  -- emu.drawString(box_x + 2, box_y + 2, string.format("%d%d", grid_x, grid_y))
   -- emu.log(string.format("section_id: %02x exits: %02x, %02x, %02x, %02x", section_id, exits[1], exits[2], exits[3], exits[4]))
   for i=1, 4 do
     local ex = exits[i]
@@ -336,11 +339,44 @@ function dump_map()
   emu.drawString(box_x+6, box_y+4, "X")
 end
 
+local key_pressed = 0
+local key_released = 0
+local key_prev = 0
+local show_map = true
+local show_perf = false
+local show_collision = true
+PRESSED_1 = 1
+PRESSED_2 = 2
+PRESSED_3 = 4
+
+function b2n(value)
+  return value and 1 or 0
+end
+
+
 function frame_start()
-  draw_object_hitbox()
-  draw_solid_hitbox()
-  dump_map()
-  draw_performance_counters()
+  local keys = (b2n(emu.isKeyPressed("1")) | (b2n(emu.isKeyPressed("2")) << 1) | (b2n(emu.isKeyPressed("3")) << 2))
+  key_pressed = keys & (~key_prev)
+  key_prev = keys
+  if ((key_pressed & PRESSED_1) ~= 0) then
+    show_map = not show_map
+  end
+  if ((key_pressed & PRESSED_2) ~= 0) then
+    show_perf = not show_perf
+  end
+  if ((key_pressed & PRESSED_3) ~= 0) then
+    show_collision = not show_collision
+  end
+  if (show_collision) then
+    draw_object_hitbox()
+    draw_solid_hitbox()
+  end
+  if (show_map) then
+    dump_map()
+  end
+  if (show_perf) then
+    draw_performance_counters()
+  end
   --now reset performance counters for the next frame
   for i = 0, scope_count do
     performance_counters[i] = 0
@@ -348,7 +384,7 @@ function frame_start()
 end
 
 emu.addEventCallback(frame_start, emu.eventType.nmi)
-
+emu.addEventCallback(dump_map, emu.eventType.codeBreak)
 
 str = ""
 function cb(address, value)
@@ -366,3 +402,5 @@ end
 
 emu.addMemoryCallback(cb, emu.callbackType.write, 0x401b)
 emu.addMemoryCallback(debug_write, emu.callbackType.write, 0x4123)
+
+

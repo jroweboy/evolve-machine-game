@@ -412,20 +412,22 @@ prg_rom_2 static void load_new_map() {
     s16 new_x = player.x->as_i();
     s16 new_y = player.y->as_i();
     if (vertical_section == SectionBase::Bottom || vertical_section == SectionBase::StartDown) {
-        new_y += 16;
+        if (direction != Direction::Down && direction != Direction::Up) {
+            new_y += 16;
+        }
     }
     switch (direction) {
     case Direction::Up:
-        new_y -= 32;
+        new_y -= 64;
         break;
     case Direction::Right:
-        new_x += 16;
+        new_x += 48;
         break;
     case Direction::Down:
-        new_y += 32;
+        new_y = room.y + 16;
         break;
     case Direction::Left:
-        new_x -= 16;
+        new_x -= 32;
         break;
     case Direction::Error:
         break;

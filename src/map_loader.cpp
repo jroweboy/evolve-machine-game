@@ -137,6 +137,7 @@ __attribute__((section(".prg_rom_1.section_table"))) = {
     section_object_collision_startdown_offset,
     section_object_collision_startup_offset,
     section_object_collision_top_offset,
+    section_object_collision_total,
 };
 
 const u8 section_x_hi[static_cast<u8>(SectionBase::Count)] 

@@ -10,6 +10,7 @@
 #include "graphics.hpp"
 #include "header/graphics_constants.hpp"
 #include "header/sprites_constants.hpp"
+#include "sprite_render.hpp"
 #include "map_loader.hpp"
 #include "map.hpp"
 #include "object.hpp"
@@ -284,6 +285,8 @@ prg_rom_1 static void load_section(const Section& section) {
 namespace MapLoader {
 
     void load_map(u8 section_id) {
+        move_all_sprites_offscreen();
+
         // TODO turn off DPCM if its playing
         // ppu_off();
         solid_object_offset = 0;
@@ -325,7 +328,7 @@ namespace MapLoader {
         // set_prg_bank(GRAPHICS_BANK);
         load_section(lead);
 
-        if (side.room_id != Dungeon::NO_EXIT) {
+        if (room.scroll != ScrollType::Single) {
             load_section(side);
         }
 

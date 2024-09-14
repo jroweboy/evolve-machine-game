@@ -344,16 +344,10 @@ prg_rom_2 static void update_scroll() {
     view_y = 0;
     switch (room.scroll) {
     case ScrollType::Horizontal:
-        // if (((player.x->as_i() >> 8) - (room.x >> 8)) > 0) {
-        //     view_x = 0xff;
-        // }
-        view_x = MMAX(player.x->as_i() - room.x - 0x78, 0);
+        view_x = MMAX(MMIN((s16)(player.x->as_i() - room.x - (s16)0x0078), 255), 0);
         break;
     case ScrollType::Vertical:
-        // if (((player.y->as_i() >> 8) - (room.y >> 8)) > 0) {
-        //     view_y = 0xf0;
-        // }
-        view_y = MMAX(player.y->as_i() - room.y - 0x68, 0);
+        view_y = MMAX(MMIN((s16)(player.y->as_i() - room.y - (s16)0x0058), 240), 0);
         break;
     default:
         break;
@@ -383,24 +377,24 @@ prg_rom_2 static void load_new_map() {
     } else {
         vertical_section = is_bottom_section ? SectionBase::Bottom : SectionBase::Top;
     }
-    
-    SectionBase horizontal_section = player.x->as_i() - room.x > 255 ? SectionBase::Right : SectionBase::Left;
-    u8 direction_a = Dungeon::GetNeighborId(room.lead_id, (u8)direction);
-    u8 direction_b = Dungeon::GetNeighborId(room.lead_id, (u8)direction);
+
     switch (room.scroll) {
     case ScrollType::Single:
-        section_id = direction_a;
+        section_id = Dungeon::GetNeighborId(room.lead_id, (u8)direction);
         break;
-    case ScrollType::Horizontal:
+    case ScrollType::Horizontal: {
+        SectionBase horizontal_section = player.x->as_i() - room.x > 255 ? SectionBase::Right : SectionBase::Left;
         section_id = lead.room_base == horizontal_section
-            ? direction_a
-            : direction_b;
+            ? Dungeon::GetNeighborId(room.lead_id, (u8)direction)
+            : Dungeon::GetNeighborId(room.side_id, (u8)direction);
         break;
-    case ScrollType::Vertical:
+    }
+    case ScrollType::Vertical: {
         section_id = lead.room_base == vertical_section
-            ? direction_a
-            : direction_b;
+                ? Dungeon::GetNeighborId(room.lead_id, (u8)direction)
+                : Dungeon::GetNeighborId(room.side_id, (u8)direction);
         break;
+    }
     }
 
     MapLoader::load_map(section_id);

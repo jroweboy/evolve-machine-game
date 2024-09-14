@@ -1,4 +1,33 @@
 ﻿
+SIZE_OF_OBJECT = 22
+OBJECT_COUNT = 16
+SOLID_OBJECT_COUNT = 32
+
+OBJECT_OFFSETOF_X_FR =      0 * OBJECT_COUNT
+OBJECT_OFFSETOF_X_LO =      1 * OBJECT_COUNT
+OBJECT_OFFSETOF_X_HI =      2 * OBJECT_COUNT
+OBJECT_OFFSETOF_Y_FR =      3 * OBJECT_COUNT
+OBJECT_OFFSETOF_Y_LO =      4 * OBJECT_COUNT
+OBJECT_OFFSETOF_Y_HI =      5 * OBJECT_COUNT
+
+OBJECT_OFFSETOF_HITBOX_X =  6 * OBJECT_COUNT
+OBJECT_OFFSETOF_HITBOX_Y =  7 * OBJECT_COUNT
+OBJECT_OFFSETOF_WIDTH    =  8 * OBJECT_COUNT
+OBJECT_OFFSETOF_HEIGHT   =  9 * OBJECT_COUNT
+
+OBJECT_OFFSETOF_STATE =    11 * OBJECT_COUNT
+
+SOLID_OBJECT_OFFSETOF_WIDTH =   5 * SOLID_OBJECT_COUNT
+SOLID_OBJECT_OFFSETOF_HEIGHT =  6 * SOLID_OBJECT_COUNT
+SOLID_OBJECT_OFFSETOF_X_LO =    1 * SOLID_OBJECT_COUNT
+SOLID_OBJECT_OFFSETOF_X_HI =    2 * SOLID_OBJECT_COUNT
+SOLID_OBJECT_OFFSETOF_Y_LO =    3 * SOLID_OBJECT_COUNT
+SOLID_OBJECT_OFFSETOF_Y_HI =    4 * SOLID_OBJECT_COUNT
+SOLID_OBJECT_OFFSETOF_STATE =   0 * SOLID_OBJECT_COUNT
+
+ROOM_OFFSET_X = 3
+ROOM_OFFSET_Y = 5
+
 
 function ram8(label, signed)
   return emu.read(emu.getLabelAddress(label)["address"], emu.memType.nesDebug, signed or false)
@@ -95,24 +124,6 @@ end
 
 -- debug collision
 
-SIZE_OF_OBJECT = 22
-OBJECT_COUNT = 16
-SOLID_OBJECT_COUNT = 32
-
-OBJECT_OFFSETOF_X_FR =      0 * OBJECT_COUNT
-OBJECT_OFFSETOF_X_LO =      1 * OBJECT_COUNT
-OBJECT_OFFSETOF_X_HI =      2 * OBJECT_COUNT
-OBJECT_OFFSETOF_Y_FR =      3 * OBJECT_COUNT
-OBJECT_OFFSETOF_Y_LO =      4 * OBJECT_COUNT
-OBJECT_OFFSETOF_Y_HI =      5 * OBJECT_COUNT
-
-OBJECT_OFFSETOF_HITBOX_X =  6 * OBJECT_COUNT
-OBJECT_OFFSETOF_HITBOX_Y =  7 * OBJECT_COUNT
-OBJECT_OFFSETOF_WIDTH    =  8 * OBJECT_COUNT
-OBJECT_OFFSETOF_HEIGHT   =  9 * OBJECT_COUNT
-
-OBJECT_OFFSETOF_STATE =    11 * OBJECT_COUNT
-
 function draw_object_hitbox()
   local objects = emu.getLabelAddress("objects")["address"]
 
@@ -152,13 +163,6 @@ function draw_object_hitbox()
   end
 end
 
-SOLID_OBJECT_OFFSETOF_WIDTH =   5 * SOLID_OBJECT_COUNT
-SOLID_OBJECT_OFFSETOF_HEIGHT =  6 * SOLID_OBJECT_COUNT
-SOLID_OBJECT_OFFSETOF_X_LO =    1 * SOLID_OBJECT_COUNT
-SOLID_OBJECT_OFFSETOF_X_HI =    2 * SOLID_OBJECT_COUNT
-SOLID_OBJECT_OFFSETOF_Y_LO =    3 * SOLID_OBJECT_COUNT
-SOLID_OBJECT_OFFSETOF_Y_HI =    4 * SOLID_OBJECT_COUNT
-SOLID_OBJECT_OFFSETOF_STATE =   0 * SOLID_OBJECT_COUNT
 
 function draw_solid_hitbox()
   local solids = emu.getLabelAddress("solid_objects")["address"]
@@ -339,23 +343,44 @@ function dump_map()
   emu.drawString(box_x+6, box_y+4, "X")
 end
 
+function write_player_position()
+  local objects = emu.getLabelAddress("objects")["address"]
+  local view_x = emu.read( emu.getLabelAddress("view_x")["address"], emu.memType.nesDebug)
+  local view_y = emu.read( emu.getLabelAddress("view_y")["address"], emu.memType.nesDebug)
+  local room_x = emu.readWord( emu.getLabelAddress("room")["address"] + ROOM_OFFSET_X, emu.memType.nesDebug)
+  local room_y = emu.readWord( emu.getLabelAddress("room")["address"] + ROOM_OFFSET_Y, emu.memType.nesDebug)
+  local room_bounds_x = emu.readWord(emu.getLabelAddress("_ZL13room_bounds_x")["address"], emu.memType.nesDebug)
+  local room_bounds_y = emu.readWord(emu.getLabelAddress("_ZL13room_bounds_y")["address"], emu.memType.nesDebug)
+  local view_y = emu.read( emu.getLabelAddress("view_y")["address"], emu.memType.nesDebug)
+  local player_x_lo = emu.read(objects + OBJECT_OFFSETOF_X_LO, emu.memType.nesDebug)
+  local player_x_hi = emu.read(objects + OBJECT_OFFSETOF_X_HI, emu.memType.nesDebug)
+  local player_y_lo = emu.read(objects + OBJECT_OFFSETOF_Y_LO, emu.memType.nesDebug)
+  local player_y_hi = emu.read(objects + OBJECT_OFFSETOF_Y_HI, emu.memType.nesDebug)
+  
+  emu.drawString(2, 2, string.format("P: (%02x%02x, %02x%02x)", player_x_hi, player_x_lo, player_y_hi, player_y_lo))
+  emu.drawString(2, 10, string.format("V: (%02x, %02x)", view_x, view_y))
+  emu.drawString(2, 18, string.format("R: (%04x, %04x)", room_x, room_y))
+  emu.drawString(2, 26, string.format("B: (%04x, %04x)", room_bounds_x, room_bounds_y))
+end
+
 local key_pressed = 0
 local key_released = 0
 local key_prev = 0
 local show_map = true
 local show_perf = false
 local show_collision = true
+local show_position = true
 PRESSED_1 = 1
 PRESSED_2 = 2
 PRESSED_3 = 4
+PRESSED_4 = 8
 
 function b2n(value)
   return value and 1 or 0
 end
 
-
 function frame_start()
-  local keys = (b2n(emu.isKeyPressed("1")) | (b2n(emu.isKeyPressed("2")) << 1) | (b2n(emu.isKeyPressed("3")) << 2))
+  local keys = (b2n(emu.isKeyPressed("1")) | (b2n(emu.isKeyPressed("2")) << 1) | (b2n(emu.isKeyPressed("3")) << 2) | (b2n(emu.isKeyPressed("4")) << 3))
   key_pressed = keys & (~key_prev)
   key_prev = keys
   if ((key_pressed & PRESSED_1) ~= 0) then
@@ -367,6 +392,9 @@ function frame_start()
   if ((key_pressed & PRESSED_3) ~= 0) then
     show_collision = not show_collision
   end
+  if ((key_pressed & PRESSED_4) ~= 0) then
+    show_position = not show_position
+  end
   if (show_collision) then
     draw_object_hitbox()
     draw_solid_hitbox()
@@ -376,6 +404,12 @@ function frame_start()
   end
   if (show_perf) then
     draw_performance_counters()
+  end
+  if (show_perf) then
+    draw_performance_counters()
+  end
+  if (show_position) then
+    write_player_position()
   end
   --now reset performance counters for the next frame
   for i = 0, scope_count do

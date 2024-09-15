@@ -8,48 +8,84 @@
 
 METASPRITES_COUNT .set 0
 
+.macro IncludeMetasprite Name, Id
+.ifndef .ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Id) )
+  .incbin .sprintf("gen/sprites/%s_metasprite_%d.bin", Name, Id)
+  .ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Id) ):
+.endif
+.endmacro
+
+.macro MetaspriteOffset Base, Name, Id, Frame
+.local Data
+Data = .ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Id) )
+.assert (Data - Base - 1) < 256, error, .sprintf("Metasprite %s frame %d offset is > 256", Name, Frame)
+.byte Data - Base - 1
+.endmacro
+
 .macro MetaspriteReserve Name
 .ident( .sprintf("METASPRITE_%s", Name) ) = METASPRITES_COUNT
 METASPRITES_COUNT .set METASPRITES_COUNT + 1
 .endmacro
 
-.macro MetaspriteAnimation Name, Animation, Frame1, Frame2, Frame3, Frame4
-; .Local Id
+.macro MetaspriteAnimation Name, Animation, F1, F2, F3, F4, F5, F6, F7, F8
+.local Base
 
 ; Id = .ident(Name)
 
-.ifblank Frame1
+.ifblank F1
   .error .sprintf("Must have at least one frame for metasprite %s", Name)
 .endif
 
+Base = .ident( .sprintf("METASPRITE_%d", METASPRITES_COUNT) )
 .ident( .sprintf("METASPRITE_%d", METASPRITES_COUNT) ):
 ; setup the animation frame offset table
-.byte .ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Frame1) ) - .ident( .sprintf("METASPRITE_%d", METASPRITES_COUNT) ) - 1
-.ifnblank Frame2
-.byte .ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Frame2) ) - .ident( .sprintf("METASPRITE_%d", METASPRITES_COUNT) ) - 1
+; Data1 = .ident( .sprintf("METASPRITE_%s_DATA_%d", Name, F1) )
+; .byte Data1 - Mspr - 1
+MetaspriteOffset Base, Name, F1, 1
+.ifnblank F2
+MetaspriteOffset Base, Name, F2, 2
 .endif
-.ifnblank Frame3
-.byte .ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Frame3) ) - .ident( .sprintf("METASPRITE_%d", METASPRITES_COUNT) ) - 1
+.ifnblank F3
+MetaspriteOffset Base, Name, F3, 3
 .endif
-.ifnblank Frame4
-.byte .ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Frame4) ) - .ident( .sprintf("METASPRITE_%d", METASPRITES_COUNT) ) - 1
+.ifnblank F4
+MetaspriteOffset Base, Name, F4, 4
+.endif
+.ifnblank F5
+MetaspriteOffset Base, Name, F5, 5
+.endif
+.ifnblank F6
+MetaspriteOffset Base, Name, F6, 6
+.endif
+.ifnblank F7
+MetaspriteOffset Base, Name, F7, 7
+.endif
+.ifnblank F8
+MetaspriteOffset Base, Name, F8, 8
 .endif
 
+IncludeMetasprite Name, F1
 
-.incbin .sprintf("gen/sprites/%s_metasprite_%d.bin", Name, Frame1)
-.ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Frame1) ):
-
-.ifnblank Frame2
-.incbin .sprintf("gen/sprites/%s_metasprite_%d.bin", Name, Frame2)
-.ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Frame2) ):
+.ifnblank F2
+IncludeMetasprite Name, F2
 .endif
-.ifnblank Frame3
-.incbin .sprintf("gen/sprites/%s_metasprite_%d.bin", Name, Frame3)
-.ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Frame3) ):
+.ifnblank F3
+IncludeMetasprite Name, F3
 .endif
-.ifnblank Frame4
-.incbin .sprintf("gen/sprites/%s_metasprite_%d.bin", Name, Frame4)
-.ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Frame4) ):
+.ifnblank F4
+IncludeMetasprite Name, F4
+.endif
+.ifnblank F5
+IncludeMetasprite Name, F5
+.endif
+.ifnblank F6
+IncludeMetasprite Name, F6
+.endif
+.ifnblank F7
+IncludeMetasprite Name, F7
+.endif
+.ifnblank F8
+IncludeMetasprite Name, F8
 .endif
 
 MetaspriteReserve .sprintf("%s_%s", Name, Animation)
@@ -82,24 +118,25 @@ MetaspriteAnimation "kitty", "walk_down",   8, 9, 10, 11
 MetaspriteAnimation "kitty", "walk_left",   12, 13, 14, 15
 
 
-MetaspriteAnimation "weapons", "sphere",   0, 1, 2, 3
-MetaspriteAnimation "weapons", "pyramid",  4, 5, 6, 7
-MetaspriteAnimation "weapons", "diamond",  8, 9, 10, 11
-MetaspriteAnimation "weapons", "cube",     12, 13, 14, 15
+MetaspriteAnimation "weapon_cube", "base",   0,  1,  2,  3
+MetaspriteAnimation "weapon_cube", "atk1",   4,  5,  6,  7
+MetaspriteAnimation "weapon_cube", "atk2",   8,  9,  10, 11
+MetaspriteAnimation "weapon_cube", "atk3",   12, 13, 14, 15
 
+MetaspriteAnimation "weapon_diamond", "base",   0,  1,  2,  3
+MetaspriteAnimation "weapon_diamond", "atk1",   4,  5,  6,  7
+MetaspriteAnimation "weapon_diamond", "atk2",   8,  9,  10, 11
+MetaspriteAnimation "weapon_diamond", "atk3",   12, 13, 14, 15
 
+MetaspriteAnimation "weapon_pyramid", "base",   0,  1,  2,  3
+MetaspriteAnimation "weapon_pyramid", "atk1",   4,  5,  6,  7
+MetaspriteAnimation "weapon_pyramid", "atk2",   8,  9,  10, 11
+MetaspriteAnimation "weapon_pyramid", "atk3",   12, 13, 14, 15
 
-
-.segment "_pprg__rom__1"
-.export kitty_chr
-kitty_chr:
-.incbin "gen/sprites/kitty.chr.dnt"
-.byte $ff, $ff
-
-.export weapons_chr
-weapons_chr:
-.incbin "gen/sprites/weapons.chr.dnt"
-.byte $ff, $ff
+MetaspriteAnimation "weapon_sphere", "base",   0,  1,  2,  3
+MetaspriteAnimation "weapon_sphere", "atk1",   4,  5,  6,  7
+MetaspriteAnimation "weapon_sphere", "atk2",   8,  9,  10, 11
+MetaspriteAnimation "weapon_sphere", "atk3",   12, 13, 14, 15
 
 
 .segment "_pprg__rom__2"

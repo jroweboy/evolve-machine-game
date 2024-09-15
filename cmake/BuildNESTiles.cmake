@@ -43,7 +43,10 @@ function(build_nes_tiles)
   if (NOT tiled_script)
     message(FATAL_ERROR "Cannot generate BG data: Unable to find builder script process_tiled_maps.py")
   endif()
-
+  
+  include(BuildMetasprites)
+  build_metasprites(TARGET ${CMAKE_SOURCE_DIR}/src/sprite_render.s SRC ${CMAKE_SOURCE_DIR}/chr DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
+  
   # build the room graphics
   # basepath is the input folder
   set(room_basepath ${TILES_SRC}/rooms)

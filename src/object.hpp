@@ -68,11 +68,15 @@ struct Object {
 
     /// Counter for number of iframes this object has.
     u8 iframe;
+
+    /// type of object
+    ObjectType type;
+
 } __attribute__((packed));
 
 #define SOA_STRUCT Object
 #define SOA_MEMBERS \
-    MEMBER(metasprite) MEMBER(state) MEMBER(tile_offset) MEMBER(animation_frame) MEMBER(frame_counter) \
+    MEMBER(metasprite) MEMBER(type) MEMBER(state) MEMBER(tile_offset) MEMBER(animation_frame) MEMBER(frame_counter) \
     MEMBER(direction) MEMBER(speed) MEMBER(attribute) MEMBER(hp) MEMBER(atk) MEMBER(x) MEMBER(y) MEMBER(hitbox) \
     MEMBER(collision) MEMBER(iframe)
 #include <soa-struct.inc>
@@ -81,6 +85,7 @@ extern soa::Array<Object, OBJECT_COUNT> objects;
 
 struct ObjectInitData {
     Metasprite metasprite;
+    ObjectType type;
     Hitbox hitbox;
     State state;
     u8 collision;

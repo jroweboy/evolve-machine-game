@@ -7,6 +7,7 @@
 prg_rom_1 ObjectInitData object_init_data[(u8)ObjectType::Count] = {
     {
         .metasprite = Metasprite::KittyLeft,
+        .type = ObjectType::Player,
         .hitbox = { .x = 0, .y = 8, .width = 8, .height = 8},
         .state = State::Normal,
         .collision = 0,
@@ -16,6 +17,7 @@ prg_rom_1 ObjectInitData object_init_data[(u8)ObjectType::Count] = {
     },
     {
         .metasprite = Metasprite::WeaponSphere,
+        .type = ObjectType::WeaponSphere,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::GroundedWeapon,
         .collision = CollisionType::Pickup,
@@ -25,6 +27,7 @@ prg_rom_1 ObjectInitData object_init_data[(u8)ObjectType::Count] = {
     },
     {
         .metasprite = Metasprite::WeaponPyramid,
+        .type = ObjectType::WeaponPyramid,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::GroundedWeapon,
         .collision = CollisionType::Pickup,
@@ -34,6 +37,7 @@ prg_rom_1 ObjectInitData object_init_data[(u8)ObjectType::Count] = {
     },
     {
         .metasprite = Metasprite::WeaponDiamond,
+        .type = ObjectType::WeaponDiamond,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::GroundedWeapon,
         .collision = CollisionType::Pickup,
@@ -43,6 +47,7 @@ prg_rom_1 ObjectInitData object_init_data[(u8)ObjectType::Count] = {
     },
     {
         .metasprite = Metasprite::WeaponCube,
+        .type = ObjectType::WeaponCube,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::GroundedWeapon,
         .collision = CollisionType::Pickup,

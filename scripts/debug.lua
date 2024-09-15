@@ -366,10 +366,10 @@ end
 local key_pressed = 0
 local key_released = 0
 local key_prev = 0
-local show_map = true
+local show_map = false
 local show_perf = false
-local show_collision = true
-local show_position = true
+local show_collision = false
+local show_position = false
 PRESSED_1 = 1
 PRESSED_2 = 2
 PRESSED_3 = 4

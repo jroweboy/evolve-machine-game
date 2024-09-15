@@ -208,7 +208,7 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
       chr_count[chr.stem] = r // 16
       ratio = 1 - (w / r)
       print("<total> :{:>6.1%} ({} => {} bytes, {})".format(ratio, r, w, chr.stem), file=sys.stderr)
-      byts += b"\xff\xff" # add a terminator bit here
+      # byts += b"\xff\xff" # add a terminator bit here
       with open(outchr_path / f"{chr.stem}.chr.dnt", 'wb') as o:
         o.write(byts)
 
@@ -216,7 +216,7 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
   for nmt in rawnmt_path.glob("*.nmt"):
     with open(nmt, 'rb') as f:
       byts = compress(f.read(), allow_partial=True)
-      byts += b"\xff\xff" # add a terminator bit here
+      # byts += b"\xff\xff" # add a terminator bit here
       with open(outnmt_path / f"{nmt.stem}.nmt.dnt", 'wb') as o:
         o.write(byts)
   
@@ -224,7 +224,7 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
   for atr in rawatr_path.glob("*.atr"):
     with open(atr, 'rb') as f:
       byts = compress(f.read(), allow_partial=True)
-      byts += b"\xff\xff" # add a terminator bit here
+      # byts += b"\xff\xff" # add a terminator bit here
       with open(outatr_path / f"{atr.stem}.atr.dnt", 'wb') as o:
         o.write(byts)
 
@@ -232,7 +232,7 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
   for p in outpal_path.glob("*.pal"):
     with open(p, 'rb') as f:
       byts = compress(f.read(), allow_partial=True)
-      byts += b"\xff\xff" # add a terminator bit here
+      # byts += b"\xff\xff" # add a terminator bit here
       with open(outpal_path / f"{p.stem}.pal.dnt", 'wb') as o:
         o.write(byts)
 
@@ -245,11 +245,12 @@ def main(nestiler: Path, huffmunch: Path, fin: Path, fout: Path):
     for p in [outatr_path, outchr_path, outnmt_path, outpal_path, outspr_path]:
       for f in sorted(p.glob("*.dnt")):
         with open(f, 'rb') as i:
-          byts = i.read()
+          byts = i.read() + b"\xff\xff"
           o.write(byts)
           file_count += 1
           file_size += [len(byts)]
           file_name += [f.stem]
+          print(f" file {f.stem} size {len(byts)}")
       
   # add the sizes to the front of the file
   with open(

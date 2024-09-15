@@ -44,11 +44,14 @@ enum class GameMode : u8 {
 
 enum class ObjectType : u8 {
     Player,
-    WeaponSphere,
-    WeaponPyramid,
-    WeaponDiamond,
     WeaponCube,
+    WeaponDiamond,
+    WeaponPyramid,
+    WeaponSphere,
+    Armadillo,
+    Pidgey,
     Count,
+    None = 0xff,
 };
 
 enum class Metasprite : u8 {
@@ -59,9 +62,27 @@ enum class Metasprite : u8 {
     KittyLeft,
 
     WeaponSphere,
+    WeaponSphereAtk1,
+    WeaponSphereAtk2,
+    WeaponSphereAtk3,
     WeaponPyramid,
+    WeaponPyramidAtk1,
+    WeaponPyramidAtk2,
+    WeaponPyramidAtk3,
     WeaponDiamond,
+    WeaponDiamondAtk1,
+    WeaponDiamondAtk2,
+    WeaponDiamondAtk3,
     WeaponCube,
+    WeaponCubeAtk1,
+    WeaponCubeAtk2,
+    WeaponCubeAtk3,
+
+    ArmadilloLeft,
+    ArmadilloRight,
+
+    PidgeyLeft,
+    PidgeyRight,
 
     Count,
 };
@@ -98,27 +119,18 @@ extern _BitInt(24) global_timer;
 #endif
 
 /// Pointer to the IRQ function
-extern void (*irq_pointer)();
+// extern void (*irq_pointer)();
 
 /// During init, this is set to true if we have epsm. We can use this for custom
 /// IRQ raster effects or something later, i dunno yet.
 extern bool has_epsm;
 
-/// Tracks the current offset to write the BG CHR tiles to for the offset.
-/// When adding the CHR tiles, this is a convenient way to know what the last VRAM address is
-/// so we can draw the next CHR tiles here and move it forward after.
-extern u16 bg_chr_offset;
-/// When generating the dungeon map, we want to make sure we don't spawn things that
-/// over flow the chr count, so this is used in each room to make sure that its within
-/// that parameter. This is also written to the object data itself, so that the metasprite rendering
-/// code can offset the tile in the metasprite by the location it is in CHR-RAM
-extern u8 bg_chr_count;
+/// Type of weapon we have equipped (or None if not equipped)
+extern ObjectType equipped_weapon;
 
-/// Same as `bg_chr_offset` but for the CHR in 0x1000
-extern u16 sp_chr_offset;
-extern u8 sp_chr_count;
+/// Type of weapons we have collected (or none if the slot is empty)
+extern ObjectType weapon_inventory[4];
 
-extern "C" u8 hud_tile_offset;
 
 #define prg_rom_1 __attribute__((section(".prg_rom_1")))
 #define prg_rom_2 __attribute__((section(".prg_rom_2")))

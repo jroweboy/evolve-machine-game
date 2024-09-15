@@ -21,50 +21,47 @@ __attribute__((section(".zp"))) _BitInt(24) global_timer;
 
 // Reserve 3 bytes of RAM as an editable IRQ handler. 
 // The linker is expecting this to be named exactly irq
-noinit void (*irq_pointer)();
-noinit u8 irq_counter;
+// noinit void (*irq_pointer)();
+// noinit u8 irq_counter;
 noinit bool has_epsm;
-
-// Global data for tracking CHR allocations
-noinit u16 bg_chr_offset;
-noinit u8 bg_chr_count;
-noinit u16 sp_chr_offset;
-noinit u8 sp_chr_count;
-noinit u8 hud_tile_offset;
 
 // Define the global object arrays
 noinit soa::Array<Object, OBJECT_COUNT> objects;
 noinit soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 noinit u8 solid_object_offset;
 
+noinit ObjectType equipped_weapon;
+noinit ObjectType weapon_inventory[4];
+
+
 // IRQ handler that will just increment a counter and return
-extern "C" void irq_detection();
-extern "C" void irq_default();
-asm(R"ASM(
-.section .text.irqdetect,"ax",@progbits
-.globl irq
-irq:
-    pha
-        ; Ack the IRQ source on the EPSM
-        lda #$27
-        sta $401c
-        lda #$30
-        sta $401d
-        jmp (irq_pointer)
+// extern "C" void irq_detection();
+// extern "C" void irq_default();
+// asm(R"ASM(
+// .section .text.irqdetect,"ax",@progbits
+// .globl irq
+// irq:
+//     pha
+//         ; Ack the IRQ source on the EPSM
+//         lda #$27
+//         sta $401c
+//         lda #$30
+//         sta $401d
+//         jmp (irq_pointer)
 
-.globl irq_detection
-irq_detection:
-        ; inform the main thread that we did something
-        inc irq_counter
-    pla
-    rti
+// .globl irq_detection
+// irq_detection:
+//         ; inform the main thread that we did something
+//         inc irq_counter
+//     pla
+//     rti
 
-.globl irq_default
-irq_default:
-    pla
-    rti
+// .globl irq_default
+// irq_default:
+//     pla
+//     rti
 
-)ASM");
+// )ASM");
 
 extern "C" void __putchar(char c) { POKE(0x401b, c); }
 
@@ -75,8 +72,8 @@ static void main_init() {
     ppu_off();
 
     set_chr_bank(3);
-        vram_adr(0);
-        vram_fill(0xff, 0x2000);
+    vram_adr(0);
+    vram_fill(0xff, 0x2000);
     // u32 magic;
     // vram_adr(0x2000 - 4);
     // vram_read(&magic, 4);
@@ -107,36 +104,36 @@ static void main_init() {
     move_all_sprites_offscreen();
 }
 
-void irq_detect() {
-    // Switch the IRQ handler to increment a counter
-    irq_pointer = irq_detection;
+// void irq_detect() {
+//     // Switch the IRQ handler to increment a counter
+//     irq_pointer = irq_detection;
 
-    u8 current_counter = irq_counter;
+//     u8 current_counter = irq_counter;
 
-    CLI();
+//     CLI();
     
-    POKE(0x401c, 0x29); // Enable IRQ
-    POKE(0x401d, 0x8f);
-    POKE(0x401c, 0x25); // Timer A Lo
-    POKE(0x401d, 0x00);
-    POKE(0x401c, 0x24); // Timer A Hi
-    POKE(0x401d, 0xff);
-    POKE(0x401c, 0x27); // Load and Enable Timer A IRQ
-    POKE(0x401d, 0x05);
+//     POKE(0x401c, 0x29); // Enable IRQ
+//     POKE(0x401d, 0x8f);
+//     POKE(0x401c, 0x25); // Timer A Lo
+//     POKE(0x401d, 0x00);
+//     POKE(0x401c, 0x24); // Timer A Hi
+//     POKE(0x401d, 0xff);
+//     POKE(0x401c, 0x27); // Load and Enable Timer A IRQ
+//     POKE(0x401d, 0x05);
 
-    ppu_wait_nmi();
+//     ppu_wait_nmi();
 
-    // Reset IRQ in case it conflicts with a cart mapper and did not get reset earlier.
-    POKE(0x401c, 0x27);
-    POKE(0x401d, 0x30);
+//     // Reset IRQ in case it conflicts with a cart mapper and did not get reset earlier.
+//     POKE(0x401c, 0x27);
+//     POKE(0x401d, 0x30);
 
-    SEI();
+//     SEI();
 
-    has_epsm = current_counter != irq_counter;
+//     has_epsm = current_counter != irq_counter;
 
-    // Reset IRQ back to the default "just return" handler
-    irq_pointer = irq_default;
-}
+//     // Reset IRQ back to the default "just return" handler
+//     irq_pointer = irq_default;
+// }
 
 prg_rom_2 __attribute__((noinline)) static void run_gamemode() {
     // I split this out so we can turn off inlining to put it in its own bank
@@ -155,7 +152,7 @@ prg_rom_2 __attribute__((noinline)) static void run_gamemode() {
 
 int main() {
     main_init();
-    irq_detect();
+    // irq_detect();
 
     while (true) {
         POKE(0x4123, 1);

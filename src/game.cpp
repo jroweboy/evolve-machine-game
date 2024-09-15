@@ -63,13 +63,19 @@ prg_rom_2 static void check_player_collision() {
         if ((collision & CollisionType::Pickup) != 0) {
             if (obj.state == State::GroundedWeapon && (pad_new & PAD_A) != 0) {
                 auto weapon = objects[1];
-                Metasprite tmp = weapon.metasprite.get();
-                weapon.metasprite = obj.metasprite.get();
+                equipped_weapon = obj->type;
+                Metasprite tmp = weapon->metasprite;
+                auto tmp2 = weapon->tile_offset;
+                auto tmptype = weapon->type;
+                weapon.type = obj->type;
+                weapon.metasprite = obj->metasprite;
                 weapon.state = State::EquippedWeapon;
-                weapon.attribute = obj.attribute.get();
-                weapon.tile_offset = obj.tile_offset.get();
+                weapon.attribute = obj->attribute;
+                weapon.tile_offset = obj->tile_offset;
                 if (tmp > Metasprite::None) {
+                    obj.type = tmptype;
                     obj.metasprite = tmp;
+                    obj.tile_offset = tmp2;
                     obj.state = State::GroundedWeapon;
                 } else {
                     obj.state = State::Hidden;
@@ -459,6 +465,7 @@ namespace Game {
 prg_rom_2 void init() {
     // ppu_wait_nmi();
     // ppu_off();
+    equipped_weapon = ObjectType::None;
     pal_spr(&sprites_pal);
     prev_game_mode = GameMode::MapLoader;
     game_mode = GameMode::InGame;

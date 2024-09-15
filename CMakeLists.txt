@@ -78,6 +78,7 @@ include(AddCa65Source)
 add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/donut.s)
 add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/music.s)
 add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/metasprite.s)
+set_source_files_properties(${CMAKE_SOURCE_DIR}/src/ca65/metasprite.s OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/gen/compressed/archive.dnt)
 
 target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE
     -g -gdwarf-4           # We want debug info generated for all builds
@@ -106,8 +107,6 @@ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE NES)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE gen)
 
-include(BuildMetasprites)
-build_metasprites(TARGET ${CMAKE_SOURCE_DIR}/src/sprite_render.s SRC ${CMAKE_SOURCE_DIR}/chr DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 include(BuildNESTiles)
 build_nes_tiles(TARGET ${CMAKE_SOURCE_DIR}/src/graphics.s SRC ${CMAKE_SOURCE_DIR}/chr DEST ${CMAKE_CURRENT_BINARY_DIR}/gen)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen)

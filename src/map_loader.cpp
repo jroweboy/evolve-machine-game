@@ -44,6 +44,23 @@ const soa::Array<SectionLookup, static_cast<u8>(SectionBase::Count)> section_lut
     {Archive::up_nmt, Archive::updown_chr, Archive::up_atr, Archive::updown_pal, MIRROR_HORIZONTAL, updown_chr_offset, updown_chr_count},
 };
 
+
+// Global data for tracking CHR allocations
+noinit u16 bg_chr_offset;
+noinit u8 bg_chr_count;
+noinit u16 sp_chr_offset;
+noinit u8 sp_chr_count;
+noinit u8 hud_tile_offset;
+
+struct ObjectTileOffset {
+    ObjectType type;
+    u8 offset;
+};
+#define SOA_STRUCT ObjectTileOffset
+#define SOA_MEMBERS MEMBER(type) MEMBER(offset)
+#include <soa-struct.inc>
+noinit soa::Array<ObjectTileOffset, 8> runtime_object_tile_mapping;
+
 noinit Room room;
 noinit Section lead;
 noinit Section side;
@@ -63,21 +80,6 @@ static void read_map_room(u8 section_id) {
     Dungeon::load_room_from_chrram(room_id);
     Dungeon::load_section_to_lead(room.lead_id);
     Dungeon::load_section_to_side(room.side_id);
-}
-
-// TODO: store the offset in RAM for the loaded objects
-constexpr u8 get_tile_offset(ObjectType obj) {
-    switch (obj) {
-    case ObjectType::Player:
-        return 0;
-    case ObjectType::WeaponSphere:
-    case ObjectType::WeaponPyramid:
-    case ObjectType::WeaponDiamond:
-    case ObjectType::WeaponCube:
-        return kitty_chr_count + hud_chr_count;
-    case ObjectType::Count:
-        return 0;
-    }
 }
 
 namespace RoomObject {
@@ -152,6 +154,79 @@ __attribute__((section(".prg_rom_1.wall_offset_y"))) = {
 };
 
 
+static const Archive weapon_lut[] = {
+    Archive::weapon_cube_chr,
+    Archive::weapon_diamond_chr,
+    Archive::weapon_pyramid_chr,
+    Archive::weapon_sphere_chr,
+};
+
+constexpr Archive get_weapon_tile(u8 offset) {
+    return weapon_lut[offset];
+}
+
+
+struct ObjectTileCount {
+    u16 tile_offset;
+    Archive archive;
+    u8 tile_count;
+};
+#define SOA_STRUCT ObjectTileCount
+#define SOA_MEMBERS MEMBER(tile_offset) MEMBER(archive) MEMBER(tile_count)
+#include <soa-struct.inc>
+static const soa::Array<ObjectTileCount, (u8)ObjectType::Count> object_tile_lut = {
+    // Player,
+    // WeaponSphere,
+    // WeaponPyramid,
+    // WeaponDiamond,
+    // WeaponCube,
+    // Armadillo,
+    // Pidgey,
+    {kitty_chr_offset, Archive::kitty_chr, kitty_chr_count},
+    {weapon_cube_chr_offset, Archive::weapon_cube_chr, weapon_cube_chr_count},
+    {weapon_diamond_chr_offset, Archive::weapon_diamond_chr, weapon_diamond_chr_count},
+    {weapon_pyramid_chr_offset, Archive::weapon_pyramid_chr, weapon_pyramid_chr_count},
+    {weapon_sphere_chr_offset, Archive::weapon_sphere_chr, weapon_sphere_chr_count},
+    {armadillo_chr_offset, Archive::armadillo_chr, armadillo_chr_count},
+    {pidgey_chr_offset, Archive::pidgey_chr, pidgey_chr_count},
+};
+
+static u8 get_or_load_tile(ObjectType obj) {
+    if (obj == ObjectType::Player) {
+        // DEBUGGER(3);
+        return 0;
+    }
+    if (equipped_weapon == obj) {
+        DEBUGGER(1);
+        return kitty_chr_count + hud_chr_count;
+    }
+
+    u8 i = 0;
+    while (runtime_object_tile_mapping[i].type != ObjectType::None) {
+        if (runtime_object_tile_mapping[i].type == obj) {
+            return runtime_object_tile_mapping[i].offset;
+        }
+        i++;
+    }
+    if (i == 7) {
+        // todo what if theres no room left? how to error?
+        DEBUGGER(2);
+        return 0; // ERROR
+    }
+    // Couldn't find that object type in ram, so load it
+    // load the object into the most recent slot
+    u8 tile_count = sp_chr_count;
+    const auto object = object_tile_lut[(u8)obj].get();
+    vram_adr(sp_chr_offset);
+    donut_decompress_vram(object.archive);
+    sp_chr_count += object.tile_count;
+    sp_chr_offset += object.tile_offset;
+    runtime_object_tile_mapping[i].type = obj;
+    runtime_object_tile_mapping[i].offset = tile_count;
+    // DEBUGGER(tile_count);
+    return tile_count;
+}
+
 
 static bool add_solid_wall(const SectionObjectRect& wall, SectionBase section) {
     if (solid_object_offset >= SOLID_OBJECT_COUNT) {
@@ -206,6 +281,7 @@ prg_rom_1 static void load_section(const Section& section) {
             // if we haven't loaded this exit type, copy it into chr
             if (room_obj_chr_counts[i] == 0) {
                 room_obj_chr_counts[i] = bg_chr_count;
+                room_obj_chr_counts[Dungeon::OppositeDirection(i)] = bg_chr_count;
                 vram_adr(bg_chr_offset);
                 // donut_decompress(graphics.chr);
                 donut_decompress_vram(graphics.chr);
@@ -213,8 +289,6 @@ prg_rom_1 static void load_section(const Section& section) {
                 bg_chr_count += graphics.chr_count;
             }
             // and now we can write the tile data to the nametable
-            // auto exitlut = section_exit_lut[static_cast<u8>(section.room_base)];
-            // auto exit = exitlut->exits[i];
 
             const auto wall = section_exit_lut[(u8)section.room_base*4 + i].get();
             u8 chr_offset = room_obj_chr_counts[i];
@@ -230,20 +304,17 @@ prg_rom_1 static void load_section(const Section& section) {
                     ++offset;
                 }
             }
-            // TODO: And now the attrs
+            // TODO: And now the attrs for the exits
 
             // There's an exit at this spot, so add the collision box
             // const auto wall = section_exit_lut[(u8)section.room_base*4 + i].get();
             add_solid_wall(wall, section.room_base);
         }
     }
-    // For now, load all the 
 
     // and then write out all the attributes
     vram_adr(nmt_addr + 0x3c0);
     vram_write(attr_buffer.data(), 64);
-    
-    // set_prg_bank(CODE_BANK);
 
     // Load all objects for this side of the map
     u8 i = 1;
@@ -261,9 +332,10 @@ prg_rom_1 static void load_section(const Section& section) {
         }
         const auto init = object_init_data[(u8)obj.id];
         slot.state = init.state;
+        slot.type = init.type;
         slot.collision = init.collision;
         slot.metasprite = init.metasprite;
-        slot.tile_offset = get_tile_offset(obj.id);
+        slot.tile_offset = get_or_load_tile(obj.id);
         slot.x = obj.x;
         slot.y = obj.y;
         slot.attribute = init.attribute;
@@ -274,17 +346,15 @@ prg_rom_1 static void load_section(const Section& section) {
         slot.hitbox.width = init.hitbox.width;
         slot.hitbox.height = init.hitbox.height;
     }
-
-    // set_prg_bank(GRAPHICS_BANK);
 }
-
-// [[maybe_unused]] constexpr u8 section_base_to_mapstyle_lut[] = {
-
-// };
 
 namespace MapLoader {
 
     void load_map(u8 section_id) {
+
+        // TODO save the previous room state when leaving
+        read_map_room(section_id);
+
         move_all_sprites_offscreen();
 
         // TODO turn off DPCM if its playing
@@ -293,31 +363,21 @@ namespace MapLoader {
         for (u8 i=0; i < 4; ++i) {
             room_obj_chr_counts[i] = 0;
         }
-
-        // switch to the 16kb bank that holds the level
-        set_prg_bank(GRAPHICS_BANK);
+        #pragma clang loop unroll(enable)
+        for (u8 i=0; i < runtime_object_tile_mapping.size(); ++i) {
+            runtime_object_tile_mapping[i].type = ObjectType::None;
+            runtime_object_tile_mapping[i].offset = 0;
+        }
 
         // clear out all old solid objects
         for (auto solid : solid_objects) {
             solid.state = (CollisionType)0;
         }
 
-        // TODO save the previous room state when leaving
-        read_map_room(section_id);
+        // switch to the 16kb bank that holds the level
+        set_prg_bank(GRAPHICS_BANK);
 
-        
-        set_mirroring(section_lut[(u8)lead.room_base].mirroring);
-
-        bg_chr_count = 0;
-        bg_chr_offset = 0x0000;
         set_chr_bank(0);
-        vram_adr(0x00);
-        u8 room_base = static_cast<u8>(lead.room_base);
-        // const char* chr = section_lut[room_base].chr;
-        // donut_decompress(chr);
-        donut_decompress_vram(section_lut[room_base].chr);
-        bg_chr_offset += section_lut[room_base].chr_offset;
-        bg_chr_count += section_lut[room_base].chr_count;
 
         // Load the basic solid objects from this style of map
         // const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
@@ -326,15 +386,28 @@ namespace MapLoader {
 
         // now load the collision data for this map
         // set_prg_bank(GRAPHICS_BANK);
-        load_section(lead);
 
-        if (room.scroll != ScrollType::Single) {
-            load_section(side);
-        }
+        u8 room_base = static_cast<u8>(lead.room_base);
+
+        // set_prg_bank(CODE_BANK);
+        // if we are using a vertical configuration, update the mirroring config
+        u8 mirroring = section_lut[room_base].mirroring;
+        set_mirroring(mirroring);
+
+
+        bg_chr_count = 0;
+        bg_chr_offset = 0x0000;
+        vram_adr(0x00);
+        // set_chr_bank(3);
+        // const char* chr = section_lut[room_base].chr;
+        // donut_decompress(chr);
+        donut_decompress_vram(section_lut[room_base].chr);
+        bg_chr_offset += section_lut[room_base].chr_offset;
+        bg_chr_count += section_lut[room_base].chr_count;
 
         // always add the kitty tile to the CHR
         // start on the chr offset at $1000
-        sp_chr_count = 1;
+        sp_chr_count = 0;
         sp_chr_offset = 0x1000;
         vram_adr(sp_chr_offset);
         // donut_decompress(&kitty_chr);
@@ -343,7 +416,7 @@ namespace MapLoader {
         sp_chr_offset += kitty_chr_offset;
 
         // Load HUD font
-        hud_tile_offset = sp_chr_count;
+        hud_tile_offset = sp_chr_count + 1;
         vram_adr(sp_chr_offset);
         // donut_decompress(&hudfont_chr);
         donut_decompress_vram(Archive::hudfont_chr);
@@ -351,16 +424,20 @@ namespace MapLoader {
         sp_chr_offset += hud_chr_offset;
 
         // and load the weapons
-        vram_adr(sp_chr_offset);
         // donut_decompress(&weapons_chr);
-        donut_decompress_vram(Archive::weapons_chr);
-        sp_chr_count += weapons_chr_count;
-        sp_chr_offset += weapons_chr_offset;
+        if (equipped_weapon != ObjectType::None) {
+            vram_adr(sp_chr_offset);
+            donut_decompress_vram(get_weapon_tile((u8)equipped_weapon - (u8)ObjectType::WeaponCube));
+        }
+        sp_chr_count += weapon_chr_count;
+        sp_chr_offset += weapon_chr_offset;
 
-        // set_prg_bank(CODE_BANK);
-        // if we are using a vertical configuration, update the mirroring config
-        u8 mirroring = section_lut[room_base].mirroring;
-        set_mirroring(mirroring);
+        
+        load_section(lead);
+
+        if (room.scroll != ScrollType::Single) {
+            load_section(side);
+        }
 
         // const char* palette = section_lut[room_base].palette;
         // std::array<u8, 16> palette;

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import math
 import sys
 from pathlib import Path
 from struct import *
@@ -26,6 +27,20 @@ def main(fin: Path, fout: Path):
       out = []
       for metasprite in range(0, 256):
         sprites = []
+        # estimate a box for the sprite to use for centering
+        meta_width = 0
+        # meta_height = 0
+        for sprite in range(0, 64):
+          spr_idx = 2 + metasprite * 256 + sprite * 4
+          spr = byts[spr_idx:spr_idx+4]
+          if (spr[0] == 0xff):
+            break
+          spr_y = spr[0] - grid_y
+          spr_x = spr[3] - grid_x
+          meta_width = max(int(math.log(spr_x + 8, 2)) * 2, meta_width)
+          # meta_height = max(int(math.log(spr_y + 16, 2)) * 2, meta_width)
+
+
         for sprite in range(0, 64):
           # load the four bytes for this sprite from the bytes
           spr_idx = 2 + metasprite * 256 + sprite * 4
@@ -39,14 +54,14 @@ def main(fin: Path, fout: Path):
           # since these are 8x16 sprites, we need to offset the tile id properly
           tile_id = spr[1] * 2 + 1
           attr = spr[2]
-          offset = 0
-          # HACK move the left/right kitty sprite over a bit
+          # offset = 0
+          # HACK move the up/down kitty sprite over a bit
           if file.stem == "kitty":
             if metasprite in range(4,8):
-              offset = 8
+              meta_width = 24
             if metasprite in range(12,16):
-              offset = 8
-          spr_x = spr[3] - grid_x - offset
+              meta_width = 24
+          spr_x = (spr[3] - grid_x) - meta_width // 2 + 1
           # NOTICE: we change the order slightly to allow skipping a sprite if its offscreen
           # print(f" {tile_id}, {attr}, {spr_y}, {spr_x}")
           sprites.append(pack("<BBbb", tile_id, attr, spr_y, spr_x))
@@ -61,15 +76,17 @@ def main(fin: Path, fout: Path):
         with open((fout / "sprites" / f"{file.stem}_metasprite_{metasprite}.bin"), 'wb') as single:
           single.write(o)
 
+      # this is broken but it keeps cmake from rebuilding all the time for now.
       with open((fout / "sprites" / f"{file.stem}_metasprite.msb"), 'wb') as o:
         offset = len(out)
         for byt in out:
           offset += len(byt)
-
-          if (offset > 255):
-            print(f"<ERROR> Total length of metasprites for {file.stem} is greater than 255", file=sys.stderr)
-            exit(1)
-          o.write(pack("<B", offset))
+          # if (offset > 255):
+          #   print(f"<ERROR> Total length of metasprites for {file.stem} is greater than 255", file=sys.stderr)
+          #   exit(1)
+          
+          if (offset < 255):
+            o.write(pack("<B", offset))
         for byt in out:
           o.write(byt)
 
@@ -112,6 +129,12 @@ constexpr uint16_t {name}_chr_offset = {off};
   for name,count in chr_count.items():
     asm_file += f"""
 constexpr uint8_t {name}_chr_count = {count};
+"""
+
+  asm_file += f"""
+// Max weapon offset/count
+constexpr uint16_t weapon_chr_offset = {max([ x for name, x in chr_offset.items() if "weapon" in name])};
+constexpr uint8_t weapon_chr_count = {max([ x for name, x in chr_count.items() if "weapon" in name])};
 """
 
   with open(fout / "header" / "sprites_constants.hpp", 'w') as out:

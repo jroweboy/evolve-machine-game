@@ -2,7 +2,7 @@
 .section .prg_rom_2,"ax",@progbits
 .globl check_solid_collision_x
 
-.set SIZE_OF_OBJECT, 22
+.set SIZE_OF_OBJECT, 23
 .set SIZE_OF_SOLID_OBJECT, 7
 .set OBJECT_COUNT, 16
 .set SOLID_OBJECT_COUNT, 32

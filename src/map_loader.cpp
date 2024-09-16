@@ -44,7 +44,6 @@ const soa::Array<SectionLookup, static_cast<u8>(SectionBase::Count)> section_lut
     {Archive::up_nmt, Archive::updown_chr, Archive::up_atr, Archive::updown_pal, MIRROR_HORIZONTAL, updown_chr_offset, updown_chr_count},
 };
 
-
 // Global data for tracking CHR allocations
 noinit u16 bg_chr_offset;
 noinit u8 bg_chr_count;
@@ -197,7 +196,6 @@ static u8 get_or_load_tile(ObjectType obj) {
         return 0;
     }
     if (equipped_weapon == obj) {
-        DEBUGGER(1);
         return kitty_chr_count + hud_chr_count;
     }
 
@@ -228,7 +226,7 @@ static u8 get_or_load_tile(ObjectType obj) {
 }
 
 
-static bool add_solid_wall(const SectionObjectRect& wall, SectionBase section) {
+static bool add_solid_wall(const SectionObjectRect& wall, SectionBase section, u8& solid_object_offset) {
     if (solid_object_offset >= SOLID_OBJECT_COUNT) {
         return false;
     }
@@ -246,7 +244,7 @@ static bool add_solid_wall(const SectionObjectRect& wall, SectionBase section) {
     return true;
 }
 
-prg_rom_1 static void load_section(const Section& section) {
+__attribute__((section(".prg_rom_1.load_section"))) static void load_section(const Section& section, u8& solid_object_offset) {
     // u8 section_base = static_cast<u8>(section.room_base);
     u16 nmt_addr = ((u16)section.nametable) << 8;
     vram_adr(nmt_addr);
@@ -269,7 +267,7 @@ prg_rom_1 static void load_section(const Section& section) {
         // if (wall.state == (CollisionType)0) {
         //     continue;
         // }
-        add_solid_wall(section_collision_lut[i].get(), section.room_base);
+        add_solid_wall(section_collision_lut[i].get(), section.room_base, solid_object_offset);
     }
 
     // now load the exits
@@ -308,7 +306,7 @@ prg_rom_1 static void load_section(const Section& section) {
 
             // There's an exit at this spot, so add the collision box
             // const auto wall = section_exit_lut[(u8)section.room_base*4 + i].get();
-            add_solid_wall(wall, section.room_base);
+            add_solid_wall(wall, section.room_base, solid_object_offset);
         }
     }
 
@@ -317,34 +315,31 @@ prg_rom_1 static void load_section(const Section& section) {
     vram_write(attr_buffer.data(), 64);
 
     // Load all objects for this side of the map
-    u8 i = 1;
-    for (const auto& obj : section.objects) {
-        u8 slot_idx = i++;
-        if (obj.id == ObjectType::Player) {
-            slot_idx = 0;
-        }
-        auto slot = objects[slot_idx];
-        if (i > OBJECT_COUNT) {
-            break;
-        }
-        if ((slot.state & 0x80) == 0) {
+    for (const auto obj : section.objects) {
+        // u8 slot_idx = next_slot++;
+        // if (obj.id == ObjectType::Player) {
+        //     slot_idx = 0;
+        // }
+        // auto slot = objects[slot_idx];
+        // if (next_slot > OBJECT_COUNT) {
+        //     break;
+        // }
+        // if ((slot.state & 0x80) == 0) {
+        //     continue;
+        // }
+        if (obj.id == ObjectType::None) {
             continue;
         }
-        const auto init = object_init_data[(u8)obj.id];
-        slot.state = init.state;
-        slot.type = init.type;
-        slot.collision = init.collision;
-        slot.metasprite = init.metasprite;
+        u8 slot_idx = Objects::load_object(obj.id);
+        if (slot_idx & 0x80) {
+            // Ran out of object slots?
+            DEBUGGER(10);
+            break;
+        }
+        auto slot = objects[slot_idx];
         slot.tile_offset = get_or_load_tile(obj.id);
         slot.x = obj.x;
         slot.y = obj.y;
-        slot.attribute = init.attribute;
-        slot.hp = init.hp;
-        slot.atk = init.atk;
-        slot.hitbox.x = init.hitbox.x;
-        slot.hitbox.y = init.hitbox.y;
-        slot.hitbox.width = init.hitbox.width;
-        slot.hitbox.height = init.hitbox.height;
     }
 }
 
@@ -359,11 +354,14 @@ namespace MapLoader {
 
         // TODO turn off DPCM if its playing
         // ppu_off();
-        solid_object_offset = 0;
+
+        // Reset the room state when transitioning
         for (u8 i=0; i < 4; ++i) {
             room_obj_chr_counts[i] = 0;
         }
-        #pragma clang loop unroll(enable)
+        for (u8 i=2; i < OBJECT_COUNT; ++i) {
+            objects[i].state = State::Dead;
+        }
         for (u8 i=0; i < runtime_object_tile_mapping.size(); ++i) {
             runtime_object_tile_mapping[i].type = ObjectType::None;
             runtime_object_tile_mapping[i].offset = 0;
@@ -426,17 +424,18 @@ namespace MapLoader {
         // and load the weapons
         // donut_decompress(&weapons_chr);
         if (equipped_weapon != ObjectType::None) {
+            Archive weapon_chr_tile = get_weapon_tile((u8)equipped_weapon - (u8)ObjectType::WeaponCube);
             vram_adr(sp_chr_offset);
-            donut_decompress_vram(get_weapon_tile((u8)equipped_weapon - (u8)ObjectType::WeaponCube));
+            donut_decompress_vram(weapon_chr_tile);
         }
         sp_chr_count += weapon_chr_count;
         sp_chr_offset += weapon_chr_offset;
 
-        
-        load_section(lead);
+        u8 solid_object_offset = 0;
+        load_section(lead, solid_object_offset);
 
         if (room.scroll != ScrollType::Single) {
-            load_section(side);
+            load_section(side, solid_object_offset);
         }
 
         // const char* palette = section_lut[room_base].palette;

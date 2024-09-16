@@ -6677,13 +6677,13 @@ famistudio_sfx_update:
     sta famistudio_sfx_ptr_hi,x ; Mark channel as inactive
 
 @update_buf:
-    lda famistudio_output_buf ; Compare effect output buffer with main output buffer
-    and #$0f ; If volume of pulse 1 of effect is higher than that of the main buffer, overwrite the main buffer value with the new one
-    sta @tmp 
-    lda famistudio_sfx_buffer+0,x
-    and #$0f
-    cmp @tmp
-    bcc @no_pulse1
+    ; lda famistudio_output_buf ; Compare effect output buffer with main output buffer
+    ; and #$0f ; If volume of pulse 1 of effect is higher than that of the main buffer, overwrite the main buffer value with the new one
+    ; sta @tmp 
+    ; lda famistudio_sfx_buffer+0,x
+    ; and #$0f
+    ; cmp @tmp
+    ; bcc @no_pulse1
     lda famistudio_sfx_buffer+0,x
     sta famistudio_output_buf+0
     lda famistudio_sfx_buffer+1,x
@@ -6692,13 +6692,13 @@ famistudio_sfx_update:
     sta famistudio_output_buf+2
 
 @no_pulse1:
-    lda famistudio_output_buf+3
-    and #$0f
-    sta @tmp
-    lda famistudio_sfx_buffer+3,x
-    and #$0f
-    cmp @tmp
-    bcc @no_pulse2
+    ; lda famistudio_output_buf+3
+    ; and #$0f
+    ; sta @tmp
+    ; lda famistudio_sfx_buffer+3,x
+    ; and #$0f
+    ; cmp @tmp
+    ; bcc @no_pulse2
     lda famistudio_sfx_buffer+3,x
     sta famistudio_output_buf+3
     lda famistudio_sfx_buffer+4,x
@@ -6708,7 +6708,7 @@ famistudio_sfx_update:
 
 @no_pulse2:
     lda famistudio_sfx_buffer+6,x ; Overwrite triangle of main output buffer if it is active
-    beq @no_triangle
+    ; beq @no_triangle
     sta famistudio_output_buf+6
     lda famistudio_sfx_buffer+7,x
     sta famistudio_output_buf+7
@@ -6716,13 +6716,13 @@ famistudio_sfx_update:
     sta famistudio_output_buf+8
 
 @no_triangle:
-    lda famistudio_output_buf+9
-    and #$0f
-    sta @tmp
-    lda famistudio_sfx_buffer+9,x
-    and #$0f
-    cmp @tmp
-    bcc @no_noise
+    ; lda famistudio_output_buf+9
+    ; and #$0f
+    ; sta @tmp
+    ; lda famistudio_sfx_buffer+9,x
+    ; and #$0f
+    ; cmp @tmp
+    ; bcc @no_noise
     lda famistudio_sfx_buffer+9,x
     sta famistudio_output_buf+9
     lda famistudio_sfx_buffer+10,x

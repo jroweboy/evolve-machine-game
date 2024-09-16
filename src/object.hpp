@@ -33,8 +33,8 @@ enum CollisionType {
 };
 
 struct Object {
-    f16_8 x;
-    f16_8 y;
+    fu16_8 x;
+    fu16_8 y;
     
     Hitbox hitbox;
     
@@ -72,7 +72,7 @@ struct Object {
     /// type of object
     ObjectType type;
 
-} __attribute__((packed));
+};
 
 #define SOA_STRUCT Object
 #define SOA_MEMBERS \
@@ -82,25 +82,6 @@ struct Object {
 #include <soa-struct.inc>
 
 extern soa::Array<Object, OBJECT_COUNT> objects;
-
-struct ObjectInitData {
-    Metasprite metasprite;
-    ObjectType type;
-    Hitbox hitbox;
-    State state;
-    u8 collision;
-    u8 attribute;
-    s8 hp;
-    u8 atk;
-};
-#define SOA_STRUCT ObjectInitData
-#define SOA_MEMBERS \
-    MEMBER(metasprite) MEMBER(hitbox) MEMBER(hp) MEMBER(atk) MEMBER(collision) MEMBER(attribute) \
-    MEMBER(state)
-#include <soa-struct.inc>
-
-
-extern ObjectInitData object_init_data[(u8)ObjectType::Count];
 
 struct SolidObject {
     CollisionType state;
@@ -117,12 +98,7 @@ struct SolidObject {
 extern soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 extern u8 solid_object_offset;
 
-// Data for the basic room layouts
-// 4 corners
-// constexpr u8 ROOM_WALL_COUNT = 2 * 4;
-// extern SolidObject updown_walls[ROOM_WALL_COUNT];
-// extern SolidObject leftright_walls[ROOM_WALL_COUNT];
-// extern SolidObject single_walls[ROOM_WALL_COUNT];
-// extern const soa::Array<SolidObject, ROOM_WALL_COUNT> updown_walls;
-// extern const soa::Array<SolidObject, ROOM_WALL_COUNT> leftright_walls;
-// extern const soa::Array<SolidObject, ROOM_WALL_COUNT> single_walls;
+namespace Objects {
+    u8 load_object(ObjectType);
+    u8 load_object_b2(ObjectType);
+}

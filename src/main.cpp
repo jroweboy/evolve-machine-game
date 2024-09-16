@@ -135,7 +135,7 @@ static void main_init() {
 //     irq_pointer = irq_default;
 // }
 
-prg_rom_2 __attribute__((noinline)) static void run_gamemode() {
+prg_rom_2 noinline static void run_gamemode() {
     // I split this out so we can turn off inlining to put it in its own bank
     // Run this frame of the game mode
     switch (main_mode) {
@@ -160,6 +160,7 @@ int main() {
         POKE(0x4123, 0);
 
         pad_poll(0);
+        u8 start_id = 0;
 
         // If we changed game modes, initialze the new one
         if (main_mode != prev_main_mode) {
@@ -170,7 +171,6 @@ int main() {
             case MainMode::GenerateDungeon: {
                 set_prg_bank(2);
                 u8 total_rooms = 0;
-                u8 start_id = 0;
                 do {
                     const auto[room_id, room_count] = Dungeon::generate_dungeon();
                     total_rooms = room_count;
@@ -178,12 +178,13 @@ int main() {
                 } while (total_rooms < Dungeon::ROOM_MINIMUM);
                 
                 main_mode = MainMode::GamePlay;
-                MapLoader::load_map(start_id);
                 // FALLTHROUGH
-            }
-            case MainMode::GamePlay:
+                equipped_weapon = ObjectType::None;
+                MapLoader::load_map(start_id);
                 Game::init();
                 next_song = Song::DangerousCitty;
+            }
+            case MainMode::GamePlay:
                 break;
             default:
                 break;

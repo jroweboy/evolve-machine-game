@@ -58,7 +58,7 @@ struct GenerateStats {
     u8 room_count;
 };
 
-prg_rom_2 GenerateStats generate_dungeon();
+GenerateStats generate_dungeon();
 u8 GetNeighborId(u8 me, u8 direction);
 
 u8 load_room_id_by_section(u8 section_id);

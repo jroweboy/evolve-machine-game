@@ -379,6 +379,19 @@ function b2n(value)
   return value and 1 or 0
 end
 
+function draw_debug()
+  if (show_collision) then
+    draw_object_hitbox()
+    draw_solid_hitbox()
+  end
+  if (show_map) then
+    dump_map()
+  end
+  if (show_position) then
+    write_player_position()
+  end
+end
+
 function frame_start()
   local keys = (b2n(emu.isKeyPressed("1")) | (b2n(emu.isKeyPressed("2")) << 1) | (b2n(emu.isKeyPressed("3")) << 2) | (b2n(emu.isKeyPressed("4")) << 3))
   key_pressed = keys & (~key_prev)
@@ -395,21 +408,9 @@ function frame_start()
   if ((key_pressed & PRESSED_4) ~= 0) then
     show_position = not show_position
   end
-  if (show_collision) then
-    draw_object_hitbox()
-    draw_solid_hitbox()
-  end
-  if (show_map) then
-    dump_map()
-  end
+  draw_debug()
   if (show_perf) then
     draw_performance_counters()
-  end
-  if (show_perf) then
-    draw_performance_counters()
-  end
-  if (show_position) then
-    write_player_position()
   end
   --now reset performance counters for the next frame
   for i = 0, scope_count do
@@ -418,7 +419,7 @@ function frame_start()
 end
 
 emu.addEventCallback(frame_start, emu.eventType.nmi)
-emu.addEventCallback(dump_map, emu.eventType.codeBreak)
+emu.addEventCallback(draw_debug, emu.eventType.codeBreak)
 
 str = ""
 function cb(address, value)

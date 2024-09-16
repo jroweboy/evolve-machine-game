@@ -29,8 +29,8 @@ noinit static GameMode game_mode;
 noinit static GameMode prev_game_mode;
 
 // When loading the room, save the room bounds here to cache them for offscreen checking.
-noinit static s16 room_bounds_x;
-noinit static s16 room_bounds_y;
+noinit static u16 room_bounds_x;
+noinit static u16 room_bounds_y;
 
 prg_rom_2 extern "C" u8 check_solid_collision(u8 filter, u8 obj_idx);
 
@@ -85,18 +85,22 @@ prg_rom_2 static void check_player_collision() {
     }
 }
 
+prg_rom_2 f16_8 distance(u8 slot1, u8 slot2) {
+    return 0.375_8_8 * (objects[slot2]->x - objects[slot1]->x) + (objects[slot2]->y - objects[slot1]->y);
+}
+
 prg_rom_2 static void move_player() {
     auto player = objects[0];
     auto pressed = pad_state(0);
-    s16 original_y = player.y->as_i();
+    u16 original_y = player.y->as_i();
     if (pressed & PAD_UP) {
         player.direction = Direction::Up;
         player.metasprite = Metasprite::KittyUp;
-        player.y = player.y.get() - PLAYER_MOVESPEED;
+        player.y = player->y - PLAYER_MOVESPEED;
     } else if (pressed & PAD_DOWN) {
         player.direction = Direction::Down;
         player.metasprite = Metasprite::KittyDown;
-        player.y = player.y.get() + PLAYER_MOVESPEED;
+        player.y = player->y + PLAYER_MOVESPEED;
     }
     if (player.y->as_i() != original_y) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
@@ -104,15 +108,15 @@ prg_rom_2 static void move_player() {
             player.y = original_y;
         }
     }
-    s16 original_x = player.x->as_i();
+    u16 original_x = player.x->as_i();
     if (pressed & PAD_LEFT) {
         player.direction = Direction::Left;
         player.metasprite = Metasprite::KittyLeft;
-        player.x = player.x.get() - PLAYER_MOVESPEED;
+        player.x = player->x - PLAYER_MOVESPEED;
     } else if (pressed & PAD_RIGHT) {
         player.direction = Direction::Right;
         player.metasprite = Metasprite::KittyRight;
-        player.x = player.x.get() + PLAYER_MOVESPEED;
+        player.x = player->x + PLAYER_MOVESPEED;
     }
     if (player.x->as_i() != original_x) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
@@ -151,8 +155,8 @@ prg_rom_2 static void run_weapon_bob() {
     auto player = objects[0];
     
     // reuse the weapon HP and iframe as the bob timer
-    weapon.x = player.x.get() - 4;
-    weapon.y = player.y.get() + weapon_bob_y_offset[weapon.hp];
+    weapon.x = player->x - 4;
+    weapon.y = player->y + weapon_bob_y_offset[weapon.hp];
 
     weapon.iframe = (weapon.iframe + 1) & 0b00000111;
     if (weapon.iframe == 0) {
@@ -160,9 +164,11 @@ prg_rom_2 static void run_weapon_bob() {
     }
 
     // if the player uses an attack, animate the spin
-    if ((get_pad_new(0) & PAD_B) != 0 && weapon.frame_counter < 0) {
+    if ((pad_state(0) & PAD_B) != 0 && weapon.frame_counter < 0) {
         weapon.frame_counter = 32;
         sfx_queue1 = Sfx::weapon_fire_1;
+        ObjectType projectile_type = (ObjectType)(((u8)equipped_weapon - (u8)ObjectType::WeaponCube) * (u8)ObjectType::WeaponCubeAtk1);
+        Objects::load_object_b2(projectile_type);
     }
     if (weapon.frame_counter >= 0) {
         weapon.frame_counter--;
@@ -465,7 +471,6 @@ namespace Game {
 prg_rom_2 void init() {
     // ppu_wait_nmi();
     // ppu_off();
-    equipped_weapon = ObjectType::None;
     pal_spr(&sprites_pal);
     prev_game_mode = GameMode::MapLoader;
     game_mode = GameMode::InGame;

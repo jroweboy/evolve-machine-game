@@ -48,9 +48,22 @@ enum class ObjectType : u8 {
     WeaponDiamond,
     WeaponPyramid,
     WeaponSphere,
+    WeaponCubeAtk1,
+    WeaponCubeAtk2,
+    WeaponCubeAtk3,
+    WeaponDiamondAtk1,
+    WeaponDiamondAtk2,
+    WeaponDiamondAtk3,
+    WeaponPyramidAtk1,
+    WeaponPyramidAtk2,
+    WeaponPyramidAtk3,
+    WeaponSphereAtk1,
+    WeaponSphereAtk2,
+    WeaponSphereAtk3,
     Armadillo,
     Pidgey,
     Count,
+    // Noinit types of objects
     None = 0xff,
 };
 
@@ -61,22 +74,22 @@ enum class Metasprite : u8 {
     KittyDown,
     KittyLeft,
 
-    WeaponSphere,
-    WeaponSphereAtk1,
-    WeaponSphereAtk2,
-    WeaponSphereAtk3,
-    WeaponPyramid,
-    WeaponPyramidAtk1,
-    WeaponPyramidAtk2,
-    WeaponPyramidAtk3,
-    WeaponDiamond,
-    WeaponDiamondAtk1,
-    WeaponDiamondAtk2,
-    WeaponDiamondAtk3,
     WeaponCube,
     WeaponCubeAtk1,
     WeaponCubeAtk2,
     WeaponCubeAtk3,
+    WeaponDiamond,
+    WeaponDiamondAtk1,
+    WeaponDiamondAtk2,
+    WeaponDiamondAtk3,
+    WeaponPyramid,
+    WeaponPyramidAtk1,
+    WeaponPyramidAtk2,
+    WeaponPyramidAtk3,
+    WeaponSphere,
+    WeaponSphereAtk1,
+    WeaponSphereAtk2,
+    WeaponSphereAtk3,
 
     ArmadilloLeft,
     ArmadilloRight,
@@ -87,12 +100,12 @@ enum class Metasprite : u8 {
     Count,
 };
 
-enum class Direction : u8 {
-    Up = 0,
-    Right = 1,
-    Down = 2,
-    Left = 3,
-    Error = 0xff,
+enum Direction : u8 {
+    Up = 1 << 0,
+    Right = 1 << 1,
+    Down = 1 << 2,
+    Left = 1 << 3,
+    Error = 1 << 7,
 };
 
 enum State : u8 {
@@ -134,6 +147,8 @@ extern ObjectType weapon_inventory[4];
 
 #define prg_rom_1 __attribute__((section(".prg_rom_1")))
 #define prg_rom_2 __attribute__((section(".prg_rom_2")))
+#define prg_fixed __attribute__((section(".prg_rom_fixed")))
+#define noinline __attribute__((noinline))
 #define noinit __attribute__((section(".noinit.late")))
 #define zpnoinit __attribute__((section(".zp.noinit")))
 

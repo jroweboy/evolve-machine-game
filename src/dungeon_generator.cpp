@@ -298,7 +298,14 @@ prg_rom_2 static void set_room_xy(u8 map_id) {
     room.y = ((u16)(map_id / 8)) << 8;
 }
 
-prg_rom_2 GenerateStats generate_dungeon() {
+prg_rom_2 noinline static void clear_room() {
+    for (u8 i = 0; i < lead.objects.size(); ++i) {
+        lead.objects[i].id = ObjectType::None;
+        side.objects[i].id = ObjectType::None;
+    }
+}
+
+prg_rom_2 noinline GenerateStats generate_dungeon() {
     // List of visited tiles and their room_ids
     MapId map;
     for (auto& num : map) { num = 0xff; }
@@ -320,6 +327,7 @@ prg_rom_2 GenerateStats generate_dungeon() {
 
     ////////////////////
     // Step 0: Manually build out the root room.
+    clear_room();
     u8 id = 0;
 
     // set the main to a random location with a vertical side room
@@ -391,6 +399,7 @@ prg_rom_2 GenerateStats generate_dungeon() {
     // }
 
     while ((++id) < ROOM_LIMIT && fill_read < fill_write) {
+        clear_room();
         ////////////////////
         // Step 1: Find the next room's position.
         // Read the next item on the todo list and add another room.

@@ -79,6 +79,9 @@ add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/do
 add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/music.s)
 add_ca65_source(TARGET ${CMAKE_PROJECT_NAME} SRC ${CMAKE_SOURCE_DIR}/src/ca65/metasprite.s)
 set_source_files_properties(${CMAKE_SOURCE_DIR}/src/ca65/metasprite.s OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/gen/compressed/archive.dnt)
+set_source_files_properties(
+    ${CMAKE_SOURCE_DIR}/src/game.s
+    OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/gen/header/speed_table.bin)
 
 target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE
     -g -gdwarf-4           # We want debug info generated for all builds

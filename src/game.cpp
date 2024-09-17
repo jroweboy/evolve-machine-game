@@ -17,7 +17,7 @@
 #include "sprite_render.hpp"
 
 
-constexpr auto PLAYER_MOVESPEED = 1.20_8_8;
+// constexpr auto PLAYER_MOVESPEED = 1.20_8_8;
 
 
 extern volatile char FRAME_CNT1;
@@ -95,15 +95,20 @@ prg_rom_2 static void move_player() {
     auto player = objects[0];
     auto pressed = pad_state(0);
     u16 original_y = player.y->as_i();
+    u8 orig_direction = player.direction;
     player.direction = Direction::None;
+    auto speed = multidirection_lut[player->direction] 
+        ? speed_table[(u8)player->speed].xy.get()
+        : speed_table[(u8)player->speed].v.get();
+    // DEBUGGER(speed.as_i());
     if (pressed & PAD_UP) {
         player.direction = Direction::Up;
         player.metasprite = Metasprite::KittyUp;
-        player.y = player->y - PLAYER_MOVESPEED;
+        player.y = player->y - speed;
     } else if (pressed & PAD_DOWN) {
         player.direction = Direction::Down;
         player.metasprite = Metasprite::KittyDown;
-        player.y = player->y + PLAYER_MOVESPEED;
+        player.y = player->y + speed;
     }
     if (player.y->as_i() != original_y) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
@@ -115,11 +120,11 @@ prg_rom_2 static void move_player() {
     if (pressed & PAD_LEFT) {
         player.direction |= Direction::Left;
         player.metasprite = Metasprite::KittyLeft;
-        player.x = player->x - PLAYER_MOVESPEED;
+        player.x = player->x - speed;
     } else if (pressed & PAD_RIGHT) {
         player.direction |= Direction::Right;
         player.metasprite = Metasprite::KittyRight;
-        player.x = player->x + PLAYER_MOVESPEED;
+        player.x = player->x + speed;
     }
     if (player.x->as_i() != original_x) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
@@ -133,6 +138,8 @@ prg_rom_2 static void move_player() {
             player.frame_counter = 6;
             player.animation_frame = (player.animation_frame + 1) & 0b11;
         }
+    } else {
+        player.direction = orig_direction;
     }
 }
 

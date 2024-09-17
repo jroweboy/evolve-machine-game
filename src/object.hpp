@@ -61,7 +61,7 @@ struct Object {
     u8 attribute;
 
     u8 direction;
-    u8 speed;
+    Speed speed;
 
     s8 hp;
     u8 atk;
@@ -98,20 +98,12 @@ struct SolidObject {
 extern soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 extern u8 solid_object_offset;
 
-enum class Speed : u8 {
-    s1_0,
-    s1_2,
-    s1_7,
-    Count,
-};
-
 struct SpeedTable {
-    f8_8 x;
-    f8_8 y;
-    f8_8 xy;
+    fs8_8 v;
+    fs8_8 xy;
 };
 #define SOA_STRUCT SpeedTable
-#define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(xy)
+#define SOA_MEMBERS MEMBER(v) MEMBER(xy)
 #include <soa-struct.inc>
 
 extern const soa::Array<SpeedTable, (u8)Speed::Count> speed_table;
@@ -121,3 +113,6 @@ namespace Objects {
     u8 load_object_b2(ObjectType);
     void core_loop();
 }
+
+
+extern const bool multidirection_lut[16];

@@ -27,9 +27,14 @@ function(build_metasprites)
   list(TRANSFORM outfiles REPLACE "${META_SRC}/metasprites/(.*).chr" "${META_DEST}/sprites/\\1.chr.dnt")
   list(TRANSFORM outfiles REPLACE "${META_SRC}/metasprites/(.*).msb" "${META_DEST}/sprites/\\1_metasprite.msb")
 
+  set(header_files
+    ${META_DEST}/header/sprites_constants.hpp
+    ${META_DEST}/header/speed_table.hpp
+    ${META_DEST}/header/speed_table.bin
+  )
   set(cmd ${Python3_EXECUTABLE} ${metasprite_script} ${META_SRC} ${META_DEST})
   add_custom_command(
-    OUTPUT ${outfiles} ${META_DEST}/header/sprites_constants.hpp
+    OUTPUT ${outfiles} ${header_files}
 
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${META_DEST}/sprites

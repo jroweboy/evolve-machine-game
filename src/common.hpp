@@ -8,6 +8,7 @@
 #ifdef NES
 #include <peekpoke.h>
 #include <fixed_point.h>
+#include "header/speed_table.hpp"
 
 using namespace fixedpoint_literals;
 #else

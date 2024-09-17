@@ -237,3 +237,8 @@ check_object_collision:
     lda object_collide
     rts
 
+
+.section .prg_rom_fixed.speed_table,"aR",@progbits
+.globl speed_table
+speed_table:
+    .incbin "header/speed_table.bin"

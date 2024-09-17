@@ -19,6 +19,7 @@ struct ObjectInitData {
     Metasprite metasprite;
     Hitbox hitbox;
     State state;
+    Speed speed;
     u8 collision;
     u8 attribute;
     s8 hp;
@@ -35,26 +36,28 @@ extern const soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init
 
 namespace Objects {
 
-prg_rom_2 void move_object_offscr_check(u8 slot, fu8_8 x, fu8_8 y) {
-    DEBUGGER();
+prg_rom_2 void move_object_offscr_check(u8 slot) {
     auto obj = objects[slot];
+    auto speed = multidirection_lut[obj->direction] 
+        ? speed_table[(u8)obj->speed].xy.get()
+        : speed_table[(u8)obj->speed].v.get();
     if (obj->direction & Direction::Up) {
-        obj.y = obj->y - y;
+        obj.y = obj->y - speed;
     } else if (obj->direction & Direction::Down) {
-        obj.y = obj->y + y;
+        obj.y = obj->y + speed;
     }
     if (obj.y->as_i() < room.y || obj.y->as_i() > room_bounds_y) {
         obj.state = State::Dead;
+        return;
     }
     if (obj->direction & Direction::Left) {
-        obj.x = obj->x - x;
+        obj.x = obj->x - speed;
     } else if (obj->direction & Direction::Right) {
-        obj.x = obj->x + x;
+        obj.x = obj->x + speed;
     }
     if (obj.x->as_i() < room.x || obj.x->as_i() > room_bounds_x) {
         obj.state = State::Dead;
     }
-    DEBUGGER();
 }
 
 // prg_rom_2 void cube_atk(u8 slot, u8 level) {
@@ -94,6 +97,7 @@ prg_rom_2 void core_loop() {
         if ((obj->state & 0x80) != 0) {
             continue;
         }
+
         switch (obj->type) {
         case ObjectType::Armadillo:
         case ObjectType::Pidgey:
@@ -116,7 +120,7 @@ prg_rom_2 void core_loop() {
         case ObjectType::WeaponSphereAtk1:
         case ObjectType::WeaponSphereAtk2:
         case ObjectType::WeaponSphereAtk3:
-            move_object_offscr_check(i, 1.7_8_8, 1.7_8_8);
+            move_object_offscr_check(i);
             break;
 
         case ObjectType::Count:
@@ -148,6 +152,7 @@ prg_rom_2 noinline u8 load_object_b2(ObjectType o) {
     const auto init = object_init_data[(u8)o];
     auto slot = objects[slot_idx];
     slot.state = init->state;
+    slot.speed = init->speed;
     slot.collision = init->collision;
     slot.metasprite = init->metasprite;
     slot.attribute = init->attribute;
@@ -170,12 +175,31 @@ prg_fixed noinline u8 load_object(ObjectType o) {
 }
 }
 
+constexpr static bool ismulti(u8 a) {
+    if ((a & Direction::Up) != 0 && ((a & Direction::Left) != 0 || (a & Direction::Right) != 0)) {
+        return true;
+    }
+    if ((a & Direction::Down) != 0 && 0 != ((a & Direction::Left) != 0 || (a & Direction::Right) != 0)) {
+        return true;
+    }
+    return false;
+}
+
+__attribute__((section(".prg_rom_fixed.multidirection_lut")))
+constexpr const bool multidirection_lut[16] = {
+    ismulti(0),ismulti(1),ismulti(2),ismulti(3),
+    ismulti(4),ismulti(5),ismulti(6),ismulti(7),
+    ismulti(8),ismulti(9),ismulti(10),ismulti(11),
+    ismulti(12),ismulti(13),ismulti(14),ismulti(15),
+};
+
 __attribute__((section(".prg_rom_2.object_init_data")))
 constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_data = {
     {
         .metasprite = Metasprite::KittyLeft,
         .hitbox = { .x = 0, .y = 8, .width = 8, .height = 8},
         .state = State::Normal,
+        .speed = Speed::s1_10,
         .collision = 0,
         .attribute = 0,
         .hp = 3,
@@ -185,6 +209,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponCube,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::GroundedWeapon,
+        .speed = Speed::None,
         .collision = CollisionType::Pickup,
         .attribute = 1,
         .hp = 0,
@@ -194,6 +219,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponDiamond,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::GroundedWeapon,
+        .speed = Speed::None,
         .collision = CollisionType::Pickup,
         .attribute = 1,
         .hp = 0,
@@ -203,6 +229,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponPyramid,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::GroundedWeapon,
+        .speed = Speed::None,
         .collision = CollisionType::Pickup,
         .attribute = 1,
         .hp = 0,
@@ -212,6 +239,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponSphere,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::GroundedWeapon,
+        .speed = Speed::None,
         .collision = CollisionType::Pickup,
         .attribute = 1,
         .hp = 0,
@@ -221,6 +249,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponCubeAtk1,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s1_65,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -230,6 +259,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponCubeAtk2,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s1_65,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -239,6 +269,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponCubeAtk3,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s1_65,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -248,6 +279,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponDiamondAtk1,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s2_20,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -257,6 +289,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponDiamondAtk2,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s2_20,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -266,6 +299,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponDiamondAtk3,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s2_20,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -275,6 +309,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponPyramidAtk1,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s2_50,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -284,6 +319,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponPyramidAtk2,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s2_50,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -293,6 +329,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponPyramidAtk3,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s2_50,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -302,6 +339,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponSphereAtk1,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s1_44,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -311,6 +349,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponSphereAtk2,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s1_44,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -320,6 +359,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponSphereAtk3,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s1_44,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -329,6 +369,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::PidgeyLeft,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s1_00,
         .collision = CollisionType::Enemy,
         .attribute = 1,
         .hp = 50,
@@ -338,6 +379,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::ArmadilloLeft,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
+        .speed = Speed::s1_00,
         .collision = CollisionType::Enemy,
         .attribute = 1,
         .hp = 80,
@@ -346,11 +388,10 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
 };
 
 
-constexpr soa::Array<SpeedTable, (u8)Speed::Count> speed_table = {
-    {1.0_8_8, 1.0_8_8, 0.77_8_8},
-    {1.2_8_8, 1.2_8_8, 1.69_8_8},
-    {1.0_8_8, 1.0_8_8, 0.77_8_8},
-};
+// constexpr soa::Array<SpeedTable, (u8)Speed::Count> speed_table = {
+//     {1.0_8_8, 1.0_8_8, 0.77_8_8},
+//     {1.2_8_8, 1.2_8_8, 1.69_8_8},
+// };
 
 // prg_rom_2 SolidObject updown_walls[ROOM_WALL_COUNT] = {
 //     // top left corner

@@ -23,7 +23,7 @@ struct Hitbox {
 #include <soa-struct.inc>
 
 enum CollisionType {
-    None = 0,
+    CollisionNone = 0,
     Solid = 1 << 0,
     Damage = 1 << 1,
     Pickup = 1 << 2,
@@ -60,7 +60,7 @@ struct Object {
     /// Currently used only to set the palette of the object
     u8 attribute;
 
-    Direction direction;
+    u8 direction;
     u8 speed;
 
     s8 hp;
@@ -98,7 +98,26 @@ struct SolidObject {
 extern soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 extern u8 solid_object_offset;
 
+enum class Speed : u8 {
+    s1_0,
+    s1_2,
+    s1_7,
+    Count,
+};
+
+struct SpeedTable {
+    f8_8 x;
+    f8_8 y;
+    f8_8 xy;
+};
+#define SOA_STRUCT SpeedTable
+#define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(xy)
+#include <soa-struct.inc>
+
+extern const soa::Array<SpeedTable, (u8)Speed::Count> speed_table;
+
 namespace Objects {
     u8 load_object(ObjectType);
     u8 load_object_b2(ObjectType);
+    void core_loop();
 }

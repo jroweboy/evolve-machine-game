@@ -450,7 +450,6 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
             // then the lead is the first nametable.)
             // Direction dir = GetDirection(side_id, lead_id);
             Direction dir = GetDirection(lead_id, side_id);
-            // DEBUGGER(dir);
             lead.nametable = LeadLUT[dir];
             side.nametable = SideLUT[dir];
             // side.nametable = LeadLUT[dir];

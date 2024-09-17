@@ -29,8 +29,10 @@ noinit static GameMode game_mode;
 noinit static GameMode prev_game_mode;
 
 // When loading the room, save the room bounds here to cache them for offscreen checking.
-noinit static u16 room_bounds_x;
-noinit static u16 room_bounds_y;
+noinit u16 transition_bounds_x;
+noinit u16 transition_bounds_y;
+noinit u16 room_bounds_x;
+noinit u16 room_bounds_y;
 
 prg_rom_2 extern "C" u8 check_solid_collision(u8 filter, u8 obj_idx);
 
@@ -93,6 +95,7 @@ prg_rom_2 static void move_player() {
     auto player = objects[0];
     auto pressed = pad_state(0);
     u16 original_y = player.y->as_i();
+    player.direction = Direction::None;
     if (pressed & PAD_UP) {
         player.direction = Direction::Up;
         player.metasprite = Metasprite::KittyUp;
@@ -110,11 +113,11 @@ prg_rom_2 static void move_player() {
     }
     u16 original_x = player.x->as_i();
     if (pressed & PAD_LEFT) {
-        player.direction = Direction::Left;
+        player.direction |= Direction::Left;
         player.metasprite = Metasprite::KittyLeft;
         player.x = player->x - PLAYER_MOVESPEED;
     } else if (pressed & PAD_RIGHT) {
-        player.direction = Direction::Right;
+        player.direction |= Direction::Right;
         player.metasprite = Metasprite::KittyRight;
         player.x = player->x + PLAYER_MOVESPEED;
     }
@@ -145,6 +148,30 @@ static const s8 weapon_bob_y_offset[] = {
     WEAPON_BOB_Y_ORIGIN - 1
 };
 
+__attribute__((section(".prg_rom_2.weapon_atk_lut"))) constexpr static ObjectType weapon_atk_lut[4] = {
+    ObjectType::WeaponCubeAtk1,
+    ObjectType::WeaponDiamondAtk1,
+    ObjectType::WeaponPyramidAtk1,
+    ObjectType::WeaponSphereAtk1
+};
+__attribute__((section(".prg_rom_fixed.direction_lut"))) constexpr static u8 direction_lut[16] = {
+    0,
+    0,
+    1,
+    1,
+    2,
+    2,
+    1,
+    1,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+};
 prg_rom_2 static void run_weapon_bob() {
     auto weapon = objects[1];
     
@@ -167,8 +194,15 @@ prg_rom_2 static void run_weapon_bob() {
     if ((pad_state(0) & PAD_B) != 0 && weapon.frame_counter < 0) {
         weapon.frame_counter = 32;
         sfx_queue1 = Sfx::weapon_fire_1;
-        ObjectType projectile_type = (ObjectType)(((u8)equipped_weapon - (u8)ObjectType::WeaponCube) * (u8)ObjectType::WeaponCubeAtk1);
-        Objects::load_object_b2(projectile_type);
+        u8 weapon_offset = (((u8)equipped_weapon - (u8)ObjectType::WeaponCube));
+        auto projectile_type = weapon_atk_lut[weapon_offset];
+        u8 slot = Objects::load_object_b2(projectile_type);
+        auto prj = objects[slot];
+        prj.direction = player->direction;
+        prj.tile_offset = weapon->tile_offset;
+        prj.x = player->x + 2;
+        prj.y = player->y;
+        prj.animation_frame = direction_lut[prj->direction];
     }
     if (weapon.frame_counter >= 0) {
         weapon.frame_counter--;
@@ -254,8 +288,8 @@ prg_rom_2 static void scroll_screen() {
 prg_rom_2 static void check_screen_transition() {
     auto player = objects[0];
     // since this check happens every frame, we cache the room boundaries
-    if (player.x->as_i() < room.x || player.x->as_i() > room_bounds_x 
-        || player.y->as_i() < room.y || player.y->as_i() > room_bounds_y) {
+    if (player.x->as_i() < room.x || player.x->as_i() > transition_bounds_x 
+        || player.y->as_i() < room.y || player.y->as_i() > transition_bounds_y) {
         game_mode = GameMode::MapLoader;
     }
 }
@@ -266,27 +300,33 @@ prg_rom_2 static Direction get_direction() {
         return Direction::Left;
     } else if (player.y->as_i() < room.y) {
         return Direction::Up;
-    } else if (player.x->as_i() > room_bounds_x) {
+    } else if (player.x->as_i() > transition_bounds_x) {
         return Direction::Right;
-    } else if (player.y->as_i() > room_bounds_y) {
+    } else if (player.y->as_i() > transition_bounds_y) {
         return Direction::Down;
     }
     return Direction::Error;
 }
 
-prg_rom_2 static void calculate_screen_bounds() {
+prg_rom_2 noinline static void calculate_screen_bounds() {
     switch (room.scroll) {
     case ScrollType::Single:
-        room_bounds_x = room.x + 256 - 16;
-        room_bounds_y = room.y + 240 - 16;
+        room_bounds_x = room.x + 256;
+        transition_bounds_x = room.x + 256 - 16;
+        room_bounds_y = room.y + 240;
+        transition_bounds_y = room.y + 240 - 16;
         break;
     case ScrollType::Horizontal:
-        room_bounds_x = room.x + 256 * 2 - 16;
-        room_bounds_y = room.y + 240 - 16;
+        room_bounds_x = room.x + 256 * 2;
+        transition_bounds_x = room.x + 256 * 2 - 16;
+        room_bounds_y = room.y + 240;
+        transition_bounds_y = room.y + 240 - 16;
         break;
     case ScrollType::Vertical:
-        room_bounds_x = room.x + 256 - 16;
-        room_bounds_y = room.y + 240 * 2 - 16;
+        room_bounds_x = room.x + 256;
+        transition_bounds_x = room.x + 256 - 16;
+        room_bounds_y = room.y + 240 * 2;
+        transition_bounds_y = room.y + 240 * 2 - 16;
         break;
     }
 }
@@ -436,6 +476,7 @@ prg_rom_2 static void load_new_map() {
         new_x -= 32;
         break;
     case Direction::Error:
+    case Direction::None:
         break;
     }
     switch (new_section.room_base) {
@@ -501,6 +542,7 @@ prg_rom_2 void update() {
     move_player();
     check_player_collision();
     run_weapon_bob();
+    Objects::core_loop();
     scroll_screen();
     check_screen_transition();
     POKE(0x4123, 4);

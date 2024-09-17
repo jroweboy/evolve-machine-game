@@ -192,7 +192,6 @@ static const soa::Array<ObjectTileCount, (u8)ObjectType::Count> object_tile_lut 
 
 static u8 get_or_load_tile(ObjectType obj) {
     if (obj == ObjectType::Player) {
-        // DEBUGGER(3);
         return 0;
     }
     if (equipped_weapon == obj) {
@@ -221,7 +220,6 @@ static u8 get_or_load_tile(ObjectType obj) {
     sp_chr_offset += object.tile_offset;
     runtime_object_tile_mapping[i].type = obj;
     runtime_object_tile_mapping[i].offset = tile_count;
-    // DEBUGGER(tile_count);
     return tile_count;
 }
 

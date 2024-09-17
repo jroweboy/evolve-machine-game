@@ -101,6 +101,7 @@ enum class Metasprite : u8 {
 };
 
 enum Direction : u8 {
+    None = 0,
     Up = 1 << 0,
     Right = 1 << 1,
     Down = 1 << 2,

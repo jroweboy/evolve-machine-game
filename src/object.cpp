@@ -253,18 +253,13 @@ prg_rom_2 noinline XYMagnitude get_angular_speed(Speed speed, u8 angle) {
         ; if its past the 8th entry, use the doubled version of the speed
         sta %[mult2]
 2:
+    stx %[ylo]
     ; speed * 32
     ror
     ror
     ror
     ror
-    sta %[ylo]
-    
-    ; + (angle & 7) * 4
-    txa
-    and #7
-    asl
-    asl
+    clc
     adc %[ylo]
     tay
     lda speed_table + 0*32*8, y
@@ -277,43 +272,11 @@ prg_rom_2 noinline XYMagnitude get_angular_speed(Speed speed, u8 angle) {
     sta %[xhi]
     ; account for the doubled speeds here
     lda %[mult2]
-    bne 1f
+    bne Exit
         asl %[ylo]
         rol %[yhi]
         asl %[xlo]
         rol %[xhi]
-1:
-    ; And choose the correct sign for each angle quadarant
-    ; x should still have the unaltered angle value
-    ; 00 +x, +y
-    ; 01 -x, +y
-    ; 10 -x, -y
-    ; 11 +x, -y
-    txa
-    and #$18
-    tax
-    beq Exit ; no quadrant adjust
-    and #$08
-    beq 1f
-    ; set negative Y
-    sec 
-    lda #0
-    sbc %[ylo]
-    sta %[ylo]
-    lda #0
-    sbc %[yhi]
-    sta %[yhi]
-    ; dont set the negative x for the 11 quadrant
-    cpx #$10
-    bne Exit
-1:  ; set negative X
-    sec 
-    lda #0
-    sbc %[xlo]
-    sta %[xlo]
-    lda #0
-    sbc %[xhi]
-    sta %[xhi]
 Exit:
 )ASM"
     : [xlo]"=r"(outx.lo), [xhi]"=r"(outx.hi),
@@ -329,23 +292,26 @@ namespace Objects {
 
 prg_rom_2 void move_object_offscr_check(u8 slot) {
     auto obj = objects[slot];
-    auto speed = multidirection_lut[obj->direction] 
-        ? speed_table[(u8)obj->speed].xy.get()
-        : speed_table[(u8)obj->speed].v.get();
-    if (obj->direction & Direction::Up) {
-        obj.y = obj->y - speed;
-    } else if (obj->direction & Direction::Down) {
-        obj.y = obj->y + speed;
-    }
+    // auto speed = multidirection_lut[obj->direction] 
+    //     ? speed_table[(u8)obj->speed].xy.get()
+    //     : speed_table[(u8)obj->speed].v.get();
+    // if (obj->direction & Direction::Up) {
+    //     obj.y = obj->y - speed;
+    // } else if (obj->direction & Direction::Down) {
+    //     obj.y = obj->y + speed;
+    // }
+    auto speed = get_angular_speed(obj.speed, obj.angle);
+    obj.y = obj->y + speed.y;
     if (obj.y->as_i() < room.y || obj.y->as_i() > room_bounds_y) {
         obj.state = State::Dead;
         return;
     }
-    if (obj->direction & Direction::Left) {
-        obj.x = obj->x - speed;
-    } else if (obj->direction & Direction::Right) {
-        obj.x = obj->x + speed;
-    }
+    // if (obj->direction & Direction::Left) {
+    //     obj.x = obj->x - speed;
+    // } else if (obj->direction & Direction::Right) {
+    //     obj.x = obj->x + speed;
+    // }
+    obj.x = obj->x + speed.x;
     if (obj.x->as_i() < room.x || obj.x->as_i() > room_bounds_x) {
         obj.state = State::Dead;
     }

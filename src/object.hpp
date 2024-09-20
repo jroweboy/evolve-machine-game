@@ -88,7 +88,7 @@ struct Object {
 #define SOA_MEMBERS \
     MEMBER(metasprite) MEMBER(type) MEMBER(state) MEMBER(tile_offset) MEMBER(animation_frame) MEMBER(frame_counter) \
     MEMBER(direction) MEMBER(speed) MEMBER(attribute) MEMBER(hp) MEMBER(atk) MEMBER(x) MEMBER(y) MEMBER(hitbox) \
-    MEMBER(collision) MEMBER(iframe)
+    MEMBER(collision) MEMBER(iframe) MEMBER(angle)
 #include <soa-struct.inc>
 
 extern soa::Array<Object, OBJECT_COUNT> objects;

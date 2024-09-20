@@ -103,7 +103,6 @@ prg_rom_2 static void move_player() {
     //     ? speed_table[(u8)player->speed].xy.get()
     //     : speed_table[(u8)player->speed].v.get();
     // DEBUGGER(speed.as_i());
-    u8 angle = 0;
     if (pressed & PAD_UP) {
         player.direction = Direction::Up;
         player.metasprite = Metasprite::KittyUp;
@@ -121,17 +120,11 @@ prg_rom_2 static void move_player() {
     }
 
     if (player.direction != 0) {
-        angle = direction_to_angle_lut[player->direction];
+        player.angle = direction_to_angle_lut[player->direction];
         player.speed = Speed::s1_20;
     }
 
-    
-    // if (orig_direction != player->direction) {
-    //     auto speed = get_angular_speed(player->speed, player.direction << 2);
-    //     player.cached_speed.x = speed.x;
-    //     player.cached_speed.y = speed.y;
-    // }
-    auto speed = get_angular_speed(player->speed, angle);
+    auto speed = get_angular_speed(player->speed, player->angle);
     player.x = player->x + speed.x;
     if (player.x->as_i() != original_x) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
@@ -221,6 +214,7 @@ prg_rom_2 static void run_weapon_bob() {
         u8 slot = Objects::load_object_b2(projectile_type);
         auto prj = objects[slot];
         prj.direction = player->direction;
+        prj.angle = player->angle;
         prj.tile_offset = weapon->tile_offset;
         prj.x = player->x + 2;
         prj.y = player->y;

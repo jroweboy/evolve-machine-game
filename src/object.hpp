@@ -22,6 +22,15 @@ struct Hitbox {
 #define SOA_MEMBERS MEMBER(x) MEMBER(y) MEMBER(width) MEMBER(height)
 #include <soa-struct.inc>
 
+
+struct XYMagnitude {
+    fs8_8 x;
+    fs8_8 y;
+};
+#define SOA_STRUCT XYMagnitude
+#define SOA_MEMBERS MEMBER(x) MEMBER(y)
+#include <soa-struct.inc>
+
 enum CollisionType {
     CollisionNone = 0,
     Solid = 1 << 0,
@@ -61,6 +70,7 @@ struct Object {
     u8 attribute;
 
     u8 direction;
+    u8 angle;
     Speed speed;
 
     s8 hp;
@@ -99,8 +109,8 @@ extern soa::Array<SolidObject, SOLID_OBJECT_COUNT> solid_objects;
 extern u8 solid_object_offset;
 
 struct SpeedTable {
-    fs8_8 v;
-    fs8_8 xy;
+    fu8_8 v;
+    fu8_8 xy;
 };
 #define SOA_STRUCT SpeedTable
 #define SOA_MEMBERS MEMBER(v) MEMBER(xy)
@@ -113,6 +123,10 @@ namespace Objects {
     u8 load_object_b2(ObjectType);
     void core_loop();
 }
+extern "C" XYMagnitude get_angular_speed(Speed speed, u8 angle);
 
+extern "C" s16 distance(u8 slot1, u8 slot2);
+extern "C" u8 arctan2(u8 slot1, u8 slot2);
 
 extern const bool multidirection_lut[16];
+extern const u8 direction_to_angle_lut[16];

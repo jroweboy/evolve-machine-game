@@ -49,7 +49,6 @@ find_package(Python3 REQUIRED)
 add_executable(${CMAKE_PROJECT_NAME}
     src/ca65.s
     src/game.s
-    src/vector_math.s
 
     src/common.hpp
     src/dungeon_generator.cpp

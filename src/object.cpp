@@ -13,6 +13,7 @@
 #include "map.hpp"
 #include <fixed_point.h>
 #include <mapper.h>
+#include <peekpoke.h>
 #include <soa.h>
 
 struct ObjectInitData {
@@ -33,6 +34,296 @@ struct ObjectInitData {
 
 extern const soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_data;
 
+__attribute__((leaf)) u8 arctan2(u8 slot1, u8 slot2) {
+    u8 result;
+    u8 scratch1;
+    u8 scratch2;
+    u8 scratch3;
+    __attribute__((leaf)) __asm__ volatile(R"ASM(
+
+.set OBJECT_COUNT, 16
+OBJECT_X_FRAC     = 0  * OBJECT_COUNT
+OBJECT_X_LO       = 1  * OBJECT_COUNT
+OBJECT_X_HI       = 2  * OBJECT_COUNT
+OBJECT_Y_FRAC     = 3  * OBJECT_COUNT
+OBJECT_Y_LO       = 4  * OBJECT_COUNT
+OBJECT_Y_HI       = 5  * OBJECT_COUNT
+
+    tay
+    sec
+    lda objects + OBJECT_X_LO,x
+    sbc objects + OBJECT_X_LO,y
+    sta %[xdiff]
+    lda objects + OBJECT_X_HI,x
+    sbc objects + OBJECT_X_HI,y
+    lda %[xdiff]
+    bcs 1f
+        eor #$ff
+        sta %[xdiff]
+1:
+    rol %[octant]
+
+    lda objects + OBJECT_Y_LO,x
+    sbc objects + OBJECT_Y_LO,y
+    sta %3
+    lda objects + OBJECT_Y_HI,x
+    sbc objects + OBJECT_Y_HI,y
+    lda %3
+    bcs 1f
+        eor #$ff
+1:
+    tay
+    rol %[octant]
+
+    ldx %[xdiff]
+    lda log2_tab,x
+    sbc log2_tab,y
+    bcc 1f
+        eor #$ff
+1:
+    tax
+    lda %[octant]
+    rol
+    and #7
+    tay
+    lda atan_tab,x
+    eor octant_adjust,y
+    lsr
+    lsr
+    lsr
+    lsr
+)ASM"
+    :"+a"(result), [xdiff]"=r"(scratch1), [ydiff]"=r"(scratch2), [octant]"=r"(scratch3)
+    : "a"(slot1), "x"(slot2)
+    : "y", "p"
+    );
+    return result;
+}
+
+typedef union {
+  uint16_t value;
+  struct {
+    uint8_t lo, hi;
+  };
+} Word;
+
+__attribute__((leaf)) s16 distance(u8 slot1, u8 slot2) {
+    Word result;
+    u8 scratch1;u8 scratch2;u8 scratch3;
+    u8 scratch4;u8 scratch5;u8 scratch6;
+    __attribute__((leaf)) __asm__ volatile(R"ASM(
+.set OBJECT_COUNT, 16
+OBJECT_X_FRAC     = 0  * OBJECT_COUNT
+OBJECT_X_LO       = 1  * OBJECT_COUNT
+OBJECT_X_HI       = 2  * OBJECT_COUNT
+OBJECT_Y_FRAC     = 3  * OBJECT_COUNT
+OBJECT_Y_LO       = 4  * OBJECT_COUNT
+OBJECT_Y_HI       = 5  * OBJECT_COUNT
+
+    tay
+    sec
+    lda objects + OBJECT_Y_LO,x
+    sbc objects + OBJECT_Y_LO,y
+    sta %[ylo]
+    lda objects + OBJECT_Y_HI,x
+    sbc objects + OBJECT_Y_HI,y
+    sta %[yhi]
+    bcs 1f
+        eor #$ff
+        sta %[yhi]
+        lda %[ylo]
+        eor #$ff
+        adc #1
+        sta %[ylo]
+1:
+    sec
+    lda objects + OBJECT_X_LO,x
+    sbc objects + OBJECT_X_LO,y
+    sta %[xlo]
+    lda objects + OBJECT_X_HI,x
+    sbc objects + OBJECT_X_HI,y
+    bcs 1f
+        sta %[xhi]
+            lda %[xlo]
+            eor #$ff
+            adc #1
+            sta %[xlo]
+        lda %[xhi]
+        eor #$ff
+1:
+    sta %[xhi]
+    cmp %[yhi]
+    bcc 2f
+    bne 1f
+    lda %[xlo]
+    cmp %[ylo]
+    bcc 2f
+1:
+        ; Y < X
+        lda %[ylo]
+        asl
+        sta %[outlo]
+        lda %[yhi]
+        rol
+        sta %[outhi]
+        clc
+        lda %[ylo]
+        adc %[outlo]
+        sta %[outlo]
+        lda %[yhi]
+        adc %[outhi]
+        lsr
+        ror %[outlo]
+        lsr
+        ror %[outlo]
+        lsr
+        ror %[outlo]
+        sta %[outhi]
+        lda %[outlo]
+        clc
+        adc %[xlo]
+        tax
+        lda %[yhi]
+        adc %[outhi]
+        jmp Exit
+2:
+    ; X < Y
+    ; multiply by 3
+    lda %[xlo]
+    asl
+    sta %[outlo]
+    lda %[xhi]
+    rol
+    sta %[outhi]
+    clc
+    lda %[xlo]
+    adc %[outlo]
+    sta %[outlo]
+    lda %[xhi]
+    adc %[outhi] ; divide by 8
+    lsr
+    ror %[outlo]
+    lsr
+    ror %[outlo]
+    lsr
+    ror %[outlo]
+    sta %[outhi]
+    lda %[outlo]
+    clc
+    adc %[ylo]
+    tax
+    lda %[yhi]
+    adc %[outhi]
+Exit:
+)ASM"
+    :"+a"(result.hi), "+x"(result.lo),
+     [ylo]"=r"(scratch1), [yhi]"=r"(scratch2), [xlo]"=r"(scratch3),
+     [xhi]"=r"(scratch4), [outlo]"=r"(scratch5), [outhi]"=r"(scratch6)
+    : "a"(slot1), "x"(slot2)
+    : "y", "p"
+);
+    return (s16)result.value;
+}
+
+asm(R"ASM(
+.section .prg_rom_fixed.speed_table,"aR",@progbits
+.globl speed_table
+speed_table:
+    .incbin "gen/header/speed_table.bin"
+)ASM");
+
+prg_rom_2 noinline XYMagnitude get_angular_speed(Speed speed, u8 angle) {
+    Word outx;
+    Word outy;
+    u8 tmp = 0;
+    
+    asm(R"ASM(
+    cmp #8
+    bcc 2f
+        cmp #$ff
+        bne 1f
+            lda #0
+            sta %[ylo]
+            sta %[yhi]
+            sta %[xlo]
+            sta %[xhi]
+            beq Exit
+1:
+        ; Speed table has 8 entries spread out so we can double them
+        ; if its past the 8th entry, use the doubled version of the speed
+        sta %[mult2]
+2:
+    ; speed * 32
+    ror
+    ror
+    ror
+    ror
+    sta %[ylo]
+    
+    ; + (angle & 7) * 4
+    txa
+    and #7
+    asl
+    asl
+    adc %[ylo]
+    tay
+    lda speed_table + 0*32*8, y
+    sta %[ylo]
+    lda speed_table + 1*32*8, y
+    sta %[yhi]
+    lda speed_table + 2*32*8, y
+    sta %[xlo]
+    lda speed_table + 3*32*8, y
+    sta %[xhi]
+    ; account for the doubled speeds here
+    lda %[mult2]
+    bne 1f
+        asl %[ylo]
+        rol %[yhi]
+        asl %[xlo]
+        rol %[xhi]
+1:
+    ; And choose the correct sign for each angle quadarant
+    ; x should still have the unaltered angle value
+    ; 00 +x, +y
+    ; 01 -x, +y
+    ; 10 -x, -y
+    ; 11 +x, -y
+    txa
+    and #$18
+    tax
+    beq Exit ; no quadrant adjust
+    and #$08
+    beq 1f
+    ; set negative Y
+    sec 
+    lda #0
+    sbc %[ylo]
+    sta %[ylo]
+    lda #0
+    sbc %[yhi]
+    sta %[yhi]
+    ; dont set the negative x for the 11 quadrant
+    cpx #$10
+    bne Exit
+1:  ; set negative X
+    sec 
+    lda #0
+    sbc %[xlo]
+    sta %[xlo]
+    lda #0
+    sbc %[xhi]
+    sta %[xhi]
+Exit:
+)ASM"
+    : [xlo]"=r"(outx.lo), [xhi]"=r"(outx.hi),
+      [ylo]"=r"(outy.lo), [yhi]"=r"(outy.hi),
+      [mult2]"=r"(tmp)
+    : "a"(speed), "x"(angle)
+    : "y", "p"
+    );
+    return {fs8_8(outx.hi, outx.lo), fs8_8(outy.hi, outy.lo)};
+}
 
 namespace Objects {
 
@@ -92,13 +383,13 @@ prg_rom_2 void move_object_offscr_check(u8 slot) {
 // }
 
 prg_rom_2 void core_loop() {
-    for (int i=2; i < OBJECT_COUNT; ++i) {
-        auto obj = objects[i];
-        if ((obj->state & 0x80) != 0) {
+    for (u8 i=2; i < OBJECT_COUNT; ++i) {
+        // auto obj = ;
+        if ((objects[i].state & 0x80) != 0) {
             continue;
         }
 
-        switch (obj->type) {
+        switch (objects[i].type) {
         case ObjectType::Armadillo:
         case ObjectType::Pidgey:
             break;
@@ -185,12 +476,44 @@ constexpr static bool ismulti(u8 a) {
     return false;
 }
 
+constexpr static u8 dir2angle(u8 a) {
+    if ((a & (Direction::Down | Direction::Right)) == (Direction::Down | Direction::Right)) {
+        return 4;
+    }
+    if ((a & (Direction::Down | Direction::Left)) == (Direction::Down | Direction::Left)) {
+        return 12;
+    }
+    if ((a & (Direction::Up | Direction::Left)) == (Direction::Up | Direction::Left)) {
+        return 20;
+    }
+    if ((a & (Direction::Up | Direction::Right)) == (Direction::Up | Direction::Right)) {
+        return 28;
+    }
+    if ((a & Direction::Up) == Direction::Up) {
+        return 24;
+    }
+    if ((a & Direction::Down) == Direction::Down) {
+        return 8;
+    }
+    if ((a & Direction::Left) == Direction::Left) {
+        return 16;
+    }
+    return 0;
+}
+
 __attribute__((section(".prg_rom_fixed.multidirection_lut")))
 constexpr const bool multidirection_lut[16] = {
     ismulti(0),ismulti(1),ismulti(2),ismulti(3),
     ismulti(4),ismulti(5),ismulti(6),ismulti(7),
     ismulti(8),ismulti(9),ismulti(10),ismulti(11),
     ismulti(12),ismulti(13),ismulti(14),ismulti(15),
+};
+__attribute__((section(".prg_rom_fixed.direction_to_angle_lut")))
+constexpr const u8 direction_to_angle_lut[16] = {
+    dir2angle(0),dir2angle(1),dir2angle(2),dir2angle(3),
+    dir2angle(4),dir2angle(5),dir2angle(6),dir2angle(7),
+    dir2angle(8),dir2angle(9),dir2angle(10),dir2angle(11),
+    dir2angle(12),dir2angle(13),dir2angle(14),dir2angle(15),
 };
 
 __attribute__((section(".prg_rom_2.object_init_data")))
@@ -309,7 +632,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponPyramidAtk1,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
-        .speed = Speed::s2_50,
+        .speed = Speed::s2_40,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -319,7 +642,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponPyramidAtk2,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
-        .speed = Speed::s2_50,
+        .speed = Speed::s2_40,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -329,7 +652,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponPyramidAtk3,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
-        .speed = Speed::s2_50,
+        .speed = Speed::s2_40,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -339,7 +662,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponSphereAtk1,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
-        .speed = Speed::s1_44,
+        .speed = Speed::s1_40,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -349,7 +672,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponSphereAtk2,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
-        .speed = Speed::s1_44,
+        .speed = Speed::s1_40,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,
@@ -359,7 +682,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .metasprite = Metasprite::WeaponSphereAtk3,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
-        .speed = Speed::s1_44,
+        .speed = Speed::s1_40,
         .collision = CollisionType::Bullet,
         .attribute = 1,
         .hp = 0,

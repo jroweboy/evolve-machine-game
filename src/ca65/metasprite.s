@@ -5,6 +5,7 @@
 ; This is used internally when making a new metasprite, but can also
 ; be used to make your own metasprite. Just reserve a slot with the name
 ; of the metasprite and 
+.importzp FRAME_CNT1
 
 METASPRITES_COUNT .set 0
 
@@ -413,7 +414,7 @@ PlayerDrawn:
     sbc #OBJECT_COUNT
 :
   sta shuffle_offset
-  lda global_timer
+  lda FRAME_CNT1
   lsr
   lda shuffle_offset
   bcc ObjectLoopNegative

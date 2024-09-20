@@ -26,7 +26,7 @@ constexpr u8 NO_EXIT = 0xff;
 constexpr u8 EXIT_PENDING = 0xfe;
 constexpr u8 SIDE_ROOM = 0xe0;
 
-enum Direction {
+enum class SectionDirection : u8 {
     Up = 0,
     Right = 1,
     Down = 2,
@@ -34,18 +34,18 @@ enum Direction {
     NONE = 0xff,
 };
 
-constexpr Direction GetDirection(u8 me, u8 neighbor) {
+constexpr SectionDirection GetDirection(u8 me, u8 neighbor) {
     switch ((s8)me - (s8)neighbor) {
     case -1:
-        return Direction::Left;
+        return SectionDirection::Left;
     case 1:
-        return Direction::Right;
+        return SectionDirection::Right;
     case -WIDTH:
-        return Direction::Up;
+        return SectionDirection::Up;
     case WIDTH:
-        return Direction::Down;
+        return SectionDirection::Down;
     default:
-        return Direction::NONE;
+        return SectionDirection::NONE;
     }
 }
 

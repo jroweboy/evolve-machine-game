@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 
-extern u16 room_bounds_x;
-extern u16 room_bounds_y;
+extern "C" u16 room_bounds_x;
+extern "C" u16 room_bounds_y;
 
 namespace Game {
     prg_rom_2 void init();

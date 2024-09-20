@@ -87,51 +87,66 @@ prg_rom_2 static void check_player_collision() {
     }
 }
 
-prg_rom_2 f16_8 distance(u8 slot1, u8 slot2) {
-    return 0.375_8_8 * (objects[slot2]->x - objects[slot1]->x) + (objects[slot2]->y - objects[slot1]->y);
-}
+// prg_rom_2 s16 distance(u8 slot1, u8 slot2) {
+//     return 0.375_8_8 * (objects[slot2]->x.as_i() - objects[slot1]->x.as_i()) + (objects[slot2]->y.as_i() - objects[slot1]->y.as_i());
+// }
 
 prg_rom_2 static void move_player() {
+
     auto player = objects[0];
     auto pressed = pad_state(0);
     u16 original_y = player.y->as_i();
     u8 orig_direction = player.direction;
     player.direction = Direction::None;
-    auto speed = multidirection_lut[player->direction] 
-        ? speed_table[(u8)player->speed].xy.get()
-        : speed_table[(u8)player->speed].v.get();
+    player.speed = Speed::None;
+    // auto speed = multidirection_lut[player->direction] 
+    //     ? speed_table[(u8)player->speed].xy.get()
+    //     : speed_table[(u8)player->speed].v.get();
     // DEBUGGER(speed.as_i());
+    u8 angle = 0;
     if (pressed & PAD_UP) {
         player.direction = Direction::Up;
         player.metasprite = Metasprite::KittyUp;
-        player.y = player->y - speed;
     } else if (pressed & PAD_DOWN) {
         player.direction = Direction::Down;
         player.metasprite = Metasprite::KittyDown;
-        player.y = player->y + speed;
-    }
-    if (player.y->as_i() != original_y) {
-        u8 collision = check_solid_collision(CollisionType::All, 0);
-        if (collision > 0) {
-            player.y = original_y;
-        }
     }
     u16 original_x = player.x->as_i();
     if (pressed & PAD_LEFT) {
         player.direction |= Direction::Left;
         player.metasprite = Metasprite::KittyLeft;
-        player.x = player->x - speed;
     } else if (pressed & PAD_RIGHT) {
         player.direction |= Direction::Right;
         player.metasprite = Metasprite::KittyRight;
-        player.x = player->x + speed;
     }
+
+    if (player.direction != 0) {
+        angle = direction_to_angle_lut[player->direction];
+        player.speed = Speed::s1_20;
+    }
+
+    
+    // if (orig_direction != player->direction) {
+    //     auto speed = get_angular_speed(player->speed, player.direction << 2);
+    //     player.cached_speed.x = speed.x;
+    //     player.cached_speed.y = speed.y;
+    // }
+    auto speed = get_angular_speed(player->speed, angle);
+    player.x = player->x + speed.x;
     if (player.x->as_i() != original_x) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
         if (collision > 0) {
             player.x = original_x;
         }
     }
+    player.y = player->y + speed.y;
+    if (player.y->as_i() != original_y) {
+        u8 collision = check_solid_collision(CollisionType::All, 0);
+        if (collision > 0) {
+            player.y = original_y;
+        }
+    }
+
     if (pressed & (PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_UP)) {
         player.frame_counter--;
         if (player.frame_counter < 0) {
@@ -301,18 +316,18 @@ prg_rom_2 static void check_screen_transition() {
     }
 }
 
-prg_rom_2 static Direction get_direction() {
+prg_rom_2 static Dungeon::SectionDirection get_direction() {
     auto player = objects[0];
     if (player.x->as_i() < room.x) {
-        return Direction::Left;
+        return Dungeon::SectionDirection::Left;
     } else if (player.y->as_i() < room.y) {
-        return Direction::Up;
+        return Dungeon::SectionDirection::Up;
     } else if (player.x->as_i() > transition_bounds_x) {
-        return Direction::Right;
+        return Dungeon::SectionDirection::Right;
     } else if (player.y->as_i() > transition_bounds_y) {
-        return Direction::Down;
+        return Dungeon::SectionDirection::Down;
     }
-    return Direction::Error;
+    return Dungeon::SectionDirection::NONE;
 }
 
 prg_rom_2 noinline static void calculate_screen_bounds() {
@@ -428,7 +443,7 @@ prg_rom_2 static void load_new_map() {
     u8 section_id = room.lead_id;
     auto player = objects[0];
 
-    Direction direction = get_direction();
+    auto direction = get_direction();
     SectionBase vertical_section;
     bool is_bottom_section = player.y->as_i() - room.y > 240;
     if (lead.room_base == SectionBase::StartDown || lead.room_base == SectionBase::StartUp) {
@@ -465,25 +480,24 @@ prg_rom_2 static void load_new_map() {
     s16 new_x = player.x->as_i();
     s16 new_y = player.y->as_i();
     if (vertical_section == SectionBase::Bottom || vertical_section == SectionBase::StartDown) {
-        if (direction != Direction::Down && direction != Direction::Up) {
+        if (direction != Dungeon::SectionDirection::Down && direction != Dungeon::SectionDirection::Up) {
             new_y += 16;
         }
     }
     switch (direction) {
-    case Direction::Up:
+    case Dungeon::SectionDirection::Up:
         new_y -= 64;
         break;
-    case Direction::Right:
+    case Dungeon::SectionDirection::Right:
         new_x += 48;
         break;
-    case Direction::Down:
+    case Dungeon::SectionDirection::Down:
         new_y = room.y + 16;
         break;
-    case Direction::Left:
+    case Dungeon::SectionDirection::Left:
         new_x -= 32;
         break;
-    case Direction::Error:
-    case Direction::None:
+    case Dungeon::SectionDirection::NONE:
         break;
     }
     switch (new_section.room_base) {

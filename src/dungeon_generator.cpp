@@ -196,7 +196,7 @@ prg_rom_2 static void update_section_exits(const MapId& map, Section& section, u
         // if we have a neighbor that was waiting for us to add the exit, then
         // update their exits now. Get the direction *from* me to the neighbor
         // section and write that.
-        u8 direction = Dungeon::GetDirection(me, neighbor);
+        u8 direction = (u8)Dungeon::GetDirection(me, neighbor);
         u8 opps = Dungeon::OppositeDirection(direction);
         u8 updated_exit = update_section_exit(neighbor, direction, opps);
         if (updated_exit == Dungeon::NO_EXIT) {
@@ -335,7 +335,7 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
     // room a room that is not along the top of the screen.
     while ((lead_id = ((u8)rand()) & 0b111111) < Dungeon::WIDTH);
     u8 start_id = lead_id;
-    u8 side_id = GetNeighborId(lead_id, Direction::Up);
+    u8 side_id = GetNeighborId(lead_id, (u8)SectionDirection::Up);
 
     // now we have the initial rooms so write my id to the map
     map[lead_id] = id;
@@ -355,8 +355,8 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
     
     ////////////////////
     // Step -1: Set the player position for debug purposes
-    objects[0].x = f16_8(room.x);
-    objects[0].y = f16_8(room.y);
+    objects[0].x = fu16_8(room.x);
+    objects[0].y = fu16_8(room.y);
 
     // clear out the exits for the room sections. we'll update the exits with
     // the ids to the next rooom when we process that room.
@@ -364,8 +364,8 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
     for (auto& num : side.exit) { num = NO_EXIT; }
 
     // Manually connect the starting rooms together to prevent the following code from trying to generate rooms over them
-    lead.exit[Direction::Up] = Dungeon::SIDE_ROOM;
-    side.exit[Direction::Down] = Dungeon::SIDE_ROOM;
+    lead.exit[(u8)SectionDirection::Up] = Dungeon::SIDE_ROOM;
+    side.exit[(u8)SectionDirection::Down] = Dungeon::SIDE_ROOM;
 
     // Keep trying to add rooms to the todo list until we actually add one.
     while (fill_read == fill_write) {
@@ -449,13 +449,13 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
             // lead will be up and left in this setup. (So if direction is UP,
             // then the lead is the first nametable.)
             // Direction dir = GetDirection(side_id, lead_id);
-            Direction dir = GetDirection(lead_id, side_id);
-            lead.nametable = LeadLUT[dir];
-            side.nametable = SideLUT[dir];
+            SectionDirection dir = GetDirection(lead_id, side_id);
+            lead.nametable = LeadLUT[(u8)dir];
+            side.nametable = SideLUT[(u8)dir];
             // side.nametable = LeadLUT[dir];
             // lead.nametable = SideLUT[dir];
             switch (dir) {
-                case Direction::Up:
+                case SectionDirection::Up:
                     lead.room_base = SectionBase::Top;
                     side.room_base = SectionBase::Bottom;
                     // lead.room_base = SectionBase::Bottom;
@@ -464,7 +464,7 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
                     set_room_xy(lead_id);
                     // set_room_xy(side_id);
                     break;
-                case Direction::Down:
+                case SectionDirection::Down:
                     lead.room_base = SectionBase::Bottom;
                     side.room_base = SectionBase::Top;
                     // lead.room_base = SectionBase::Top;
@@ -473,7 +473,7 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
                     set_room_xy(side_id);
                     // set_room_xy(lead_id);
                     break;
-                case Direction::Right:
+                case SectionDirection::Right:
                     lead.room_base = SectionBase::Right;
                     side.room_base = SectionBase::Left;
                     // lead.room_base = SectionBase::Left;
@@ -482,7 +482,7 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
                     set_room_xy(side_id);
                     // set_room_xy(lead_id);
                     break;
-                case Direction::Left:
+                case SectionDirection::Left:
                     lead.room_base = SectionBase::Left;
                     side.room_base = SectionBase::Right;
                     // lead.room_base = SectionBase::Right;
@@ -497,7 +497,7 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
             
             // Since we know we have a side and we know the direction, update this info here
             // lead.exit[dir] = Dungeon::SIDE_ROOM;
-            lead.exit[OppositeDirection(dir)] = Dungeon::SIDE_ROOM;
+            lead.exit[OppositeDirection((u8)dir)] = Dungeon::SIDE_ROOM;
         }
         else {
             lead.nametable = 0x20;

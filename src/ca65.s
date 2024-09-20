@@ -134,14 +134,14 @@ __run_audio:
     sta A53_REG_VALUE
     jmp music_nmi_callback
 
-.section .nmi.200,"axR",@progbits
-inc_global_timer:
-    inc global_timer
-    bne .L1
-        inc global_timer+1
-        bne .L1
-            inc global_timer+2
-.L1:
+; .section .nmi.200,"axR",@progbits
+; inc_global_timer:
+;     inc global_timer
+;     bne .L1
+;         inc global_timer+1
+;         bne .L1
+;             inc global_timer+2
+; .L1:
 
 .section .nmi.055,"axR",@progbits
 .globl oam_update_nmi

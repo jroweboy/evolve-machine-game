@@ -4,19 +4,19 @@
   <image source="../rooms/leftright.bmp" width="512" height="240"/>
  </imagelayer>
  <objectgroup id="3" name="collision">
-  <object id="1" name="0" x="0" y="157" width="80" height="83"/>
+  <object id="1" name="0" x="0" y="160" width="80" height="80"/>
   <object id="2" name="1" x="176" y="216" width="160" height="24"/>
-  <object id="3" name="2" x="432" y="156" width="80" height="85"/>
-  <object id="4" name="3" x="432" y="0" width="80" height="85"/>
+  <object id="3" name="2" x="432" y="160" width="80" height="80"/>
+  <object id="4" name="3" x="432" y="5" width="80" height="75"/>
   <object id="5" name="4" x="176" y="0" width="160" height="16"/>
   <object id="6" name="5" x="0" y="0" width="80" height="84"/>
  </objectgroup>
  <objectgroup id="4" name="exit_spawns">
-  <object id="8" name="left_down" x="64" y="200" width="128" height="40"/>
-  <object id="9" name="right_down" x="320" y="200" width="128" height="40"/>
-  <object id="10" name="right_right" x="472" y="84" width="40" height="72"/>
+  <object id="8" name="left_down" x="80" y="200" width="96" height="40"/>
+  <object id="9" name="right_down" x="336" y="200" width="96" height="40"/>
+  <object id="10" name="right_right" x="472" y="80" width="40" height="80"/>
   <object id="11" name="right_up" x="336" y="0" width="96" height="48"/>
   <object id="12" name="left_up" x="80" y="0" width="96" height="48"/>
-  <object id="13" name="left_left" x="0" y="84" width="40" height="72"/>
+  <object id="13" name="left_left" x="0" y="84" width="48" height="76"/>
  </objectgroup>
 </map>

@@ -111,12 +111,12 @@ struct SectionObjectLookup {
 #define SOA_STRUCT SectionObjectLookup
 #define SOA_MEMBERS MEMBER(nametable) MEMBER(chr) MEMBER(attribute) MEMBER(chr_offset) MEMBER(chr_count)
 #include <soa-struct.inc>
-const soa::Array<SectionObjectLookup, 4> section_object_lut = {
-    {Archive::door_up_nmt, Archive::door_up_chr, Archive::door_up_atr, door_up_chr_offset, door_up_chr_count},
-    {Archive::door_right_nmt, Archive::door_right_chr, Archive::door_up_atr, door_right_chr_offset, door_right_chr_count},
-    {Archive::door_down_nmt, Archive::door_down_chr, Archive::door_down_atr, door_down_chr_offset, door_down_chr_count},
-    {Archive::door_left_nmt, Archive::door_left_chr, Archive::door_left_atr, door_left_chr_offset, door_left_chr_count},
-};
+// const soa::Array<SectionObjectLookup, 4> section_object_lut = {
+//     {Archive::door_up_nmt, Archive::door_up_chr, Archive::door_up_atr, door_up_chr_offset, door_up_chr_count},
+//     {Archive::door_right_nmt, Archive::door_right_chr, Archive::door_up_atr, door_right_chr_offset, door_right_chr_count},
+//     {Archive::door_down_nmt, Archive::door_down_chr, Archive::door_down_atr, door_down_chr_offset, door_down_chr_count},
+//     {Archive::door_left_nmt, Archive::door_left_chr, Archive::door_left_atr, door_left_chr_offset, door_left_chr_count},
+// };
 
 extern const soa::Array<SectionObjectRect, section_object_collision_total> section_collision_lut;
 
@@ -273,33 +273,33 @@ __attribute__((section(".prg_rom_1.load_section"))) static void load_section(con
         if ((section.exit[i] & 0x80) != 0) {
             // Theres an exit at this spot, so replace the chr tiles with the
             // the graphics for the new exit
-            auto graphics = section_object_lut[i];
-            // if we haven't loaded this exit type, copy it into chr
-            if (room_obj_chr_counts[i] == 0) {
-                room_obj_chr_counts[i] = bg_chr_count;
-                room_obj_chr_counts[Dungeon::OppositeDirection(i)] = bg_chr_count;
-                vram_adr(bg_chr_offset);
-                // donut_decompress(graphics.chr);
-                donut_decompress_vram(graphics.chr);
-                bg_chr_offset += graphics.chr_offset;
-                bg_chr_count += graphics.chr_count;
-            }
-            // and now we can write the tile data to the nametable
+            // auto graphics = section_object_lut[i];
+            // // if we haven't loaded this exit type, copy it into chr
+            // if (room_obj_chr_counts[i] == 0) {
+            //     room_obj_chr_counts[i] = bg_chr_count;
+            //     room_obj_chr_counts[Dungeon::OppositeDirection(i)] = bg_chr_count;
+            //     vram_adr(bg_chr_offset);
+            //     // donut_decompress(graphics.chr);
+            //     donut_decompress_vram(graphics.chr);
+            //     bg_chr_offset += graphics.chr_offset;
+            //     bg_chr_count += graphics.chr_count;
+            // }
+            // // and now we can write the tile data to the nametable
 
             const auto wall = section_exit_lut[(u8)section.room_base*4 + i].get();
-            u8 chr_offset = room_obj_chr_counts[i];
-            u8 offset = 0;
-            donut_decompress_buffer(graphics.nametable);
-            // Load the tiles
-            for (u8 h=0; h < wall.height/8; ++h) {
-                auto addr = nmt_addr | NTADR((u16)wall.x/8, (u16)(wall.y/8) + h);
-                vram_adr(addr);
-                for (u8 w=0; w < wall.width/8; ++w) {
-                    // u8 byt = huffmunch_read();
-                    vram_put(decompress_buffer[offset] + chr_offset);
-                    ++offset;
-                }
-            }
+            // u8 chr_offset = room_obj_chr_counts[i];
+            // u8 offset = 0;
+            // donut_decompress_buffer(graphics.nametable);
+            // // Load the tiles
+            // for (u8 h=0; h < wall.height/8; ++h) {
+            //     auto addr = nmt_addr | NTADR((u16)wall.x/8, (u16)(wall.y/8) + h);
+            //     vram_adr(addr);
+            //     for (u8 w=0; w < wall.width/8; ++w) {
+            //         // u8 byt = huffmunch_read();
+            //         vram_put(decompress_buffer[offset] + chr_offset);
+            //         ++offset;
+            //     }
+            // }
             // TODO: And now the attrs for the exits
 
             // There's an exit at this spot, so add the collision box

@@ -54,7 +54,7 @@ def make_palette_params(input: Path, outpal: Path):
 def nestiler_params_bg(nestiler: Path, outchr: Path, opts = []):
   return [
     "-c", str(nestiler / 'nestiler-colors.json'),
-    "--mode", "bg", "--lossy", "0",
+    "--mode", "bg", "--lossy", "1",
     "--share-pattern-table",
     "--out-pattern-table-0", str(outchr)] + opts
 

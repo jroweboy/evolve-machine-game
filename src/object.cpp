@@ -272,7 +272,7 @@ prg_rom_2 noinline XYMagnitude get_angular_speed(Speed speed, u8 angle) {
     sta %[xhi]
     ; account for the doubled speeds here
     lda %[mult2]
-    bne Exit
+    beq Exit
         asl %[ylo]
         rol %[yhi]
         asl %[xlo]
@@ -281,7 +281,7 @@ Exit:
 )ASM"
     : [xlo]"=r"(outx.lo), [xhi]"=r"(outx.hi),
       [ylo]"=r"(outy.lo), [yhi]"=r"(outy.hi),
-      [mult2]"=r"(tmp)
+      [mult2]"+r"(tmp)
     : "a"(speed), "x"(angle)
     : "y", "p"
     );

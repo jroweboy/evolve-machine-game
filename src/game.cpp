@@ -169,23 +169,24 @@ __attribute__((section(".prg_rom_2.weapon_atk_lut"))) constexpr static ObjectTyp
     ObjectType::WeaponPyramidAtk1,
     ObjectType::WeaponSphereAtk1
 };
+
 __attribute__((section(".prg_rom_fixed.direction_lut"))) constexpr static u8 direction_lut[16] = {
+    1,
+    1,
     0,
     0,
-    1,
-    1,
+    3,
+    3,
+    0,
+    0,
     2,
     2,
-    1,
-    1,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
 };
 prg_rom_2 static void run_weapon_bob() {
     auto weapon = objects[1];

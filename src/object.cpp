@@ -292,28 +292,70 @@ namespace Objects {
 
 prg_rom_2 void move_object_offscr_check(u8 slot) {
     auto obj = objects[slot];
-    // auto speed = multidirection_lut[obj->direction] 
-    //     ? speed_table[(u8)obj->speed].xy.get()
-    //     : speed_table[(u8)obj->speed].v.get();
-    // if (obj->direction & Direction::Up) {
-    //     obj.y = obj->y - speed;
-    // } else if (obj->direction & Direction::Down) {
-    //     obj.y = obj->y + speed;
-    // }
     auto speed = get_angular_speed(obj.speed, obj.angle);
     obj.y = obj->y + speed.y;
     if (obj.y->as_i() < room.y || obj.y->as_i() > room_bounds_y) {
         obj.state = State::Dead;
         return;
     }
-    // if (obj->direction & Direction::Left) {
-    //     obj.x = obj->x - speed;
-    // } else if (obj->direction & Direction::Right) {
-    //     obj.x = obj->x + speed;
-    // }
     obj.x = obj->x + speed.x;
     if (obj.x->as_i() < room.x || obj.x->as_i() > room_bounds_x) {
         obj.state = State::Dead;
+    }
+}
+
+prg_rom_2 void move_object_with_solid_collision(u8 slot) {
+    auto obj = objects[slot];
+    auto init = object_init_data[(u8)obj->type];
+    u16 original_y = obj.y->as_i();
+    u8 orig_direction = obj.direction;
+    // auto speed = multidirection_lut[player->direction] 
+    //     ? speed_table[(u8)player->speed].xy.get()
+    //     : speed_table[(u8)player->speed].v.get();
+    // DEBUGGER(speed.as_i());
+    if (orig_direction & Direction::Up) {
+        obj.metasprite = (Metasprite)((u8)init->metasprite + 0);
+    } else if (orig_direction & Direction::Down) {
+        obj.metasprite = (Metasprite)((u8)init->metasprite + 2);
+    }
+    u16 original_x = obj.x->as_i();
+    if (pressed & PAD_LEFT) {
+        player.direction |= Direction::Left;
+        player.metasprite = Metasprite::KittyLeft;
+    } else if (pressed & PAD_RIGHT) {
+        player.direction |= Direction::Right;
+        player.metasprite = Metasprite::KittyRight;
+    }
+
+    if (player.direction != 0) {
+        player.angle = direction_to_angle_lut[player->direction];
+        player.speed = Speed::s1_20;
+    }
+
+    auto speed = get_angular_speed(player->speed, player->angle);
+    player.x = player->x + speed.x;
+    if (player.x->as_i() != original_x) {
+        u8 collision = check_solid_collision(CollisionType::All, 0);
+        if (collision > 0) {
+            player.x = original_x;
+        }
+    }
+    player.y = player->y + speed.y;
+    if (player.y->as_i() != original_y) {
+        u8 collision = check_solid_collision(CollisionType::All, 0);
+        if (collision > 0) {
+            player.y = original_y;
+        }
+    }
+
+    if (pressed & (PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_UP)) {
+        player.frame_counter--;
+        if (player.frame_counter < 0) {
+            player.frame_counter = 6;
+            player.animation_frame = (player.animation_frame + 1) & 0b11;
+        }
+    } else {
+        player.direction = orig_direction;
     }
 }
 

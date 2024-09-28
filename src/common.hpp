@@ -92,11 +92,15 @@ enum class Metasprite : u8 {
     WeaponSphereAtk2,
     WeaponSphereAtk3,
 
-    ArmadilloLeft,
+    ArmadilloUp,
     ArmadilloRight,
+    ArmadilloDown,
+    ArmadilloLeft,
 
-    PidgeyLeft,
+    PidgeyUp,
     PidgeyRight,
+    PidgeyDown,
+    PidgeyLeft,
 
     Count,
 };

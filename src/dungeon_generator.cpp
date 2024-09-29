@@ -163,10 +163,29 @@ prg_rom_2 static u8 get_side_cell(const MapId& map, u8 position) {
     return Dungeon::NO_EXIT;
 }
 
+
 // Load up stuff into the current room
 prg_rom_2 static void generate_room_spawns() {
-    // TODO actually add stuff to the room
-    return;
+    // u8 spawn_count = ((u8)rand()) & 0b111;
+    // if (spawn_count > 6) {
+    //     spawn_count -= 4;
+    // }
+    u8 spawn_count = 1;
+    u8 spawn_slot = 0;
+    while (spawn_count > 0) {
+        // TODO: calculate a distance from the start and a relative difficulty value
+        // and prevent close rooms to the start from being too challenging
+        // u8 spawn_id = rand() & 0b1;
+        u8 x = rand() & 0x3f + 32;
+        u8 y = rand() & 0x1f + 32;
+        lead.objects[spawn_slot++] = ObjectSpawn{
+            .id = ObjectType::HamsterBall,
+            .state = State::Normal,
+            .x = room.x + x,
+            .y = room.y + y,
+        };
+        spawn_count--;
+    }
 }
 
 prg_rom_2 static void add_sections_to_fill(Section& section, MapId& to_fill, u8& fill_write, u8 me) {
@@ -376,11 +395,11 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
     // spawn random things into the room itself
     
     // start the player at the bottom center of the screen
-    lead.objects[0] = {ObjectType::Player, Normal, (s16)(room.x + 100), (s16)(room.y + 240 + 100)};
-    lead.objects[1] = {ObjectType::WeaponCube, Normal, (s16)(room.x + 25), (s16)(room.y + 240 + 100)};
-    lead.objects[2] = {ObjectType::WeaponDiamond, Normal, (s16)(room.x + 50),  (s16)(room.y + 240 + 100)};
-    lead.objects[3] = {ObjectType::WeaponPyramid, Normal, (s16)(room.x + 125), (s16)(room.y + 240 + 100)};
-    lead.objects[4] = {ObjectType::WeaponSphere, Normal, (s16)(room.x + 150), (s16)(room.y + 240 + 100)};
+    lead.objects[0] = {ObjectType::Player, Normal, room.x + 100, room.y + 240 + 100};
+    lead.objects[1] = {ObjectType::WeaponCube, Normal, room.x + 25, room.y + 240 + 100};
+    lead.objects[2] = {ObjectType::WeaponDiamond, Normal, room.x + 50,  room.y + 240 + 100};
+    lead.objects[3] = {ObjectType::WeaponPyramid, Normal, room.x + 125, room.y + 240 + 100};
+    lead.objects[4] = {ObjectType::WeaponSphere, Normal, room.x + 150, room.y + 240 + 100};
 
     // and then save our first room to CHR RAM.
     write_room_to_chrram(id);

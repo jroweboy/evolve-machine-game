@@ -11,28 +11,12 @@
 #include "common.hpp"
 #include "game.hpp"
 #include "map.hpp"
+#include "enemy.hpp"
 #include <fixed_point.h>
 #include <mapper.h>
 #include <peekpoke.h>
 #include <soa.h>
 
-struct ObjectInitData {
-    Metasprite metasprite;
-    Hitbox hitbox;
-    State state;
-    Speed speed;
-    u8 collision;
-    u8 attribute;
-    s8 hp;
-    u8 atk;
-};
-#define SOA_STRUCT ObjectInitData
-#define SOA_MEMBERS \
-    MEMBER(metasprite) MEMBER(hitbox) MEMBER(hp) MEMBER(atk) MEMBER(collision) MEMBER(attribute) \
-    MEMBER(state)
-#include <soa-struct.inc>
-
-extern const soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_data;
 
 __attribute__((leaf)) u8 arctan2(u8 slot1, u8 slot2) {
     u8 result;
@@ -65,10 +49,10 @@ OBJECT_Y_HI       = 5  * OBJECT_COUNT
 
     lda objects + OBJECT_Y_LO,x
     sbc objects + OBJECT_Y_LO,y
-    sta %3
+    sta %[ydiff]
     lda objects + OBJECT_Y_HI,x
     sbc objects + OBJECT_Y_HI,y
-    lda %3
+    lda %[ydiff]
     bcs 1f
         eor #$ff
 1:
@@ -91,7 +75,6 @@ OBJECT_Y_HI       = 5  * OBJECT_COUNT
     lsr
     lsr
     lsr
-    lsr
 )ASM"
     :"+a"(result), [xdiff]"=r"(scratch1), [ydiff]"=r"(scratch2), [octant]"=r"(scratch3)
     : "a"(slot1), "x"(slot2)
@@ -107,7 +90,7 @@ typedef union {
   };
 } Word;
 
-__attribute__((leaf)) s16 distance(u8 slot1, u8 slot2) {
+noinline __attribute__((leaf)) u16 distance(u8 slot1, u8 slot2) {
     Word result;
     u8 scratch1;u8 scratch2;u8 scratch3;
     u8 scratch4;u8 scratch5;u8 scratch6;
@@ -214,7 +197,7 @@ OBJECT_Y_HI       = 5  * OBJECT_COUNT
     tax
     lda %[yhi]
     adc %[outhi]
-Exit:
+3:
 )ASM"
     :"+a"(result.hi), "+x"(result.lo),
      [ylo]"=r"(scratch1), [yhi]"=r"(scratch2), [xlo]"=r"(scratch3),
@@ -222,7 +205,7 @@ Exit:
     : "a"(slot1), "x"(slot2)
     : "y", "p"
 );
-    return (s16)result.value;
+    return (u16)result.value;
 }
 
 asm(R"ASM(
@@ -307,55 +290,43 @@ prg_rom_2 void move_object_offscr_check(u8 slot) {
 prg_rom_2 void move_object_with_solid_collision(u8 slot) {
     auto obj = objects[slot];
     auto init = object_init_data[(u8)obj->type];
-    u16 original_y = obj.y->as_i();
     u8 orig_direction = obj.direction;
-    // auto speed = multidirection_lut[player->direction] 
-    //     ? speed_table[(u8)player->speed].xy.get()
-    //     : speed_table[(u8)player->speed].v.get();
-    // DEBUGGER(speed.as_i());
+
+    u8 mspr_offset = 0;
     if (orig_direction & Direction::Up) {
-        obj.metasprite = (Metasprite)((u8)init->metasprite + 0);
+        mspr_offset = 0;
     } else if (orig_direction & Direction::Down) {
-        obj.metasprite = (Metasprite)((u8)init->metasprite + 2);
+        mspr_offset = 2;
     }
+    if (orig_direction & Direction::Left) {
+        mspr_offset = 3;
+    } else if (orig_direction & Direction::Right) {
+        mspr_offset = 1;
+    }
+    obj.metasprite = (Metasprite)((u8)init->metasprite + mspr_offset);
+
+    auto speed = get_angular_speed(obj->speed, obj->angle);
     u16 original_x = obj.x->as_i();
-    if (pressed & PAD_LEFT) {
-        player.direction |= Direction::Left;
-        player.metasprite = Metasprite::KittyLeft;
-    } else if (pressed & PAD_RIGHT) {
-        player.direction |= Direction::Right;
-        player.metasprite = Metasprite::KittyRight;
-    }
-
-    if (player.direction != 0) {
-        player.angle = direction_to_angle_lut[player->direction];
-        player.speed = Speed::s1_20;
-    }
-
-    auto speed = get_angular_speed(player->speed, player->angle);
-    player.x = player->x + speed.x;
-    if (player.x->as_i() != original_x) {
+    obj.x = obj->x + speed.x;
+    if (obj.x->as_i() != original_x) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
         if (collision > 0) {
-            player.x = original_x;
+            obj.x = original_x;
         }
     }
-    player.y = player->y + speed.y;
-    if (player.y->as_i() != original_y) {
+    u16 original_y = obj.y->as_i();
+    obj.y = obj->y + speed.y;
+    if (obj.y->as_i() != original_y) {
         u8 collision = check_solid_collision(CollisionType::All, 0);
         if (collision > 0) {
-            player.y = original_y;
+            obj.y = original_y;
         }
     }
 
-    if (pressed & (PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_UP)) {
-        player.frame_counter--;
-        if (player.frame_counter < 0) {
-            player.frame_counter = 6;
-            player.animation_frame = (player.animation_frame + 1) & 0b11;
-        }
-    } else {
-        player.direction = orig_direction;
+    obj.frame_counter--;
+    if (obj.frame_counter < 0) {
+        obj.frame_counter = init->frame_pacing;
+        obj.animation_frame = (obj.animation_frame + 1) & 0b11;
     }
 }
 
@@ -401,15 +372,12 @@ prg_rom_2 void core_loop() {
         case ObjectType::Armadillo:
         case ObjectType::Pidgey:
             break;
+        case ObjectType::HamsterBall:
+            process_hamster(i);
+            break;
         case ObjectType::WeaponCubeAtk1:
-            // cube_atk(i, 1);
-            // break;
         case ObjectType::WeaponCubeAtk2:
-            // cube_atk(i, 2);
-            // break;
         case ObjectType::WeaponCubeAtk3:
-            // cube_atk(i, 3);
-            // break;
         case ObjectType::WeaponDiamondAtk1:
         case ObjectType::WeaponDiamondAtk2:
         case ObjectType::WeaponDiamondAtk3:
@@ -448,7 +416,7 @@ prg_rom_2 noinline u8 load_object_b2(ObjectType o) {
     {
         return 0xff;
     }
-    const auto init = object_init_data[(u8)o];
+    auto init = object_init_data[(u8)o];
     auto slot = objects[slot_idx];
     slot.state = init->state;
     slot.speed = init->speed;
@@ -509,6 +477,33 @@ constexpr static u8 dir2angle(u8 a) {
     return 0;
 }
 
+constexpr static u8 angle2dir(u8 a) {
+    if (a >= 29 || a < 3) {
+        return Direction::Right;
+    } else if (a >= 3 && a < 6) {
+        return Direction::Right | Direction::Down;
+    } else if (a >= 6 && a < 10) {
+        return Direction::Down;
+    } else if (a >= 10 && a < 14) {
+        return Direction::Left | Direction::Down;
+    } else if (a >= 14 && a < 18) {
+        return Direction::Left;
+    } else if (a >= 18 && a < 22) {
+        return Direction::Left | Direction::Up;
+    } else if (a >= 22 && a < 29) {
+        return Direction::Up;
+    }
+    return Direction::Error;
+}
+
+constexpr std::array<u8, 32> generate_a2d_table() {
+    std::array<u8, 32> arr;
+    for (int i=0; i<32; i++) {
+        arr[i] = angle2dir(i);
+    }
+    return arr;
+}
+
 __attribute__((section(".prg_rom_fixed.multidirection_lut")))
 constexpr const bool multidirection_lut[16] = {
     ismulti(0),ismulti(1),ismulti(2),ismulti(3),
@@ -523,18 +518,21 @@ constexpr const u8 direction_to_angle_lut[16] = {
     dir2angle(8),dir2angle(9),dir2angle(10),dir2angle(11),
     dir2angle(12),dir2angle(13),dir2angle(14),dir2angle(15),
 };
+__attribute__((section(".prg_rom_fixed.angle_to_direction_lut")))
+constexpr const std::array<u8, 32> angle_to_direction_lut = generate_a2d_table();
 
 __attribute__((section(".prg_rom_2.object_init_data")))
-constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_data = {
+constexpr soa::Array<ObjectInitData, (u8)ObjectType::Count> object_init_data = {
     {
-        .metasprite = Metasprite::KittyLeft,
+        .metasprite = Metasprite::KittyUp,
         .hitbox = { .x = 0, .y = 8, .width = 8, .height = 8},
         .state = State::Normal,
         .speed = Speed::s1_10,
         .collision = 0,
         .attribute = 0,
-        .hp = 3,
+        .hp = 24,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponCube,
@@ -545,6 +543,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponDiamond,
@@ -555,6 +554,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponPyramid,
@@ -565,6 +565,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponSphere,
@@ -575,6 +576,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponCubeAtk1,
@@ -585,6 +587,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponCubeAtk2,
@@ -595,6 +598,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponCubeAtk3,
@@ -605,6 +609,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponDiamondAtk1,
@@ -615,6 +620,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponDiamondAtk2,
@@ -625,6 +631,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponDiamondAtk3,
@@ -635,6 +642,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponPyramidAtk1,
@@ -645,6 +653,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponPyramidAtk2,
@@ -655,6 +664,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponPyramidAtk3,
@@ -665,6 +675,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponSphereAtk1,
@@ -675,6 +686,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponSphereAtk2,
@@ -685,6 +697,7 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 6,
     },
     {
         .metasprite = Metasprite::WeaponSphereAtk3,
@@ -695,92 +708,39 @@ constexpr soa::Array<const ObjectInitData, (u8)ObjectType::Count> object_init_da
         .attribute = 1,
         .hp = 0,
         .atk = 0,
+        .frame_pacing = 4,
     },
     {
-        .metasprite = Metasprite::PidgeyLeft,
+        .metasprite = Metasprite::PidgeyUp,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
         .speed = Speed::s1_00,
         .collision = CollisionType::Enemy,
         .attribute = 1,
-        .hp = 50,
+        .hp = 100,
         .atk = 5,
+        .frame_pacing = 4,
     },
     {
-        .metasprite = Metasprite::ArmadilloLeft,
+        .metasprite = Metasprite::ArmadilloUp,
         .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
         .state = State::Normal,
         .speed = Speed::s1_00,
         .collision = CollisionType::Enemy,
         .attribute = 1,
-        .hp = 80,
+        .hp = 160,
         .atk = 5,
+        .frame_pacing = 10,
+    },
+    {
+        .metasprite = Metasprite::HamsterUp,
+        .hitbox = { .x = 0, .y = 0, .width = 16, .height = 16},
+        .state = State::Normal,
+        .speed = Speed::s1_00,
+        .collision = CollisionType::Enemy,
+        .attribute = 1,
+        .hp = 20,
+        .atk = 5,
+        .frame_pacing = 10,
     },
 };
-
-
-// constexpr soa::Array<SpeedTable, (u8)Speed::Count> speed_table = {
-//     {1.0_8_8, 1.0_8_8, 0.77_8_8},
-//     {1.2_8_8, 1.2_8_8, 1.69_8_8},
-// };
-
-// prg_rom_2 SolidObject updown_walls[ROOM_WALL_COUNT] = {
-//     // top left corner
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 0, .y = 0, .width = WALL_LONG, .height = WALL_SHORT,
-//     },
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 0, .y = 0, .width = WALL_SHORT, .height = WALL_LONG,
-//     },
-//     // top right corner
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 256 - WALL_LONG, .y = 0, .width = WALL_LONG, .height = WALL_SHORT,
-//     },
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 256 - WALL_SHORT, .y = 0, .width = WALL_SHORT, .height = WALL_LONG,
-//     },
-//     // bot left corner
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 0, .y = 480 - WALL_SHORT, .width = WALL_LONG, .height = WALL_SHORT,
-//     },
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 0, .y = 480 - WALL_LONG, .width = WALL_SHORT, .height = WALL_LONG,
-//     },
-//     // bot right corner
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 256 - WALL_LONG, .y = 480 - WALL_SHORT, .width = WALL_LONG, .height = WALL_SHORT,
-//     },
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 256 - WALL_SHORT, .y = 480 - WALL_LONG, .width = WALL_SHORT, .height = WALL_LONG,
-//     },
-// };
-
-// prg_rom_2 SolidObject leftright_walls[ROOM_WALL_COUNT] = {
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 0, .y = 0, .width = 100, .height = 16,
-//     },
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 0, .y = 0, .width = 16, .height = 100,
-//     }
-// };
-
-// prg_rom_2 SolidObject single_walls[ROOM_WALL_COUNT] = {
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 0, .y = 0, .width = 100, .height = 16,
-//     },
-//     {
-//         .state = CollisionType::Solid,
-//         .x = 0, .y = 0, .width = 16, .height = 100,
-//     }
-// };

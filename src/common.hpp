@@ -63,6 +63,7 @@ enum class ObjectType : u8 {
     WeaponSphereAtk3,
     Armadillo,
     Pidgey,
+    HamsterBall,
     Count,
     // Noinit types of objects
     None = 0xff,
@@ -102,6 +103,16 @@ enum class Metasprite : u8 {
     PidgeyDown,
     PidgeyLeft,
 
+    HamsterUp,
+    HamsterRight,
+    HamsterDown,
+    HamsterLeft,
+
+    HamsterBallUp,
+    HamsterBallRight,
+    HamsterBallDown,
+    HamsterBallLeft,
+
     Count,
 };
 
@@ -118,6 +129,7 @@ enum State : u8 {
     Normal = 0x00,
     EquippedWeapon = 0x01,
     GroundedWeapon = 0x02,
+    HamsterChasing = 0x03,
     Hidden = 0x80,
     Dead = 0xff,
 };

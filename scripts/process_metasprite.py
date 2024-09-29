@@ -89,7 +89,9 @@ def main(fin: Path, fout: Path):
             o.write(pack("<B", offset))
         for byt in out:
           o.write(byt)
-
+    # hack skip ball mspr
+    if file.stem == "hamsterball":
+      continue
     with open(fin / "metasprites" / f"{file.stem}.chr", 'rb') as f:
       rawchr = f.read()
       compressed_pages = []

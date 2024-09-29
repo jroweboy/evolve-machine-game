@@ -10,6 +10,10 @@ huffmunch_zpblock = $02
 decompress_buffer = $100
 .globl decompress_buffer
 
+
+PAL_BUF = $140
+.globl PAL_BUF
+
 .section .prg_rom_1.compress,"ax",@progbits
 .globl donut_decompress_vram
 donut_decompress_vram:

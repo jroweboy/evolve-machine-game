@@ -118,15 +118,40 @@ struct SpeedTable {
 
 extern const soa::Array<SpeedTable, (u8)Speed::Count> speed_table;
 
+
+struct ObjectInitData {
+    Metasprite metasprite;
+    Hitbox hitbox;
+    State state;
+    Speed speed;
+    u8 collision;
+    u8 attribute;
+    u8 hp;
+    u8 atk;
+    u8 frame_pacing;
+};
+#define SOA_STRUCT ObjectInitData
+#define SOA_MEMBERS \
+    MEMBER(metasprite) MEMBER(hitbox) MEMBER(hp) MEMBER(atk) MEMBER(collision) MEMBER(attribute) \
+    MEMBER(state) MEMBER(frame_pacing)
+#include <soa-struct.inc>
+extern const soa::Array<ObjectInitData, (u8)ObjectType::Count> object_init_data;
+
 namespace Objects {
     u8 load_object(ObjectType);
     u8 load_object_b2(ObjectType);
+    void move_object_offscr_check(u8 slot);
+    void move_object_with_solid_collision(u8 slot);
     void core_loop();
 }
+
 extern "C" XYMagnitude get_angular_speed(Speed speed, u8 angle);
 
-extern "C" s16 distance(u8 slot1, u8 slot2);
+extern "C" u16 distance(u8 slot1, u8 slot2);
 extern "C" u8 arctan2(u8 slot1, u8 slot2);
 
 extern const bool multidirection_lut[16];
 extern const u8 direction_to_angle_lut[16];
+extern const std::array<u8, 32> angle_to_direction_lut;
+
+prg_rom_2 extern "C" u8 check_solid_collision(u8 filter, u8 obj_idx);

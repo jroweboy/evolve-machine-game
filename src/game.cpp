@@ -9,15 +9,10 @@
 #include "dungeon_generator.hpp"
 #include "map.hpp"
 #include "music.hpp"
-// #include "graphics.hpp"
-// #include "map_loader.hpp"
 #include "map_loader.hpp"
 #include "nes_extra.hpp"
 #include "object.hpp"
 #include "sprite_render.hpp"
-
-
-// constexpr auto PLAYER_MOVESPEED = 1.20_8_8;
 
 
 extern volatile char FRAME_CNT1;
@@ -33,8 +28,6 @@ noinit u16 transition_bounds_x;
 noinit u16 transition_bounds_y;
 noinit u16 room_bounds_x;
 noinit u16 room_bounds_y;
-
-prg_rom_2 extern "C" u8 check_solid_collision(u8 filter, u8 obj_idx);
 
 struct ObjectCollisionParameter {
     s16 x;
@@ -92,17 +85,11 @@ prg_rom_2 static void check_player_collision() {
 // }
 
 prg_rom_2 static void move_player() {
-
     auto player = objects[0];
     auto pressed = pad_state(0);
-    u16 original_y = player.y->as_i();
     u8 orig_direction = player.direction;
     player.direction = Direction::None;
     player.speed = Speed::None;
-    // auto speed = multidirection_lut[player->direction] 
-    //     ? speed_table[(u8)player->speed].xy.get()
-    //     : speed_table[(u8)player->speed].v.get();
-    // DEBUGGER(speed.as_i());
     if (pressed & PAD_UP) {
         player.direction = Direction::Up;
         player.metasprite = Metasprite::KittyUp;
@@ -110,7 +97,6 @@ prg_rom_2 static void move_player() {
         player.direction = Direction::Down;
         player.metasprite = Metasprite::KittyDown;
     }
-    u16 original_x = player.x->as_i();
     if (pressed & PAD_LEFT) {
         player.direction |= Direction::Left;
         player.metasprite = Metasprite::KittyLeft;
@@ -122,30 +108,7 @@ prg_rom_2 static void move_player() {
     if (player.direction != 0) {
         player.angle = direction_to_angle_lut[player->direction];
         player.speed = Speed::s1_20;
-    }
-
-    auto speed = get_angular_speed(player->speed, player->angle);
-    player.x = player->x + speed.x;
-    if (player.x->as_i() != original_x) {
-        u8 collision = check_solid_collision(CollisionType::All, 0);
-        if (collision > 0) {
-            player.x = original_x;
-        }
-    }
-    player.y = player->y + speed.y;
-    if (player.y->as_i() != original_y) {
-        u8 collision = check_solid_collision(CollisionType::All, 0);
-        if (collision > 0) {
-            player.y = original_y;
-        }
-    }
-
-    if (pressed & (PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_UP)) {
-        player.frame_counter--;
-        if (player.frame_counter < 0) {
-            player.frame_counter = 6;
-            player.animation_frame = (player.animation_frame + 1) & 0b11;
-        }
+        Objects::move_object_with_solid_collision(0);
     } else {
         player.direction = orig_direction;
     }
@@ -240,11 +203,6 @@ prg_rom_2 static void scroll_screen() {
         if (screen_pos_y < 0 || screen_pos_y > 239) {
             return;
         }
-        // if (screen_pos_y > 0x88 && view_y < 240) {
-        //     view_y += PLAYER_MOVESPEED;
-        // } else if (screen_pos_y < 0x68 && view_y != 0) {
-        //     view_y -= PLAYER_MOVESPEED;
-        // }
         u8 orig_view_y = view_y;
         if (screen_pos_y > 0x78) {
             if (view_y < 240) {
@@ -326,26 +284,26 @@ prg_rom_2 static Dungeon::SectionDirection get_direction() {
 }
 
 prg_rom_2 noinline static void calculate_screen_bounds() {
+    u16 x;
+    u16 y;
     switch (room.scroll) {
     case ScrollType::Single:
-        room_bounds_x = room.x + 256;
-        transition_bounds_x = room.x + 256 - 16;
-        room_bounds_y = room.y + 240;
-        transition_bounds_y = room.y + 240 - 16;
+        x = 256;
+        y = 240;
         break;
     case ScrollType::Horizontal:
-        room_bounds_x = room.x + 256 * 2;
-        transition_bounds_x = room.x + 256 * 2 - 16;
-        room_bounds_y = room.y + 240;
-        transition_bounds_y = room.y + 240 - 16;
+        x = 256 * 2;
+        y = 240;
         break;
     case ScrollType::Vertical:
-        room_bounds_x = room.x + 256;
-        transition_bounds_x = room.x + 256 - 16;
-        room_bounds_y = room.y + 240 * 2;
-        transition_bounds_y = room.y + 240 * 2 - 16;
+        x = 256;
+        y = 240 * 2;
         break;
     }
+    room_bounds_x = room.x + x;
+    transition_bounds_x = room_bounds_x - 16;
+    room_bounds_y = room.y + y;
+    transition_bounds_y = room_bounds_y - 16;
 }
 
 // __attribute__((section(".prg_rom_2.x_offset_lut"))) static const s8 player_position_x_offset[] = {

@@ -53,6 +53,8 @@ add_executable(${CMAKE_PROJECT_NAME}
     src/common.hpp
     src/dungeon_generator.cpp
     src/dungeon_generator.hpp
+    src/enemy.cpp
+    src/enemy.hpp
     src/game.cpp
     src/game.hpp
     src/main.cpp

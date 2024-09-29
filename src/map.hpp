@@ -33,8 +33,8 @@ enum ExitType {
 struct ObjectSpawn {
     ObjectType id;
     State state;
-    s16 x;
-    s16 y;
+    u16 x;
+    u16 y;
 };
 
 enum class SectionBase : u8 {

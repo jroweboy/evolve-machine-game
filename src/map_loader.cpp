@@ -153,7 +153,7 @@ __attribute__((section(".prg_rom_1.wall_offset_y"))) = {
 };
 
 
-static const Archive weapon_lut[] = {
+static constexpr Archive weapon_lut[] = {
     Archive::weapon_cube_chr,
     Archive::weapon_diamond_chr,
     Archive::weapon_pyramid_chr,
@@ -173,21 +173,27 @@ struct ObjectTileCount {
 #define SOA_STRUCT ObjectTileCount
 #define SOA_MEMBERS MEMBER(tile_offset) MEMBER(archive) MEMBER(tile_count)
 #include <soa-struct.inc>
-static const soa::Array<ObjectTileCount, (u8)ObjectType::Count> object_tile_lut = {
-    // Player,
-    // WeaponSphere,
-    // WeaponPyramid,
-    // WeaponDiamond,
-    // WeaponCube,
-    // Armadillo,
-    // Pidgey,
+static constexpr soa::Array<ObjectTileCount, (u8)ObjectType::Count> object_tile_lut = {
     {kitty_chr_offset, Archive::kitty_chr, kitty_chr_count},
     {weapon_cube_chr_offset, Archive::weapon_cube_chr, weapon_cube_chr_count},
     {weapon_diamond_chr_offset, Archive::weapon_diamond_chr, weapon_diamond_chr_count},
     {weapon_pyramid_chr_offset, Archive::weapon_pyramid_chr, weapon_pyramid_chr_count},
     {weapon_sphere_chr_offset, Archive::weapon_sphere_chr, weapon_sphere_chr_count},
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
+    {0, Archive::Count, 0}, // weapon attacks are unused here
     {armadillo_chr_offset, Archive::armadillo_chr, armadillo_chr_count},
     {pidgey_chr_offset, Archive::pidgey_chr, pidgey_chr_count},
+    {hamster_chr_offset, Archive::hamster_chr, hamster_chr_count},
 };
 
 static u8 get_or_load_tile(ObjectType obj) {

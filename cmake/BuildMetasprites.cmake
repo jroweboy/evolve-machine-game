@@ -22,8 +22,8 @@ function(build_metasprites)
     message(FATAL_ERROR "Cannot build metasprites: Unable to find processing script process_metasprite.py")
   endif()
   
-  file(GLOB infiles "${META_SRC}/metasprites/*")
-  file(GLOB outfiles "${META_SRC}/metasprites/*")
+  file(GLOB infiles "${META_SRC}/metasprites/*.?")
+  file(GLOB outfiles "${META_SRC}/metasprites/*.?")
   list(TRANSFORM outfiles REPLACE "${META_SRC}/metasprites/(.*).chr" "${META_DEST}/sprites/\\1.chr.dnt")
   list(TRANSFORM outfiles REPLACE "${META_SRC}/metasprites/(.*).msb" "${META_DEST}/sprites/\\1_metasprite.msb")
 

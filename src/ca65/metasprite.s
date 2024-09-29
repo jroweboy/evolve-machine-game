@@ -28,6 +28,11 @@ Data = .ident( .sprintf("METASPRITE_%s_DATA_%d", Name, Id) )
 METASPRITES_COUNT .set METASPRITES_COUNT + 1
 .endmacro
 
+.macro MetaspritePlaceholder Name
+.ident( .sprintf("METASPRITE_%d", METASPRITES_COUNT) ) = $0000
+MetaspriteReserve Name
+.endmacro
+
 .macro MetaspriteAnimation Name, Animation, F1, F2, F3, F4, F5, F6, F7, F8
 .local Base
 
@@ -110,8 +115,7 @@ shuffle_offset: .res 1
 .segment "_pprg__rom__2"
 
 
-MetaspriteReserve "NULL"
-METASPRITE_0 = $0000
+MetaspritePlaceholder "NULL"
 
 MetaspriteAnimation "kitty", "walk_up",     0, 1, 2, 3
 MetaspriteAnimation "kitty", "walk_right",  4, 5, 6, 7
@@ -139,10 +143,39 @@ MetaspriteAnimation "weapon_sphere", "atk1",   4,  5,  6,  7
 MetaspriteAnimation "weapon_sphere", "atk2",   8,  9,  10, 11
 MetaspriteAnimation "weapon_sphere", "atk3",   12, 13, 14, 15
 
+; MetaspriteAnimation "pidgey", "walk_up",     0,  1,  2,  1
+; MetaspriteAnimation "pidgey", "walk_right",  0,  1,  2,  3
+; MetaspriteAnimation "pidgey", "walk_down",   0,  1,  2,  3
+; MetaspriteAnimation "pidgey", "walk_left",   0,  1,  2,  3
+MetaspritePlaceholder "pidgey_up"
+MetaspritePlaceholder "pidgey_right"
+MetaspritePlaceholder "pidgey_down"
+MetaspritePlaceholder "pidgey_left"
+
+; Armadillo
+; MetaspriteAnimation "pidgey", "armadillo_up",     0,  1,  2,  3
+; MetaspriteAnimation "pidgey", "armadillo_right",  0,  1,  2,  3
+; MetaspriteAnimation "pidgey", "armadillo_down",   0,  1,  2,  3
+; MetaspriteAnimation "pidgey", "armadillo_left",   0,  1,  2,  3
+MetaspritePlaceholder "armadillo_up"
+MetaspritePlaceholder "armadillo_right"
+MetaspritePlaceholder "armadillo_down"
+MetaspritePlaceholder "armadillo_left"
+
+; Hamster
+
+MetaspriteAnimation "hamster", "up",     0,  0,  1,  2
+MetaspriteAnimation "hamster", "right",  3,  3,  4,  5
+MetaspriteAnimation "hamster", "down",   6,  6,  7,  8
+MetaspriteAnimation "hamster", "left",   9,  9, 10, 11
+
+MetaspriteAnimation "hamsterball", "up",     0,  1,  2,  3
+MetaspriteAnimation "hamsterball", "right",  4,  5,  6,  7
+MetaspriteAnimation "hamsterball", "down",   8,  9,  10, 11
+MetaspriteAnimation "hamsterball", "left",   12, 13, 14, 15
+
 
 .segment "_pprg__rom__2"
-
-
 
 
 
@@ -504,8 +537,10 @@ HUD_HP = 0
   ; carry clear
   adc #2
   sta OAM_BUF + OAM::Tile + CAT_R, x
+  ; HP / 8 * 2 to get the tile offset
   lda objects + OBJECT_HP
-  asl
+  lsr
+  lsr
   clc
   adc hud_tile_offset
   sta OAM_BUF + OAM::Tile + HUD_HP, x

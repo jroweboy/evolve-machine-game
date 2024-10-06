@@ -43,6 +43,21 @@ enum class GameMode : u8 {
     Pause = 0x80,
 };
 
+constexpr u8 PALETTE_KITTY = 0;
+constexpr u8 PALETTE_WEAPON = 1;
+constexpr u8 PALETTE_ENEMY1 = 2;
+constexpr u8 PALETTE_ENEMY2 = 3;
+
+enum class PaletteSet : u8 {
+    None,
+    WeaponCube, // Also kitty palette
+    WeaponDiamond,
+    WeaponPyramid,
+    WeaponSphere,
+    Hamster,
+    Count,
+};
+
 enum class ObjectType : u8 {
     Player,
     WeaponCube,

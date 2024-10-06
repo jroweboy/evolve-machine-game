@@ -11,6 +11,13 @@ decompress_buffer = $100
 .globl decompress_buffer
 
 
+; enable EPSM
+__console_type = 3
+.global __console_type
+__extended_console_type = 4
+.global __extended_console_type
+
+
 PAL_BUF = $140
 .globl PAL_BUF
 

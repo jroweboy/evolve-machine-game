@@ -24,14 +24,13 @@ FAMISTUDIO_DPCM_OFF = evolve_machine_dpcm
 .define FAMISTUDIO_CA65_RAM_SEGMENT _pnoinit
 .define FAMISTUDIO_CA65_CODE_SEGMENT _pprg__rom__0
 
-.segment "_pnoinit"
 
 .export current_song, next_song, sfx_queue1, sfx_queue2
 
-current_song: .res 1
-next_song:    .res 1
-sfx_queue1:   .res 1
-sfx_queue2:   .res 1
+current_song := $160
+next_song := $161
+sfx_queue1 := $162
+sfx_queue2 := $163
 
 .segment "_pprg__rom__0"
 
@@ -40,7 +39,8 @@ StopMusic = $fe
 InitEngine = $ff
 
 .export music_nmi_callback
-
+ExitMusic:
+    rts
 music_nmi_callback:
     lda next_song
     bpl check_for_song_change
@@ -48,7 +48,7 @@ music_nmi_callback:
     cmp #InitEngine
     beq init_famistudio
     cmp #StopMusic
-    bne continue_playing_song
+    bne ExitMusic
         jsr famistudio_music_stop
         dec next_song
         jmp continue_playing_song

@@ -59,13 +59,14 @@ prg_rom_2 static void check_player_collision() {
             if (obj.state == State::GroundedWeapon && (pad_new & PAD_A) != 0) {
                 auto weapon = objects[1];
                 equipped_weapon = obj->type;
+                MapLoader::load_pal(1, (PaletteSet)equipped_weapon);
                 Metasprite tmp = weapon->metasprite;
                 auto tmp2 = weapon->tile_offset;
                 auto tmptype = weapon->type;
-                weapon.type = obj->type;
+                weapon.type = equipped_weapon;
                 weapon.metasprite = obj->metasprite;
                 weapon.state = State::EquippedWeapon;
-                weapon.attribute = obj->attribute;
+                weapon.attribute = PALETTE_WEAPON;
                 weapon.tile_offset = obj->tile_offset;
                 if (tmp > Metasprite::None) {
                     obj.type = tmptype;
@@ -192,6 +193,7 @@ prg_rom_2 static void run_weapon_bob() {
     }
 }
 
+// TODO: fix me to not suck
 prg_rom_2 static void scroll_screen() {
     if (room.scroll == ScrollType::Single) {
         return;
@@ -475,18 +477,18 @@ prg_rom_2 static void load_new_map() {
     game_mode = GameMode::InGame;
 }
 
-constexpr char sprites_pal[] = {
-    0x0f, 0x03, 0x00, 0x27,
-    0x0f, 0x06, 0x26, 0x30,
-    0x0f, 0x10, 0x20, 0x30,
-    0x0f, 0x10, 0x20, 0x30,
-};
+// constexpr char sprites_pal[] = {
+//     0x0f, 0x03, 0x00, 0x27,
+//     0x0f, 0x06, 0x26, 0x30,
+//     0x0f, 0x10, 0x20, 0x30,
+//     0x0f, 0x10, 0x20, 0x30,
+// };
 
 namespace Game {
 prg_rom_2 void init() {
     // ppu_wait_nmi();
     // ppu_off();
-    pal_spr(&sprites_pal);
+    // pal_spr(&sprites_pal);
     prev_game_mode = GameMode::MapLoader;
     game_mode = GameMode::InGame;
     calculate_screen_bounds();

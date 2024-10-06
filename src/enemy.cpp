@@ -12,7 +12,6 @@ prg_rom_2 void process_hamster(u8 slot) {
     auto obj = objects[slot];
     if (obj.state == State::HamsterChasing) {
         obj.angle = arctan2(0, slot);
-        // DEBUGGER(obj.angle);
     } else {
         auto dist = distance(0, slot);
         if (dist < 50) {
@@ -31,6 +30,8 @@ prg_rom_2 void process_hamster(u8 slot) {
     Objects::move_object_with_solid_collision(slot);
     if (FRAME_CNT1 & 1) {
         obj.metasprite = (Metasprite)((u8)obj->metasprite + 4);
+        obj.attribute = PALETTE_WEAPON;
+    } else {
+        obj.attribute = PALETTE_ENEMY1;
     }
-
 }

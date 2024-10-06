@@ -63,9 +63,9 @@ enum class Sfx : u8 {
 };
 
 
-extern Song next_song;
-extern Sfx sfx_queue1;
-extern Sfx sfx_queue2;
+extern volatile Song next_song;
+extern volatile Sfx sfx_queue1;
+extern volatile Sfx sfx_queue2;
 
 // __attribute__((leaf)) void play_song(Song song);
 // __attribute__((leaf)) void play_sfx(Sfx song);

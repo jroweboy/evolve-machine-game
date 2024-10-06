@@ -35,6 +35,8 @@ struct ObjectSpawn {
     State state;
     u16 x;
     u16 y;
+    // Which palette to use for the enemies in this room
+    u8 attr;
 };
 
 enum class SectionBase : u8 {
@@ -69,6 +71,10 @@ struct Room {
     // The object type that drops when this room is cleared
     // Update this if the prize has been grabbed
     PrizeType prize;
+
+    // What palette colors to use for enemies in this room
+    PaletteSet palette_index1;
+    PaletteSet palette_index2;
 };
 
 struct Section {
@@ -93,7 +99,6 @@ struct Section {
     // of the next section to spawn on.
 
     std::array<ObjectSpawn, 6> objects;
-
 };
 
 // The global RAM allocation for the room that the player is entering.

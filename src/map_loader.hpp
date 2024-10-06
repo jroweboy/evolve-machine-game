@@ -23,5 +23,6 @@ extern "C" u8 hud_tile_offset;
 extern "C" u8 object_tile_offset[];
 
 namespace MapLoader {
+    void load_pal(u8 id, PaletteSet pal);
     void load_map(u8 room_id);
 }

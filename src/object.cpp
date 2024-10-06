@@ -309,7 +309,7 @@ prg_rom_2 void move_object_with_solid_collision(u8 slot) {
     u16 original_x = obj.x->as_i();
     obj.x = obj->x + speed.x;
     if (obj.x->as_i() != original_x) {
-        u8 collision = check_solid_collision(CollisionType::All, 0);
+        u8 collision = check_solid_collision(CollisionType::All, slot);
         if (collision > 0) {
             obj.x = original_x;
         }
@@ -317,7 +317,7 @@ prg_rom_2 void move_object_with_solid_collision(u8 slot) {
     u16 original_y = obj.y->as_i();
     obj.y = obj->y + speed.y;
     if (obj.y->as_i() != original_y) {
-        u8 collision = check_solid_collision(CollisionType::All, 0);
+        u8 collision = check_solid_collision(CollisionType::All, slot);
         if (collision > 0) {
             obj.y = original_y;
         }

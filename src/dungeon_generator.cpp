@@ -170,6 +170,7 @@ prg_rom_2 static void generate_room_spawns() {
     // if (spawn_count > 6) {
     //     spawn_count -= 4;
     // }
+    room.palette_index1 = PaletteSet::Hamster;
     u8 spawn_count = 1;
     u8 spawn_slot = 0;
     while (spawn_count > 0) {
@@ -183,6 +184,7 @@ prg_rom_2 static void generate_room_spawns() {
             .state = State::Normal,
             .x = room.x + x,
             .y = room.y + y,
+            .attr = PALETTE_ENEMY1,
         };
         spawn_count--;
     }
@@ -393,13 +395,30 @@ prg_rom_2 noinline GenerateStats generate_dungeon() {
 
     // We need to hard code the item spawns in the room.
     // spawn random things into the room itself
+    room.palette_index1 = PaletteSet::WeaponPyramid;
+    room.palette_index2 = PaletteSet::WeaponSphere;
     
     // start the player at the bottom center of the screen
-    lead.objects[0] = {ObjectType::Player, Normal, room.x + 100, room.y + 240 + 100};
-    lead.objects[1] = {ObjectType::WeaponCube, Normal, room.x + 25, room.y + 240 + 100};
-    lead.objects[2] = {ObjectType::WeaponDiamond, Normal, room.x + 50,  room.y + 240 + 100};
-    lead.objects[3] = {ObjectType::WeaponPyramid, Normal, room.x + 125, room.y + 240 + 100};
-    lead.objects[4] = {ObjectType::WeaponSphere, Normal, room.x + 150, room.y + 240 + 100};
+    lead.objects[0] = {
+        ObjectType::Player, Normal, room.x + 100, room.y + 240 + 100,
+        PALETTE_KITTY,
+    };
+    lead.objects[1] = {
+        ObjectType::WeaponCube, Normal, room.x + 25, room.y + 240 + 100,
+        PALETTE_KITTY,
+    };
+    lead.objects[2] = {
+        ObjectType::WeaponDiamond, Normal, room.x + 50,  room.y + 240 + 100,
+        PALETTE_WEAPON
+    };
+    lead.objects[3] = {
+        ObjectType::WeaponPyramid, Normal, room.x + 125, room.y + 240 + 100,
+        PALETTE_ENEMY1
+    };
+    lead.objects[4] = {
+        ObjectType::WeaponSphere, Normal, room.x + 150, room.y + 240 + 100,
+        PALETTE_ENEMY2
+    };
 
     // and then save our first room to CHR RAM.
     write_room_to_chrram(id);

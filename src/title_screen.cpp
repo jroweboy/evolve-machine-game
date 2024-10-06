@@ -83,8 +83,8 @@ namespace Titlescreen {
                 // Run the RNG once to push the numbers along
                 Rng::rand8();
                 if (pressed & PAD_START) {
-                    pal_fade_to(4, 0, 4);
                     next_song = Song::StopMusic;
+                    pal_fade_to(4, 0, 4);
                     main_mode = MainMode::GenerateDungeon;
                     return;
                 } else if (pressed & PAD_SELECT) {

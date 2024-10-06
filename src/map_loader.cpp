@@ -20,6 +20,8 @@
 // the sprite constants for the HUD are hardcoded for now
 constexpr u8 hud_chr_count = 12 * 2;
 constexpr u16 hud_chr_offset = hud_chr_count * 16;
+extern u8 PAL_BUF[32];
+extern u8 PAL_UPDATE;
 
 struct SectionLookup {
     Archive nametable;
@@ -196,6 +198,23 @@ static constexpr soa::Array<ObjectTileCount, (u8)ObjectType::Count> object_tile_
     {hamster_chr_offset, Archive::hamster_chr, hamster_chr_count},
 };
 
+struct Palette {
+    u8 color1;
+    u8 color2;
+    u8 color3;
+};
+#define SOA_STRUCT Palette
+#define SOA_MEMBERS MEMBER(color1) MEMBER(color2) MEMBER(color3)
+#include <soa-struct.inc>
+static constexpr soa::Array<Palette, (u8)PaletteSet::Count> palette_lut = {
+    {0x00, 0x00, 0x00}, // None
+    {0x03, 0x00, 0x27}, // WeaponCube/Player
+    {0x05, 0x00, 0x10}, // WeaponDiamond
+    {0x19, 0x29, 0x30}, // WeaponPyramid
+    {0x21, 0x31, 0x30}, // WeaponSphere
+    {0x36, 0x27, 0x17}, // Hamster
+};
+
 static u8 get_or_load_tile(ObjectType obj) {
     if (obj == ObjectType::Player) {
         return 0;
@@ -344,10 +363,20 @@ __attribute__((section(".prg_rom_1.load_section"))) static void load_section(con
         slot.tile_offset = get_or_load_tile(obj.id);
         slot.x = obj.x;
         slot.y = obj.y;
+        slot.attribute = obj.attr;
     }
 }
 
 namespace MapLoader {
+
+    void load_pal(u8 id, PaletteSet pal) {
+        auto palette = palette_lut[(u8)pal];
+        auto offset = id * 4;
+        PAL_BUF[0x10 + 1 + offset] = palette->color1;
+        PAL_BUF[0x10 + 2 + offset] = palette->color2;
+        PAL_BUF[0x10 + 3 + offset] = palette->color3;
+        ++PAL_UPDATE;
+    }
 
     void load_map(u8 section_id) {
 
@@ -381,15 +410,14 @@ namespace MapLoader {
 
         set_chr_bank(0);
 
-        // Load the basic solid objects from this style of map
-        // const auto& walls = room.scroll == ScrollType::Vertical ? updown_walls 
-        //     : room.scroll == ScrollType::Horizontal ? leftright_walls : single_walls;
-        // room_collision_lut[]
-
-        // now load the collision data for this map
-        // set_prg_bank(GRAPHICS_BANK);
-
         u8 room_base = static_cast<u8>(lead.room_base);
+
+        if (lead.room_base == SectionBase::StartDown) {
+            load_pal(0, PaletteSet::WeaponCube);
+            load_pal(1, PaletteSet::WeaponDiamond);
+        }
+        load_pal(2, room.palette_index1);
+        load_pal(3, room.palette_index2);
 
         // set_prg_bank(CODE_BANK);
         // if we are using a vertical configuration, update the mirroring config
@@ -434,6 +462,7 @@ namespace MapLoader {
         }
         sp_chr_count += weapon_chr_count;
         sp_chr_offset += weapon_chr_offset;
+
 
         u8 solid_object_offset = 0;
         load_section(lead, solid_object_offset);

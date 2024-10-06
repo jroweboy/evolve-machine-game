@@ -1,9 +1,7 @@
-
-
-MEMORY {
-    prg_rom_0_extended : ORIGIN = 0x8000, LENGTH = 0x8000 - 0x20
-}
+INCLUDE link.ld
 
 SECTIONS {
-    .prg_rom_0_extended : { *(.prg_rom_0); . = (. < 0x8000 ? 0x8000 : .); *(.prg_rom_fixed) } > prg_rom_0
+  CLASS(c) { *(.rodata.earlier) }
+  .rodata { *(.rodata) CLASS(c) (*.rodata.later) } >prg_rom_0
+  .rodata2 { CLASS(c) } >prg_rom_fixed
 }
